@@ -1,3 +1,3 @@
-# Apostill-library
+# Apostille-library
 
-This is the typescript implementation of the apostil protocol and standards described in the [apostill whitepaper](https://nem.io/wp-content/themes/nem/files/ApostilleWhitePaper.pdf).
+This is the typescript implementation of the apostille protocol and standards described in the [apostille whitepaper](https://nem.io/wp-content/themes/nem/files/ApostilleWhitePaper.pdf).
