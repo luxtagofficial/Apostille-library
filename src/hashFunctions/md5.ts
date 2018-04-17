@@ -2,7 +2,7 @@ import CryptoJS from 'crypto-js';
 import { HashFunction } from './HashFunction';
 
 export class MD5 extends HashFunction {
-  private constructor() {
+  constructor() {
     super('01', '81');
   }
 

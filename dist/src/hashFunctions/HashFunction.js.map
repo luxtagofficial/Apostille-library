@@ -1,0 +1,1 @@
+{"version":3,"file":"HashFunction.js","sourceRoot":"","sources":["../../../src/hashFunctions/HashFunction.ts"],"names":[],"mappings":";;AAAA;IAIE,YAAmB,SAAiB,EAAE,MAAc;QAClD,IAAI,CAAC,SAAS,GAAG,SAAS,CAAC;QAC3B,IAAI,CAAC,MAAM,GAAG,MAAM,CAAC;IACvB,CAAC;CAIF;AAXD,oCAWC"}

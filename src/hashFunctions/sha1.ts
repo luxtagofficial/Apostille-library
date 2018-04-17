@@ -2,7 +2,7 @@ import CryptoJS from 'crypto-js';
 import { HashFunction } from './HashFunction';
 
 export class SHA1 extends HashFunction {
-  private constructor() {
+  constructor() {
     super('02', '82');
   }
 
