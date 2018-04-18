@@ -4,16 +4,17 @@ import { Apostille } from '../../src/Apostille';
 import { SHA256 } from '../../src/hashFunctions';
 
 const tag = 'NEM is Awesome!';
+// A funny but valid private key
 const signer = 'aaaaaaaaaaeeeeeeeeeebbbbbbbbbb5555555555dddddddddd1111111111aaee';
 
 // Create a common object holding key
-var common = nem.model.objects.create('common')('', signer);
+const common = nem.model.objects.create('common')('', signer);
 
 // Simulate the file content
-var fileContent = nem.crypto.js.enc.Utf8.parse('Apostille is awesome !');
+const payload = nem.crypto.js.enc.Utf8.parse('Apostille is awesome !');
 
 // Create the Apostille
-var oldPrivateApostille = nem.model.apostille.create(common, 'NEM is Awesome!', fileContent, 'Test Apostille', nem.model.apostille.hashing['SHA256'], false, {}, true, nem.model.network.data.testnet.id);
+const oldPrivateApostille = nem.model.apostille.create(common, 'NEM is Awesome!', payload, 'Test Apostille', nem.model.apostille.hashing['SHA256'], false, {}, true, nem.model.network.data.testnet.id);
 
 const newPrivateApostille = new Apostille(tag, signer, NetworkType.TEST_NET);
 
@@ -32,14 +33,14 @@ describe('HD account generation should be correct', () => {
 });
 
 const hashType = new SHA256();
-newPrivateApostille.create(fileContent, hashType);
+newPrivateApostille.create(payload, hashType);
 
 describe('private apostille hash should be correct', () => {
   it('should generate correct signed checksum with sha-256', () => {
-    expect(newPrivateApostille.apostilleHash.substring(0, 10) === oldPrivateApostille.data.checksum).toBeTruthy();
+    expect(newPrivateApostille.apostilleHash.substring(0, 10)).toMatch(oldPrivateApostille.data.checksum);
   });
 
   it('should generate correct hash with sha-256', () => {
-    expect(newPrivateApostille.apostilleHash === oldPrivateApostille.data.hash).toBeTruthy();
+    expect(newPrivateApostille.apostilleHash).toMatch(oldPrivateApostille.data.hash);
   });
 });
