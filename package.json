@@ -16,7 +16,7 @@
   },
   "main": "index.ts",
   "scripts": {
-    "test": "jest"
+    "test": "jest --coverage --verbose"
   },
   "author": "gimyboya <amine@luxtag.io>",
   "license": "Apache-2.0",
@@ -47,6 +47,10 @@
       "jsx",
       "json",
       "node"
+    ],
+    "coverageDirectory": "<rootDir>/tests/unit/coverage",
+    "collectCoverageFrom": [
+      "<rootDir>/src/**/*.ts"
     ]
   }
 }
