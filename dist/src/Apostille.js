@@ -108,7 +108,7 @@ class Apostille {
         return this.Apostille.publicKey;
     }
     get address() {
-        return this.Apostille.address.plain();
+        return this.Apostille.address.pretty();
     }
     get apostilleHash() {
         return this.hash;

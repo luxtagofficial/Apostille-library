@@ -4,7 +4,7 @@ import { Apostille } from '../../src/Apostille';
 import { SHA256 } from '../../src/hashFunctions';
 
 const tag = 'NEM is Awesome!';
-const signer = '73CA8F6F7F39A94E6094A0E423C85D6FA9C924E6C59E6CBFF5D2C969FF63650A';
+const signer = 'aaaaaaaaaaeeeeeeeeeebbbbbbbbbb5555555555dddddddddd1111111111aaee';
 
 // Create a common object holding key
 var common = nem.model.objects.create('common')('', signer);

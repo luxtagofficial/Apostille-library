@@ -8,7 +8,7 @@ const nem2_sdk_1 = require("nem2-sdk");
 const Apostille_1 = require("../../src/Apostille");
 const hashFunctions_1 = require("../../src/hashFunctions");
 const tag = 'NEM is Awesome!';
-const signer = '73CA8F6F7F39A94E6094A0E423C85D6FA9C924E6C59E6CBFF5D2C969FF63650A';
+const signer = 'aaaaaaaaaaeeeeeeeeeebbbbbbbbbb5555555555dddddddddd1111111111aaee';
 // Create a common object holding key
 var common = nem_sdk_1.default.model.objects.create('common')('', signer);
 // Simulate the file content

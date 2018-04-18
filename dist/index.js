@@ -1,4 +1,7 @@
 "use strict";
+function __export(m) {
+    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
+}
 Object.defineProperty(exports, "__esModule", { value: true });
 // import everything from the src folder
 const nem2_sdk_1 = require("nem2-sdk");
@@ -20,4 +23,6 @@ myApostille.update('test #1', [nem2_sdk_1.XEM.createRelative(1)]);
 myApostille.update('test #2', [nem2_sdk_1.XEM.createRelative(2)]);
 myApostille.update('test #3', [nem2_sdk_1.XEM.createRelative(3)]);
 myApostille.announce();
+__export(require("./src/hashFunctions"));
+__export(require("./src/Apostille"));
 //# sourceMappingURL=index.js.map

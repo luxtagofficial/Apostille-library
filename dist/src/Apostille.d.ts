@@ -8,7 +8,7 @@ declare class Apostille {
     private Apostille;
     private created;
     private creationAnnounced;
-    hash: any;
+    private hash;
     constructor(seed: string, signerPrivateKey: string, networkType: NetworkType);
     create(rawData: string, hashFunction?: HashFunction, mosaics?: Array<Mosaic>): void;
     update(message: string, mosaics?: Array<Mosaic>): void;

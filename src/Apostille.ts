@@ -9,7 +9,7 @@ class Apostille {
   private Apostille: Account = new Account();
   private created: boolean = false;
   private creationAnnounced: boolean = false;
-  public hash;
+  private hash;
   constructor(public readonly seed: string, private signerPrivateKey: string, public readonly networkType: NetworkType) {
     if (!nem.utils.helpers.isPrivateKeyValid(signerPrivateKey)) {
       throw new Error('!invalid private key');
@@ -149,7 +149,7 @@ class Apostille {
   }
 
   get address(): string {
-    return this.Apostille.address.plain();
+    return this.Apostille.address.pretty();
   }
 
   get apostilleHash(): string {
