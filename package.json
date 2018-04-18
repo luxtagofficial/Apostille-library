@@ -1,13 +1,25 @@
 {
-  "name": "luxtag-ts-sdk",
+  "name": "apostille-library",
   "version": "1.0.0",
-  "description": "luxtag sdk written in typescript",
-  "main": "index.js",
+  "description": "Typescript implementation of apostille protocol and standards",
+  "keywords": [
+    "blockchain",
+    "nem",
+    "notarization",
+    "certificate",
+    "poe"
+  ],
+  "homepage": "https://nem.io/wp-content/themes/nem/files/ApostilleWhitePaper.pdf",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NEM-Apostille/Apostille-library"
+  },
+  "main": "index.ts",
   "scripts": {
     "test": "jest"
   },
   "author": "gimyboya <amine@luxtag.io>",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "dependencies": {
     "@types/crypto-js": "^3.1.38",
     "@types/lodash": "^4.14.102",
