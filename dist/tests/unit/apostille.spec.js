@@ -23,19 +23,17 @@ describe('HD account generation should be correct', () => {
     it('public key should be valid', () => {
         expect(nem_sdk_1.default.utils.helpers.isPublicKeyValid(newPrivateApostille.publicKey)).toBeTruthy();
     });
-    it('should generate the same HD account', () => {
+    it('should generate the same HD account as old apostille', () => {
         expect(oldPrivateApostille.data.dedicatedAccount.privateKey.toUpperCase() === newPrivateApostille.privateKey).toBeTruthy();
     });
 });
 const hashType = new hashFunctions_1.SHA256();
 newPrivateApostille.create(fileContent, hashType);
-describe('apostille hash should be correct', () => {
+describe('private apostille hash should be correct', () => {
     it('should generate correct signed checksum with sha-256', () => {
-        console.log(newPrivateApostille.apostilleHash.substring(0, 10));
         expect(newPrivateApostille.apostilleHash.substring(0, 10) === oldPrivateApostille.data.checksum).toBeTruthy();
     });
     it('should generate correct hash with sha-256', () => {
-        console.log(newPrivateApostille.apostilleHash);
         expect(newPrivateApostille.apostilleHash === oldPrivateApostille.data.hash).toBeTruthy();
     });
 });

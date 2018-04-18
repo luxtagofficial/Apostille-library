@@ -85,9 +85,6 @@ class Apostille {
             }, err => console.error(err));
             // empty the array
             this.transactions = [];
-            console.log('owner pk', owner.privateKey);
-            console.log('owner pp', owner.publicKey);
-            console.log('owner address', owner.address.plain());
         }
         else {
             const aggregateTransactions = [];
@@ -102,9 +99,6 @@ class Apostille {
             }, err => console.error(err));
             // empty the array
             this.transactions = [];
-            console.log('owner pk', owner.privateKey);
-            console.log('owner pp', owner.publicKey);
-            console.log('owner address', owner.address.plain());
         }
     }
     get privateKey() {

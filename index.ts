@@ -24,3 +24,6 @@ myApostille.update('test #1', [XEM.createRelative(1)]);
 myApostille.update('test #2', [XEM.createRelative(2)]);
 myApostille.update('test #3', [XEM.createRelative(3)]);
 myApostille.announce();
+
+export * from './src/hashFunctions';
+export * from './src/Apostille';
