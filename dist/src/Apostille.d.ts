@@ -6,6 +6,9 @@ declare class Apostille {
     readonly networkType: NetworkType;
     private transactions;
     private Apostille;
+    private created;
+    private creationAnnounced;
+    hash: any;
     constructor(seed: string, signerPrivateKey: string, networkType: NetworkType);
     create(rawData: string, hashFunction?: HashFunction, mosaics?: Array<Mosaic>): void;
     update(message: string, mosaics?: Array<Mosaic>): void;
@@ -13,5 +16,8 @@ declare class Apostille {
     readonly privateKey: string;
     readonly publicKey: string;
     readonly address: string;
+    readonly apostilleHash: string;
+    readonly isCreated: boolean;
+    isAnnouced(): boolean;
 }
 export { Apostille };

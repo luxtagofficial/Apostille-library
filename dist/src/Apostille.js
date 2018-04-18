@@ -18,6 +18,8 @@ class Apostille {
         this.networkType = networkType;
         this.transactions = [];
         this.Apostille = new nem2_sdk_1.Account();
+        this.created = false;
+        this.creationAnnounced = false;
         if (!nem.utils.helpers.isPrivateKeyValid(signerPrivateKey)) {
             throw new Error('!invalid private key');
         }
@@ -30,14 +32,18 @@ class Apostille {
         this.Apostille = nem2_sdk_1.Account.createFromPrivateKey(privateKey, this.networkType);
     }
     create(rawData, hashFunction, mosaics) {
+        // TODO: check if the apostill exists on the blockchain
+        if (this.created || this.creationAnnounced) {
+            throw new Error('you have already created this apostille');
+        }
         let creationTransaction;
         if (hashFunction) {
-            const hashedData = hashFunction.signedHashing(rawData);
+            this.hash = hashFunction.signedHashing(rawData, this.signerPrivateKey);
             if (mosaics) {
-                creationTransaction = nem2_sdk_1.TransferTransaction.create(nem2_sdk_1.Deadline.create(), nem2_sdk_1.Address.createFromRawAddress(this.Apostille.address.plain()), mosaics, nem2_sdk_1.PlainMessage.create(hashedData), this.networkType);
+                creationTransaction = nem2_sdk_1.TransferTransaction.create(nem2_sdk_1.Deadline.create(), nem2_sdk_1.Address.createFromRawAddress(this.Apostille.address.plain()), mosaics, nem2_sdk_1.PlainMessage.create(this.hash), this.networkType);
             }
             else {
-                creationTransaction = nem2_sdk_1.TransferTransaction.create(nem2_sdk_1.Deadline.create(), nem2_sdk_1.Address.createFromRawAddress(this.Apostille.address.plain()), [nem2_sdk_1.XEM.createRelative(0)], nem2_sdk_1.PlainMessage.create(hashedData), this.networkType);
+                creationTransaction = nem2_sdk_1.TransferTransaction.create(nem2_sdk_1.Deadline.create(), nem2_sdk_1.Address.createFromRawAddress(this.Apostille.address.plain()), [nem2_sdk_1.XEM.createRelative(0)], nem2_sdk_1.PlainMessage.create(this.hash), this.networkType);
             }
         }
         else {
@@ -50,8 +56,12 @@ class Apostille {
         }
         // push the creation transaction to the transaction array
         this.transactions.push(creationTransaction);
+        this.created = true;
     }
     update(message, mosaics) {
+        if (!this.created) {
+            throw new Error('Apostille not created yet!');
+        }
         let updateTransaction;
         if (mosaics) {
             updateTransaction = nem2_sdk_1.TransferTransaction.create(nem2_sdk_1.Deadline.create(), nem2_sdk_1.Address.createFromRawAddress(this.Apostille.address.plain()), mosaics, nem2_sdk_1.PlainMessage.create(message), this.networkType);
@@ -60,14 +70,19 @@ class Apostille {
             updateTransaction = nem2_sdk_1.TransferTransaction.create(nem2_sdk_1.Deadline.create(), nem2_sdk_1.Address.createFromRawAddress(this.Apostille.address.plain()), [nem2_sdk_1.XEM.createRelative(0)], nem2_sdk_1.PlainMessage.create(message), this.networkType);
         }
         this.transactions.push(updateTransaction);
-        console.log('update pushed');
     }
     announce() {
+        if (!this.created) {
+            throw new Error('Apostille not created yet!');
+        }
         const transactionHttp = new nem2_sdk_1.TransactionHttp('http://api.beta.catapult.mijin.io:3000');
         const owner = nem2_sdk_1.Account.createFromPrivateKey(this.signerPrivateKey, this.networkType);
         if (this.transactions.length === 1) {
             const signedTransaction = owner.sign(this.transactions[0]);
-            transactionHttp.announce(signedTransaction).subscribe(res => console.log(res), err => console.error(err));
+            transactionHttp.announce(signedTransaction).subscribe((res) => {
+                console.log(res);
+                this.creationAnnounced = true;
+            }, err => console.error(err));
             // empty the array
             this.transactions = [];
             console.log('owner pk', owner.privateKey);
@@ -81,7 +96,10 @@ class Apostille {
             });
             const aggregateTransaction = nem2_sdk_1.AggregateTransaction.createComplete(nem2_sdk_1.Deadline.create(), aggregateTransactions, nem2_sdk_1.NetworkType.MIJIN_TEST, []);
             const signedAggregate = owner.sign(aggregateTransaction);
-            transactionHttp.announce(signedAggregate).subscribe(res => console.log(res), err => console.error(err));
+            transactionHttp.announce(signedAggregate).subscribe((res) => {
+                console.log(res);
+                this.creationAnnounced = true;
+            }, err => console.error(err));
             // empty the array
             this.transactions = [];
             console.log('owner pk', owner.privateKey);
@@ -97,6 +115,17 @@ class Apostille {
     }
     get address() {
         return this.Apostille.address.plain();
+    }
+    get apostilleHash() {
+        return this.hash;
+    }
+    get isCreated() {
+        return this.created;
+    }
+    isAnnouced() {
+        // TODO: check from the block chain
+        const isAnnouced = this.creationAnnounced;
+        return isAnnouced;
     }
 }
 exports.Apostille = Apostille;

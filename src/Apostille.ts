@@ -6,7 +6,10 @@ import { HashFunction } from './hashFunctions/HashFunction';
 const nem = nemSDK.default;
 class Apostille {
   private transactions: Array<any> = [];
-  private Apostille = new Account();
+  private Apostille: Account = new Account();
+  private created: boolean = false;
+  private creationAnnounced: boolean = false;
+  public hash;
   constructor(public readonly seed: string, private signerPrivateKey: string, public readonly networkType: NetworkType) {
     if (!nem.utils.helpers.isPrivateKeyValid(signerPrivateKey)) {
       throw new Error('!invalid private key');
@@ -21,15 +24,19 @@ class Apostille {
   }
 
   public create(rawData: string, hashFunction?: HashFunction, mosaics?: Array<Mosaic>): void {
+    // TODO: check if the apostill exists on the blockchain
+    if (this.created || this.creationAnnounced) {
+      throw new Error('you have already created this apostille');
+    }
     let creationTransaction: TransferTransaction;
     if (hashFunction) {
-      const hashedData = hashFunction.signedHashing(rawData);
+      this.hash = hashFunction.signedHashing(rawData, this.signerPrivateKey);
       if (mosaics) {
         creationTransaction = TransferTransaction.create(
           Deadline.create(),
           Address.createFromRawAddress(this.Apostille.address.plain()),
           mosaics,
-          PlainMessage.create(hashedData),
+          PlainMessage.create(this.hash),
           this.networkType
         );
       } else {
@@ -37,7 +44,7 @@ class Apostille {
           Deadline.create(),
           Address.createFromRawAddress(this.Apostille.address.plain()),
           [XEM.createRelative(0)],
-          PlainMessage.create(hashedData),
+          PlainMessage.create(this.hash),
           this.networkType
         );
       }
@@ -62,9 +69,13 @@ class Apostille {
     }
     // push the creation transaction to the transaction array
     this.transactions.push(creationTransaction);
+    this.created = true;
   }
 
   public update(message: string, mosaics?: Array<Mosaic>): void {
+    if (!this.created) {
+      throw new Error('Apostille not created yet!');
+    }
     let updateTransaction: TransferTransaction;
     if (mosaics) {
       updateTransaction = TransferTransaction.create(
@@ -84,23 +95,25 @@ class Apostille {
       );
     }
     this.transactions.push(updateTransaction);
-    console.log('update pushed');
   }
 
   public announce(): void {
+    if (!this.created) {
+      throw new Error('Apostille not created yet!');
+    }
     const transactionHttp = new TransactionHttp('http://api.beta.catapult.mijin.io:3000');
     const owner = Account.createFromPrivateKey(this.signerPrivateKey, this.networkType);
     if (this.transactions.length === 1) {
       const signedTransaction = owner.sign(this.transactions[0]);
       transactionHttp.announce(signedTransaction).subscribe(
-        res => console.log(res),
+        (res) => {
+          console.log(res);
+          this.creationAnnounced = true;
+        },
         err => console.error(err)
       );
       // empty the array
       this.transactions = [];
-      console.log('owner pk', owner.privateKey);
-      console.log('owner pp', owner.publicKey);
-      console.log('owner address', owner.address.plain());
     } else {
       const aggregateTransactions: Array<InnerTransaction> = [];
       this.transactions.forEach(transaction => {
@@ -116,14 +129,14 @@ class Apostille {
 
       const signedAggregate = owner.sign(aggregateTransaction);
       transactionHttp.announce(signedAggregate).subscribe(
-        res => console.log(res),
+        (res) => {
+          console.log(res);
+          this.creationAnnounced = true;
+        },
         err => console.error(err)
       );
       // empty the array
       this.transactions = [];
-      console.log('owner pk', owner.privateKey);
-      console.log('owner pp', owner.publicKey);
-      console.log('owner address', owner.address.plain());
     }
   }
 
@@ -137,6 +150,20 @@ class Apostille {
 
   get address(): string {
     return this.Apostille.address.plain();
+  }
+
+  get apostilleHash(): string {
+    return this.hash;
+  }
+
+  get isCreated(): boolean {
+    return this.created;
+  }
+
+  isAnnouced(): boolean {
+    // TODO: check from the block chain
+    const isAnnouced = this.creationAnnounced;
+    return isAnnouced;
   }
 }
 

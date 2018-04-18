@@ -7,6 +7,6 @@ export abstract class HashFunction {
     this.signed = signed;
   }
 
-  public abstract signedHashing(data: string): string;
+  public abstract signedHashing(data: string, signerPrivateKey: string): string;
   public abstract nonSignedHashing(data: string): string;
 }
