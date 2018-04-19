@@ -1,4 +1,5 @@
 import nem from 'nem-sdk';
+import CryptoJS from 'crypto-js';
 import { NetworkType } from 'nem2-sdk';
 import { Apostille } from '../../src/Apostille';
 import { SHA256, MD5, SHA1, SHA3256, SHA3512 } from '../../src/hashFunctions';
@@ -26,7 +27,7 @@ const signer = 'aaaaaaaaaaeeeeeeeeeebbbbbbbbbb5555555555dddddddddd1111111111aaee
 const common = nem.model.objects.create('common')('', signer);
 
 // Simulate the file content
-const payload = nem.crypto.js.enc.Utf8.parse('Apostille is awesome !');
+const payload = CryptoJS.enc.Utf8.parse('Public apostille is awesome !');
 
 // Create the Apostille
 let oldPrivateApostille = nem.model.apostille.create(common, 'NEM is Awesome!', payload, 'Test Apostille', nem.model.apostille.hashing['SHA256'], false, {}, true, nem.model.network.data.testnet.id);

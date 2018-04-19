@@ -12,10 +12,10 @@ export class SHA3256 extends HashFunction {
   public signedHashing(data: string, signerPrivateKey: string) {
     const keyPair = nem.crypto.keyPair.create(signerPrivateKey);
     const CHEKSUM = 'fe4e5459' + this.signed;
-    return CHEKSUM +  keyPair.sign(CryptoJS.SHA3(data, undefined, { outputLength: 256 }).toString()).toString();
+    return CHEKSUM +  keyPair.sign(CryptoJS.SHA3(data, { outputLength: 256 }).toString()).toString();
   }
   public nonSignedHashing(data: string) {
     const CHEKSUM = 'fe4e5459' + this.nonSigned;
-    return CHEKSUM + CryptoJS.SHA3(data, undefined, { outputLength: 256 });
+    return CHEKSUM + CryptoJS.SHA3(data, { outputLength: 256 });
   }
 }
