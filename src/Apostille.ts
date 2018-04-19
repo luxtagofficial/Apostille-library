@@ -97,11 +97,20 @@ class Apostille {
     this.transactions.push(updateTransaction);
   }
 
-  public announce(): void {
+  public announce(url?: string): void {
     if (!this.created) {
       throw new Error('Apostille not created yet!');
     }
-    const transactionHttp = new TransactionHttp('http://api.beta.catapult.mijin.io:3000');
+    let transactionHttp;
+    if (this.networkType === NetworkType.MAIN_NET) {
+      transactionHttp = new TransactionHttp('http://88.99.192.82:7890');
+    } else if (this.networkType === NetworkType.TEST_NET) {
+      transactionHttp = new TransactionHttp('http://104.128.226.60:7890');
+    } else if (this.networkType === NetworkType.MIJIN) {
+      transactionHttp = new TransactionHttp(url);
+    } else {
+      transactionHttp = new TransactionHttp('http://api.beta.catapult.mijin.io:3000');
+    }
     const owner = Account.createFromPrivateKey(this.signerPrivateKey, this.networkType);
     if (this.transactions.length === 1) {
       const signedTransaction = owner.sign(this.transactions[0]);
@@ -123,7 +132,7 @@ class Apostille {
       const aggregateTransaction = AggregateTransaction.createComplete(
         Deadline.create(),
         aggregateTransactions,
-        NetworkType.MIJIN_TEST,
+        this.networkType,
         []
       );
 
