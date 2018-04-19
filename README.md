@@ -8,18 +8,18 @@ This library is still a draft and **meant to work with Catapult only.** it will 
 
 ## Table of Contents
 
-- [Abstract](#Abstract)
+- [Abstract](#abstract)
 - [Features](#features)
-- [Getting Started](#Getting-Started)
-  - [Installation](#Installation)
-  - [Usage](#Usage)
-    - [Public Apostille](#Public-Apostille)
-    - [Private Apostille](#Private-Apostille)
-      - [Create](#Create)
-      - [Update](#Update)
-      - [Transfer](#Transfer)
-      - [Announce](#Announce)
-- [Acknowledgments](#Acknowledgments)
+- [Getting Started](#getting-started)
+  - [Installation](#installation)
+  - [Usage](#usage)
+    - [Public Apostille](#public-apostille)
+    - [Private Apostille](#private-apostille)
+      - [Create](#1--create)
+      - [Update](#2--update)
+      - [Transfer](#3--transfer)
+      - [Announce](#4--announce)
+- [Acknowledgments](#acknowledgments)
 
 # Abstract
 
