@@ -29,44 +29,14 @@ const common = nem.model.objects.create('common')('', signer);
 // Simulate the file content
 const payload = CryptoJS.enc.Utf8.parse('Public apostille is awesome !');
 
-// Create the Apostille
-let oldPrivateApostille = nem.model.apostille.create(common, 'NEM is Awesome!', payload, 'Test Apostille', nem.model.apostille.hashing['SHA256'], false, {}, true, nem.model.network.data.testnet.id);
 
-let newPrivateApostille = new Apostille(tag, signer, NetworkType.TEST_NET);
-
-describe('HD account generation should be correct', () => {
-  it('private key should be valid', () => {
-    expect(nem.utils.helpers.isPrivateKeyValid(newPrivateApostille.privateKey)).toBeTruthy();
-  });
-
-  it('public key should be valid', () => {
-    expect(nem.utils.helpers.isPublicKeyValid(newPrivateApostille.publicKey)).toBeTruthy();
-  });
-
-  it('should generate the same HD account as old apostille', () => {
-    expect(oldPrivateApostille.data.dedicatedAccount.privateKey.toUpperCase() === newPrivateApostille.privateKey).toBeTruthy();
-  });
-});
-
-
-/*** Test for SHA256 ***/
-let hashType = chooseHash('SHA256');
-newPrivateApostille.create(payload, hashType);
-
-describe('private apostille hash should be correct', () => {
-  it('should generate correct signed checksum with sha-256', () => {
-    expect(newPrivateApostille.apostilleHash.substring(0, 10)).toMatch(oldPrivateApostille.data.checksum);
-  });
-
-  it('should generate correct hash with sha-256', () => {
-    expect(newPrivateApostille.apostilleHash).toMatch(oldPrivateApostille.data.hash);
-  });
-});
-
-/*** Test for MD5, SHA1, SHA3-256, SHA3-512 ***/
-const hashArray = ['MD5', 'SHA1', 'SHA3-256', 'SHA3-512'];
-
+/*** Test for MD5, SHA1, SHA256, SHA3-256, SHA3-512 ***/
+const hashArray = ['MD5', 'SHA1', 'SHA256', 'SHA3-256', 'SHA3-512'];
+let oldPrivateApostille;
+let newPrivateApostille;
+let hashType;
 hashArray.forEach(hash => {
+  // Create the Apostille
   oldPrivateApostille = nem.model.apostille.create(common, 'NEM is Awesome!', payload, 'Test Apostille', nem.model.apostille.hashing[hash], false, {}, true, nem.model.network.data.testnet.id);
 
   newPrivateApostille = new Apostille(tag, signer, NetworkType.TEST_NET);
