@@ -4,7 +4,7 @@ Typescript implementation of Apostille protocol and standards described in the [
 
 ---
 
-This library is still a draft and **meant to work with Catapult only.** it will be updated as the `nem2-sdk` and Catapult evolves and as more contributions and ideas emerges.
+This library is still a draft and **meant to work with Catapult only.** it will be updated as the `nem2-sdk` and Catapult evolves and as more contributions and ideas emerges. The purpose of this Github is to define the standard and give examples. 
 
 ## Table of Contents
 
