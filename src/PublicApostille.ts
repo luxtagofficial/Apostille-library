@@ -31,19 +31,26 @@ class PublicApostille {
     this.announced = false;
   }
 
-  public announce(url?: string) {
+  public announce(urls?: string) {
     if (this.announced) {
       throw new Error('This File has already been anounced to the network');
     }
     let transactionHttp;
-    if (this.networkType === NetworkType.MAIN_NET) {
-      transactionHttp = new TransactionHttp('http://88.99.192.82:7890');
-    } else if (this.networkType === NetworkType.TEST_NET) {
-      transactionHttp = new TransactionHttp('http://104.128.226.60:7890');
-    } else if (this.networkType === NetworkType.MIJIN) {
-      transactionHttp = new TransactionHttp(url);
+    if (urls) {
+      if (this.networkType === NetworkType.MAIN_NET || this.networkType === NetworkType.TEST_NET) {
+        console.warn('To fetch a far far away transaction a historical node is needed');
+      }
+      transactionHttp = new TransactionHttp(urls);
     } else {
-      transactionHttp = new TransactionHttp('http://api.beta.catapult.mijin.io:3000');
+      if (this.networkType === NetworkType.MAIN_NET) {
+        transactionHttp = new TransactionHttp('http://88.99.192.82:7890');
+      } else if (this.networkType === NetworkType.TEST_NET) {
+        transactionHttp = new TransactionHttp('http://104.128.226.60:7890');
+      } else if (this.networkType === NetworkType.MIJIN) {
+        throw new Error('Missing Endpoint argument!');
+      } else {
+        transactionHttp = new TransactionHttp('http://api.beta.catapult.mijin.io:3000');
+      }
     }
     const owner = Account.createFromPrivateKey(this.signerPrivateKey, this.networkType);
     const signedTransaction = owner.sign(this.creationTransaction);
