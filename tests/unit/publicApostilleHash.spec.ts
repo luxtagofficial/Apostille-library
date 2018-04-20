@@ -29,34 +29,20 @@ const common = nem.model.objects.create('common')('', signer);
 // Simulate the file content
 const fileContent = CryptoJS.enc.Utf8.parse('Public apostille is awesome !');
 
-// Create the public Apostille
-let oldPublicApostille = nem.model.apostille.create(common, fileName, fileContent, 'Test Apostille', nem.model.apostille.hashing['SHA256'], false, {}, false, nem.model.network.data.testnet.id);
-
-let newPublicApostille = new PublicApostille(signer, NetworkType.TEST_NET);
-
-/*** Test for SHA256 ***/
-let hashType = chooseHash('SHA256');
-newPublicApostille.create(fileContent, hashType);
-
-describe('Public apostille hashes should be correct', () => {
-  it('should generate correct non-signed checksum with sha-256', () => {
-    expect(newPublicApostille.apostilleHash.substring(0, 10)).toMatch(oldPublicApostille.data.checksum);
-  });
-  it('should generate correct file hash with sha-256', () => {
-    expect(newPublicApostille.apostilleHash).toMatch(oldPublicApostille.data.hash);
-  });
-});
-
 /*** Test for MD5, SHA1, SHA3-256, SHA3-512 ***/
-const hashArray = ['MD5', 'SHA1', 'SHA3-256', 'SHA3-512'];
+const hashArray = ['MD5', 'SHA1', 'SHA256', 'SHA3-256', 'SHA3-512'];
+let oldPublicApostille;
+let newPublicApostille;
+let hashType;
+
 
 hashArray.forEach(hash => {
   // Create the public Apostille
-  let oldPublicApostille = nem.model.apostille.create(common, fileName, fileContent, 'Test Apostille', nem.model.apostille.hashing[hash], false, {}, false, nem.model.network.data.testnet.id);
+  oldPublicApostille = nem.model.apostille.create(common, fileName, fileContent, 'Test Apostille', nem.model.apostille.hashing[hash], false, {}, false, nem.model.network.data.testnet.id);
 
-  let newPublicApostille = new PublicApostille(signer, NetworkType.TEST_NET);
+  newPublicApostille = new PublicApostille(signer, NetworkType.TEST_NET);
 
-  let hashType = chooseHash(hash);
+  hashType = chooseHash(hash);
   newPublicApostille.create(fileContent, hashType);
 
   describe('Public apostille hashes should be correct', () => {
