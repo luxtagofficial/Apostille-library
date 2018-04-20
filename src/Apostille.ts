@@ -157,8 +157,8 @@ class Apostille {
     return this.Apostille.publicKey;
   }
 
-  get address(): string {
-    return this.Apostille.address.pretty();
+  get address(): Address {
+    return this.Apostille.address;
   }
 
   get apostilleHash(): string {

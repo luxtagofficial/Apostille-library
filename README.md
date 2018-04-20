@@ -111,11 +111,11 @@ By default when constructing a public Apostille the network type will be matched
 however if the need arise to use a different sink address you can just pass it to the constructor as follow
 
 ```typescript
-const address = SCGDK2J46BODGGKMPIKCBGTBBIWL6AL5ZKLKQ56A;
+const mySinkAddress = SCGDK2J46BODGGKMPIKCBGTBBIWL6AL5ZKLKQ56A;
 // A funny but valid private key
 const signer = 'aaaaaaaaaaeeeeeeeeeebbbbbbbbbb5555555555dddddddddd1111111111aaee';
 // create a public apostille instance
-const MyPublicApostille = new PublicApostille(signer, NetworkType.MIJIN_TEST, address);
+const MyPublicApostille = new PublicApostille(signer, NetworkType.MIJIN_TEST, mySinkAddress);
 ```
 
 ### Private Apostille
