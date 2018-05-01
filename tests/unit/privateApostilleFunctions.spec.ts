@@ -1,3 +1,5 @@
+// TODO: test isCreated and isAnnounced
+// TODO: test account getters Generator Account, HD Account and Signer (creator) Account
 import nem from 'nem-sdk';
 import { NetworkType } from 'nem2-sdk';
 import { Apostille } from '../../src/Apostille';
@@ -16,7 +18,7 @@ describe('Getters should work properly', () => {
     publicKey: '727472EBD5474CD3BB8698D0C6406C541A6EE1B7DF9A0273B95B2A3ACFC594A4'.toUpperCase(),
   };
 
-  it('should be created via private key', () => {
+  it('should correctly generate a private apostille via a private key', () => {
     const PrivateApostille = new Apostille(tag, signer, NetworkType.MIJIN_TEST);
 
     expect(PrivateApostille.privateKey).toMatch(hdAccountInformation.privateKey);

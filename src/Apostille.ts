@@ -271,11 +271,12 @@ class Apostille {
     return this.Apostille.address;
   }
 
-  get hdAccount(): PublicAccount {
-    return PublicAccount.createFromPublicKey(this.publicKey, this.networkType);
-  }
   get hashSigner(): PublicAccount {
     return this.generatorAccount.publicAccount;
+  }
+
+  get hdAccount(): PublicAccount {
+    return PublicAccount.createFromPublicKey(this.publicKey, this.networkType);
   }
 
   get apostilleHash(): string {
@@ -287,7 +288,6 @@ class Apostille {
   }
 
   public isAnnouced(apostille?: Apostille): boolean {
-    let isAnnouced = false;
     // check if the apostille account has any transaction
     if (apostille) {
       let accountHttp ;
@@ -307,21 +307,22 @@ class Apostille {
       ).subscribe(
           (transactions) => {
             if (transactions.length) {
-              isAnnouced = true;
+              this.created = true;
+              this.creationAnnounced = true;
+              return true;
             } else {
-              isAnnouced = this.creationAnnounced;
+              return this.creationAnnounced;
             }
           },
           (err) => {
             console.error(err);
-            isAnnouced = this.creationAnnounced;
+            return this.creationAnnounced;
           },
       );
-    } else {
-      isAnnouced = this.creationAnnounced;
     }
-    return isAnnouced;
+    return this.creationAnnounced;
   }
+
 }
 
 export { Apostille };
