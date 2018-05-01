@@ -19,15 +19,17 @@ import {
   LockFundsTransaction} from 'nem2-sdk';
 import { SHA256 } from './hashFunctions';
 import { HashFunction } from './hashFunctions/HashFunction';
+import { Initiator } from './Initiator';
 
 const nem = nemSDK.default;
 class Apostille {
+  // TODO: convert this array into signedTransaction one
   private transactions: any[] = [];
   private Apostille: Account = new Account();
   private created: boolean = false;
   private creationAnnounced: boolean = false;
   private generatorAccount: Account = new Account();
-  private signerAccount: Account = new Account();
+  private creatorAccount;
   private hash;
 
   constructor(
@@ -48,28 +50,32 @@ class Apostille {
     this.Apostille = Account.createFromPrivateKey(privateKey, this.networkType);
   }
 
-  public create(
-    initiatorPrivateKey: string,
+  public async create(
+    initiatorAccount: Initiator,
     rawData: string,
     mosaics: Mosaic[] | Mosaic[] = [],
-    isMultisig: boolean,
     hashFunction?: HashFunction,
-    multisigAccount?: PublicAccount,
-    isCompleet?: boolean,
-    cosignatories?: Account[],
-  ): void {
-    // check if it was created locally or on chain
-    if (this.created || this.isAnnouced(this)) {
+  ): Promise<void> {
+    if (initiatorAccount.network !== this.networkType) {
+      throw new Error('Netrowk type miss matched!');
+    }
+    // check if the apostille was already created locally or on chain
+    await this.isAnnouced(this);
+    if (this.created) {
+      this.created = true;
       throw new Error('you have already created this apostille');
     }
-    this.signerAccount = Account.createFromPrivateKey(initiatorPrivateKey, this.networkType);
+    this.creatorAccount = initiatorAccount;
     let creationTransaction: TransferTransaction;
     let signedCreation: SignedTransaction;
-    if (isMultisig) {
+    if (initiatorAccount.multisigAccount) {
       // the sender is a multisig account
       // we need to wrap the transaction in an aggregate transaction
+      // first we create the creation transaction as a transfer transaction
       if (hashFunction) {
-        this.hash = hashFunction.signedHashing(rawData, initiatorPrivateKey);
+        // for digital files it's a good idea to hash the content of the file
+        // but can be used for other types of information for real life assets
+        this.hash = hashFunction.signedHashing(rawData, initiatorAccount.account.privateKey);
         creationTransaction = TransferTransaction.create(
           Deadline.create(),
           Address.createFromRawAddress(this.Apostille.address.plain()),
@@ -78,6 +84,7 @@ class Apostille {
           this.networkType,
         );
       } else {
+        // the data can be sent without being hashed
         creationTransaction = TransferTransaction.create(
           Deadline.create(),
           Address.createFromRawAddress(this.Apostille.address.plain()),
@@ -86,67 +93,62 @@ class Apostille {
           this.networkType,
         );
       }
-      // now we create the aggreagte transaction
-      if (isCompleet) {
+      // we wrap the creation transaction in an aggreagte transaction
+      if (initiatorAccount.complete) {
         // aggregate complete
-        if (!multisigAccount) {
-          throw new Error('The multisig account is missing!');
-        }
         const aggregateTransaction = AggregateTransaction.createComplete(
           Deadline.create(),
           [
-            creationTransaction.toAggregate(multisigAccount),
+            creationTransaction.toAggregate(initiatorAccount.multisigAccount),
           ],
           NetworkType.MIJIN_TEST,
           [],
         );
-        if (cosignatories) {
-          // if we have cosignatories
-          signedCreation = this.signerAccount.signTransactionWithCosignatories(
+        if (initiatorAccount.cosignatories) {
+          // if we have cosignatories that needs to sign
+          signedCreation = this.creatorAccount.account.signTransactionWithCosignatories(
             aggregateTransaction,
-            cosignatories);
+            initiatorAccount.cosignatories);
         } else {
-          signedCreation = this.signerAccount.sign(aggregateTransaction);
+          signedCreation = this.creatorAccount.account.sign(aggregateTransaction);
         }
         this.transactions.push(signedCreation);
         this.created = true;
       } else {
         // aggreagte bounded
         // we need a lock transaction
-        if (!multisigAccount) {
-          throw new Error('The multisig account is missing!');
-        }
         const aggregateTransaction = AggregateTransaction.createBonded(
           Deadline.create(),
           [
-            creationTransaction.toAggregate(multisigAccount),
+            creationTransaction.toAggregate(initiatorAccount.multisigAccount),
           ],
           NetworkType.MIJIN_TEST,
           [],
         );
-        if (cosignatories) {
+        if (initiatorAccount.cosignatories) {
           // if we have cosignatories
-          signedCreation = this.signerAccount.signTransactionWithCosignatories(
+          signedCreation = this.creatorAccount.account.signTransactionWithCosignatories(
             aggregateTransaction,
-            cosignatories);
+            initiatorAccount.cosignatories);
         } else {
-          signedCreation = this.signerAccount.sign(aggregateTransaction);
+          signedCreation = this.creatorAccount.account.sign(aggregateTransaction);
         }
+        // the lock need the signed aggregate transaction
         const lockFundsTransaction = LockFundsTransaction.create(
           Deadline.create(),
           XEM.createRelative(10),
           UInt64.fromUint(480),
           signedCreation,
           NetworkType.MIJIN_TEST);
-
-        const signedLock = this.signerAccount.sign(lockFundsTransaction);
+        // we sign the lock and push it along with the aggregate to the transaction arry
+        const signedLock = this.creatorAccount.account.sign(lockFundsTransaction);
         this.transactions.push(signedLock, signedCreation);
         this.created = true;
       }
     } else {
       // the account is a normal account
       if (hashFunction) {
-        this.hash = hashFunction.signedHashing(rawData, initiatorPrivateKey);
+        this.hash = hashFunction.signedHashing(rawData, initiatorAccount.account.privateKey);
         creationTransaction = TransferTransaction.create(
           Deadline.create(),
           Address.createFromRawAddress(this.Apostille.address.plain()),
@@ -164,35 +166,90 @@ class Apostille {
         );
       }
       // push the creation transaction to the transaction array
-      signedCreation = this.signerAccount.sign(creationTransaction)
+      signedCreation = this.creatorAccount.account.sign(creationTransaction);
       this.transactions.push(signedCreation);
     }
     this.created = true;
   }
 
-  public update(message: string, mosaics?: Mosaic[]): void {
+  public async update(
+    initiatorAccount: Initiator,
+    message: string,
+    mosaics: Mosaic[] | Mosaic[] = [],
+  ): Promise<void> {
+    if (initiatorAccount.network !== this.networkType) {
+      throw new Error('Netrowk type miss matched!');
+    }
     if (!this.created) {
-      throw new Error('Apostille not created yet!');
+      // we test locally first to avoid testing on chain evrytime we update
+      await this.isAnnouced(this);
+      if (!this.created) {
+        throw new Error('Apostille not created yet!');
+      }
     }
-    let updateTransaction: TransferTransaction;
-    if (mosaics) {
-      updateTransaction = TransferTransaction.create(
-        Deadline.create(),
-        Address.createFromRawAddress(this.Apostille.address.plain()),
-        mosaics,
-        PlainMessage.create(message),
-        this.networkType,
-      );
-    } else {
-      updateTransaction = TransferTransaction.create(
-        Deadline.create(),
-        Address.createFromRawAddress(this.Apostille.address.plain()),
-        [XEM.createRelative(0)],
-        PlainMessage.create(message),
-        this.networkType,
-      );
+    const updateTransaction = TransferTransaction.create(
+      Deadline.create(),
+      Address.createFromRawAddress(this.Apostille.address.plain()),
+      mosaics,
+      PlainMessage.create(message),
+      this.networkType,
+    );
+    let signedUpdate: SignedTransaction;
+    if (initiatorAccount.multisigAccount) {
+      // we need to wrap the transaction in an aggregate transaction
+      if (initiatorAccount.complete) {
+        // we create an aggregate complete
+        const aggregateTransaction = AggregateTransaction.createComplete(
+          Deadline.create(),
+          [
+            updateTransaction.toAggregate(initiatorAccount.multisigAccount),
+          ],
+          NetworkType.MIJIN_TEST,
+          [],
+        );
+
+        if (initiatorAccount.cosignatories) {
+          // we sign with cosignatories
+          signedUpdate = initiatorAccount.account.signTransactionWithCosignatories(
+            aggregateTransaction,
+            initiatorAccount.cosignatories);
+        } else {
+          signedUpdate = initiatorAccount.account.sign(aggregateTransaction);
+        }
+        this.transactions.push(signedUpdate);
+      } else {
+        // we create aggregate bounded
+        // we need a lock transaction
+        const aggregateTransaction = AggregateTransaction.createBonded(
+          Deadline.create(),
+          [
+            updateTransaction.toAggregate(initiatorAccount.multisigAccount),
+          ],
+          NetworkType.MIJIN_TEST,
+          [],
+        );
+
+        if (initiatorAccount.cosignatories) {
+          // we sign with cosignatories
+          signedUpdate = initiatorAccount.account.signTransactionWithCosignatories(
+            aggregateTransaction,
+            initiatorAccount.cosignatories);
+        } else {
+          signedUpdate = initiatorAccount.account.sign(aggregateTransaction);
+        }
+
+        // the lock need the signed aggregate transaction
+        const lockFundsTransaction = LockFundsTransaction.create(
+          Deadline.create(),
+          XEM.createRelative(10),
+          UInt64.fromUint(480),
+          signedUpdate,
+          NetworkType.MIJIN_TEST);
+        // we sign the lock and push it along with the aggregate to the transaction arry
+        const signedLock = initiatorAccount.account.sign(lockFundsTransaction);
+        this.transactions.push(signedLock, signedUpdate);
+      }
     }
-    this.transactions.push(updateTransaction);
   }
 
   public announce(urls?: string): void {
