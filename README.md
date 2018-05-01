@@ -1,5 +1,5 @@
 # Apostille-library
-[![Build Status](https://travis-ci.org/NEM-Apostille/Apostille-library.svg?branch=master)](https://travis-ci.org/NEM-Apostille/Apostille-library)
+[![Build Status](https://travis-ci.org/NEM-Apostille/Apostille-library.svg?branch=master)](https://travis-ci.org/NEM-Apostille/Apostille-library) [![codecov](https://codecov.io/gh/NEM-Apostille/Apostille-library/branch/master/graph/badge.svg)](https://codecov.io/gh/NEM-Apostille/Apostille-library)
 
 Typescript implementation of Apostille protocol and standards described in the [apostille whitepaper](https://nem.io/wp-content/themes/nem/files/ApostilleWhitePaper.pdf).
 
