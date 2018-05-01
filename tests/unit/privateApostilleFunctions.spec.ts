@@ -7,9 +7,7 @@ const tag = 'NEM is Awesome!';
 const signer = 'aaaaaaaaaaeeeeeeeeeebbbbbbbbbb5555555555dddddddddd1111111111aaee';
 
 // Simulate the file content
-const payload = nem.crypto.js.enc.Utf8.parse('Apostille is awesome !');
-
-
+// const payload = nem.crypto.js.enc.Utf8.parse('Apostille is awesome !');
 
 describe('Getters should work properly', () => {
   const hdAccountInformation = {

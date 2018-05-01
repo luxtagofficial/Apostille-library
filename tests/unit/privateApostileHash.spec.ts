@@ -5,17 +5,17 @@ import { Apostille } from '../../src/Apostille';
 import { SHA256, MD5, SHA1, SHA3256, SHA3512 } from '../../src/hashFunctions';
 
 // prepare hashing object
-const chooseHash = function(hashing) {
+const chooseHash = (hashing) => {
   if (hashing === 'MD5') {
-    return new MD5;
+    return new MD5();
   } else if (hashing === 'SHA1') {
-    return new SHA1;
+    return new SHA1();
   } else if (hashing === 'SHA256') {
-    return new SHA256;
+    return new SHA256();
   } else if (hashing === 'SHA3-256') {
-    return new SHA3256;
+    return new SHA3256();
   } else {
-    return new SHA3512;
+    return new SHA3512();
   }
 };
 

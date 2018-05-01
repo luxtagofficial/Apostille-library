@@ -1,6 +1,6 @@
 {
   "name": "apostille-library",
-  "version": "1.0.0",
+  "version": "0.5.0",
   "description": "Typescript implementation of apostille protocol and standards",
   "keywords": [
     "blockchain",
@@ -14,12 +14,13 @@
     "type": "git",
     "url": "https://github.com/NEM-Apostille/Apostille-library"
   },
-  "main": "index.ts",
+  "main": "dist/index.ts",
   "scripts": {
+    "lint": "tslint -c tslint.json 'src/**/*.ts'",
     "test": "jest --coverage --verbose"
   },
   "author": "gimyboya <amine@luxtag.io>",
-  "license": "Apache-2.0",
+  "license": "MIT",
   "dependencies": {
     "@types/crypto-js": "^3.1.39",
     "@types/lodash": "^4.14.102",
@@ -35,6 +36,9 @@
     "jest": "^22.4.3",
     "ts-jest": "^22.4.2"
   },
+  "files": [
+    "dist"
+  ],
   "jest": {
     "transform": {
       "^.+\\.tsx?$": "ts-jest"

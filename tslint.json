@@ -7,6 +7,7 @@
     "rules": {
         "quotemark": [true, "single"],
         "no-console": false,
+        "ordered-imports": false
     },
     "rulesDirectory": []
 }

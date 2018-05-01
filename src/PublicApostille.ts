@@ -1,4 +1,12 @@
-import { NetworkType, Address, TransferTransaction, Deadline, PlainMessage, XEM, TransactionHttp, Account, NetworkHttp } from 'nem2-sdk';
+import {
+  NetworkType,
+  Address,
+  TransferTransaction,
+  Deadline,
+  PlainMessage,
+  XEM,
+  TransactionHttp,
+  Account } from 'nem2-sdk';
 import { Sinks } from './Sinks';
 import { HashFunction } from './hashFunctions/HashFunction';
 
@@ -7,13 +15,17 @@ class PublicApostille {
   private  hash;
   private announced: boolean = false;
   private creationTransaction: TransferTransaction;
-  constructor(private signerPrivateKey: string, public readonly networkType: NetworkType, sinkAddress?: string) {
+  constructor(
+    private signerPrivateKey: string,
+    public readonly networkType: NetworkType,
+    sinkAddress?: string,
+  ) {
     if (sinkAddress) {
       const newSink = Address.createFromRawAddress(sinkAddress);
       if (newSink.networkType !== networkType) {
         throw new Error('the address is of a wrong network type');
       }
-      this.address = newSink
+      this.address = newSink;
     } else {
       this.address = Address.createFromRawAddress(Sinks[networkType]);
     }
@@ -26,7 +38,7 @@ class PublicApostille {
       this.address,
       [XEM.createRelative(0)],
       PlainMessage.create(this.hash),
-      this.networkType
+      this.networkType,
     );
     this.announced = false;
   }
@@ -59,7 +71,7 @@ class PublicApostille {
         console.log(res);
         this.announced = true;
       },
-      err => console.error(err)
+      (err) => { console.error(err); },
     );
   }
 
