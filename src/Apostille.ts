@@ -22,6 +22,7 @@ import { HashFunction } from './hashFunctions/HashFunction';
 import { Initiator } from './Initiator';
 
 const nem = nemSDK.default;
+// TODO: add tx hash of creation
 class Apostille {
   // TODO: convert this array into signedTransaction one
   private transactions: any[] = [];
@@ -110,6 +111,7 @@ class Apostille {
             aggregateTransaction,
             initiatorAccount.cosignatories);
         } else {
+          // it should be a 1-n account
           signedCreation = this.creatorAccount.account.sign(aggregateTransaction);
         }
         this.transactions.push(signedCreation);
