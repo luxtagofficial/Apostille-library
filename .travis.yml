@@ -3,6 +3,7 @@ language: node_js
 cache:
   directories:
     - node_modules
+    - ~/.npm
 branches:
   only:
     - master
@@ -11,10 +12,10 @@ notifications:
 before_script:
   - npm prune
 script:
-  - npm run cover
-  - npm run check-coverage
+  - npm run validate
   - npm run build
 after_success:
   - npm run report-coverage
-  - npm run semantic-release
+  - npm install -g travis-deploy-once
+  - travis-deploy-once "npm run semantic-release"
   

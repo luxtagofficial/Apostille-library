@@ -13,7 +13,7 @@ import {
   Listener} from 'nem2-sdk';
 import { Sinks } from './Sinks';
 import { HashFunction } from './hashFunctions/HashFunction';
-import { Initiator } from '..';
+import { Initiator } from './Initiator';
 
 // TODO: add tx hash
 

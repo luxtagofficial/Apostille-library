@@ -1,8 +1,9 @@
 import nem from 'nem-sdk';
 import CryptoJS from 'crypto-js';
-import { NetworkType } from 'nem2-sdk';
+import { Account, NetworkType } from 'nem2-sdk';
 import { PublicApostille } from '../../src/PublicApostille';
 import { SHA256, MD5, SHA1, SHA3256, SHA3512 } from '../../src/hashFunctions';
+import { Initiator } from '../../src/Initiator';
 
 // prepare hashing object
 const chooseHash = (hashing) => {
@@ -22,7 +23,7 @@ const chooseHash = (hashing) => {
 const fileName = 'FileName.pdf';
 // A funny but valid private key
 const signer = 'aaaaaaaaaaeeeeeeeeeebbbbbbbbbb5555555555dddddddddd1111111111aaee';
-
+const initiator = new Initiator(Account.createFromPrivateKey(signer, NetworkType.TEST_NET), NetworkType.TEST_NET);
 // Create a common object holding key
 const common = nem.model.objects.create('common')('', signer);
 
@@ -38,9 +39,16 @@ let hashType;
 
 hashArray.forEach(hash => {
   // Create the public Apostille
-  oldPublicApostille = nem.model.apostille.create(common, fileName, fileContent, 'Test Apostille', nem.model.apostille.hashing[hash], false, {}, false, nem.model.network.data.testnet.id);
+  oldPublicApostille = nem.model.apostille.create(
+    common,
+    fileName,
+    fileContent,
+    'Test Apostille',
+    nem.model.apostille.hashing[hash],
+    false, {}, false,
+    nem.model.network.data.testnet.id);
 
-  newPublicApostille = new PublicApostille(signer, NetworkType.TEST_NET);
+  newPublicApostille = new PublicApostille(initiator, fileName, NetworkType.TEST_NET);
 
   hashType = chooseHash(hash);
   newPublicApostille.create(fileContent, hashType);
@@ -54,4 +62,3 @@ hashArray.forEach(hash => {
     });
   });
 });
-

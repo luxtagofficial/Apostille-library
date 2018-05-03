@@ -7,9 +7,9 @@ import { SHA256 } from './hashFunctions';
 const nem = nemSDK.default;
 
 class Verifier {
-  public static VerifiPubluc(fileContent: string, apostille: PublicApostille): boolean;
-  public static VerifiPubluc(fileContent: string, txID: string): boolean;
-
+  public static VerifiPublic(fileContent: string, track: PublicApostille | string): boolean {
+    return true;
+  }
 }
 
 export { Verifier };

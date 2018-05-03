@@ -2,7 +2,8 @@ import { Account, PublicAccount, NetworkType } from 'nem2-sdk';
 
 class Initiator {
   constructor(
-    public readonly account: Account,
+    public readonly account: Account | string,
+    public readonly network: NetworkType,
     public readonly multisigAccount?: PublicAccount,
     private isComplete?: boolean,
     public readonly cosignatories?: Account[],
@@ -11,6 +12,10 @@ class Initiator {
       if (isComplete === undefined) {
         throw new Error('Missing argument "isCompleet"');
       }
+    }
+
+    if (typeof account === 'string') {
+      this.account = Account.createFromPrivateKey(account, network);
     }
   }
 
@@ -22,9 +27,6 @@ class Initiator {
     return false;
   }
 
-  get network(): NetworkType {
-    return this.account.address.networkType;
-  }
 }
 
 export { Initiator };

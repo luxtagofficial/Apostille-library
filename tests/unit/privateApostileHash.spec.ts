@@ -23,7 +23,7 @@ const chooseHash = (hashing) => {
 const seed = 'NEM is Awesome!';
 // A funny but valid private key
 const signer = 'aaaaaaaaaaeeeeeeeeeebbbbbbbbbb5555555555dddddddddd1111111111aaee';
-const initiator = new Initiator(Account.createFromPrivateKey(signer, NetworkType.TEST_NET));
+const initiator = new Initiator(Account.createFromPrivateKey(signer, NetworkType.TEST_NET), NetworkType.TEST_NET);
 
 // Create a common object holding key
 const common = nem.model.objects.create('common')('', signer);
