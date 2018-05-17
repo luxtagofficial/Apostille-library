@@ -1,25 +1,8 @@
 import * as nemSDK from 'nem-sdk';
-import {
-  Account,
-  NetworkType,
-  TransferTransaction,
-  Deadline,
-  Address,
-  XEM,
-  PlainMessage,
-  TransactionHttp,
-  InnerTransaction,
-  AggregateTransaction,
-  Mosaic,
-  PublicAccount,
-  SignedTransaction,
-  AccountHttp,
-  QueryParams,
-  UInt64,
-  LockFundsTransaction} from 'nem2-sdk';
+import { Account, AccountHttp, Address, AggregateTransaction, Deadline, InnerTransaction, LockFundsTransaction, Mosaic, NetworkType, PlainMessage, PublicAccount, QueryParams, SignedTransaction, TransactionHttp, TransferTransaction, UInt64, XEM } from 'nem2-sdk';
+import { Initiator } from './Initiator';
 import { SHA256 } from './hashFunctions';
 import { HashFunction } from './hashFunctions/HashFunction';
-import { Initiator } from './Initiator';
 
 const nem = nemSDK.default;
 // TODO: add tx hash of creation
@@ -69,32 +52,30 @@ class Apostille {
     this.creatorAccount = initiatorAccount;
     let creationTransaction: TransferTransaction;
     let signedCreation: SignedTransaction;
+    // first we create the creation transaction as a transfer transaction
+    if (hashFunction) {
+      // for digital files it's a good idea to hash the content of the file
+      // but can be used for other types of information for real life assets
+      this.hash = hashFunction.signedHashing(rawData, initiatorAccount.account.privateKey);
+      creationTransaction = TransferTransaction.create(
+        Deadline.create(),
+        Address.createFromRawAddress(this.Apostille.address.plain()),
+        mosaics,
+        PlainMessage.create(this.hash),
+        this.networkType,
+      );
+    } else {
+      creationTransaction = TransferTransaction.create(
+        Deadline.create(),
+        Address.createFromRawAddress(this.Apostille.address.plain()),
+        mosaics,
+        PlainMessage.create(rawData),
+        this.networkType,
+      );
+    }
     if (initiatorAccount.multisigAccount) {
       // the sender is a multisig account
       // we need to wrap the transaction in an aggregate transaction
-      // first we create the creation transaction as a transfer transaction
-      if (hashFunction) {
-        // for digital files it's a good idea to hash the content of the file
-        // but can be used for other types of information for real life assets
-        this.hash = hashFunction.signedHashing(rawData, initiatorAccount.account.privateKey);
-        creationTransaction = TransferTransaction.create(
-          Deadline.create(),
-          Address.createFromRawAddress(this.Apostille.address.plain()),
-          mosaics,
-          PlainMessage.create(this.hash),
-          this.networkType,
-        );
-      } else {
-        // the data can be sent without being hashed
-        creationTransaction = TransferTransaction.create(
-          Deadline.create(),
-          Address.createFromRawAddress(this.Apostille.address.plain()),
-          mosaics,
-          PlainMessage.create(rawData),
-          this.networkType,
-        );
-      }
-      // we wrap the creation transaction in an aggreagte transaction
       if (initiatorAccount.complete) {
         // aggregate complete
         const aggregateTransaction = AggregateTransaction.createComplete(
@@ -149,26 +130,8 @@ class Apostille {
       }
     } else {
       // the account is a normal account
-      if (hashFunction) {
-        this.hash = hashFunction.signedHashing(rawData, initiatorAccount.account.privateKey);
-        creationTransaction = TransferTransaction.create(
-          Deadline.create(),
-          Address.createFromRawAddress(this.Apostille.address.plain()),
-          mosaics,
-          PlainMessage.create(this.hash),
-          this.networkType,
-        );
-      } else {
-        creationTransaction = TransferTransaction.create(
-          Deadline.create(),
-          Address.createFromRawAddress(this.Apostille.address.plain()),
-          mosaics,
-          PlainMessage.create(rawData),
-          this.networkType,
-        );
-      }
-      // push the creation transaction to the transaction array
       signedCreation = this.creatorAccount.account.sign(creationTransaction);
+      // push the creation transaction to the transaction array
       this.transactions.push(signedCreation);
     }
     this.created = true;
@@ -189,6 +152,7 @@ class Apostille {
         throw new Error('Apostille not created yet!');
       }
     }
+    // we create the update transaction
     const updateTransaction = TransferTransaction.create(
       Deadline.create(),
       Address.createFromRawAddress(this.Apostille.address.plain()),
@@ -216,6 +180,7 @@ class Apostille {
             aggregateTransaction,
             initiatorAccount.cosignatories);
         } else {
+          // it's a 1-1 multisig
           signedUpdate = initiatorAccount.account.sign(aggregateTransaction);
         }
         this.transactions.push(signedUpdate);
@@ -251,14 +216,20 @@ class Apostille {
         const signedLock = initiatorAccount.account.sign(lockFundsTransaction);
         this.transactions.push(signedLock, signedUpdate);
       }
+    } else {
+      // it's a normal account
+      signedUpdate = initiatorAccount.account.sign(updateTransaction);
+      // push the update transaction to the transaction array
+      this.transactions.push(signedUpdate);
     }
   }
 
-  public announce(urls?: string): void {
+  public async announce(urls?: string): Promise<void> {
     // TODO: check transaction types
     // if transfer transaction keep piling them in an aggregate
     // if aggregate complete announce alone
     // if lock fund then fetch the next aggregate transaction (should be bounded) and announce them
+    await this.isAnnouced(this);
     if (!this.created) {
       throw new Error('Apostille not created yet!');
     }
@@ -342,7 +313,8 @@ class Apostille {
     return this.hash;
   }
 
-  get isCreated(): boolean {
+  public async isCreated(): Promise<boolean> {
+    await this.isAnnouced(this);
     return this.created;
   }
 
