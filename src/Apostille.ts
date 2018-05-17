@@ -180,7 +180,7 @@ class Apostille {
             aggregateTransaction,
             initiatorAccount.cosignatories);
         } else {
-          // it's a 1-1 multisig
+          // it's a 1-n multisig
           signedUpdate = initiatorAccount.account.sign(aggregateTransaction);
         }
         this.transactions.push(signedUpdate);

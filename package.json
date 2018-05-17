@@ -18,7 +18,9 @@
   "scripts": {
     "commit": "git-cz",
     "prebuild": "rimraf dist",
+    "prebuild:watch": "rimraf dist",
     "build": "tsc",
+    "build:watch": "tsc --watch",
     "lint": "tslint -c tslint.json 'src/**/*.ts'",
     "test": "jest --coverage --verbose",
     "validate": "npm-run-all --parallel lint test",
