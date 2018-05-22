@@ -1,9 +1,9 @@
-import nem from 'nem-sdk';
 import CryptoJS from 'crypto-js';
-import { NetworkType, Account, Mosaic } from 'nem2-sdk';
+import nem from 'nem-sdk';
+import { Account, NetworkType } from 'nem2-sdk';
 import { Apostille } from '../../src/Apostille';
-import { SHA256, MD5, SHA1, SHA3256, SHA3512 } from '../../src/hashFunctions';
 import { Initiator } from '../../src/Initiator';
+import { MD5, SHA1, SHA256, SHA3256, SHA3512 } from '../../src/hashFunctions';
 
 // prepare hashing object
 const chooseHash = (hashing) => {
@@ -54,11 +54,11 @@ hashArray.forEach((hash) => {
 
   describe('private apostille hash should be correct', () => {
     it(`should generate correct signed checksum with ${hash}`, () => {
-      expect(newPrivateApostille.apostilleHash.substring(0, 10)).toMatch(oldPrivateApostille.data.checksum);
+      expect(newPrivateApostille.creationHash.substring(0, 10)).toMatch(oldPrivateApostille.data.checksum);
     });
 
     it(`should generate correct hash with ${hash}`, () => {
-      expect(newPrivateApostille.apostilleHash).toMatch(oldPrivateApostille.data.hash);
+      expect(newPrivateApostille.creationHash).toMatch(oldPrivateApostille.data.hash);
     });
   });
 });

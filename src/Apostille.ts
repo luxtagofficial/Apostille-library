@@ -190,6 +190,9 @@ class Apostille {
         readyTransfer.push(readyTransaction);
       } else if (readyTransaction.type === TransactionType.AGGREGATE_COMPLETE) {
         // if aggregate complete check if trensfer transaction has transaction to announce
+        if (!readyTransaction.initiator.multisigAccount) {
+          throw Error('This aggregate compleet needs a multisig account');
+        }
         if (readyTransfer.length > 0) {
           this.announceTransfer(readyTransfer, transactionHttp);
           readyTransfer = [];
@@ -218,6 +221,9 @@ class Apostille {
           (err) => console.error(err));
 
       } else if (readyTransaction.type === TransactionType.AGGREGATE_BONDED) {
+        if (!readyTransaction.initiator.multisigAccount) {
+          throw Error('This aggregate bounded needs a multisig account');
+        }
         if (readyTransfer.length > 0) {
           this.announceTransfer(readyTransfer, transactionHttp);
           readyTransfer = [];
@@ -288,7 +294,7 @@ class Apostille {
     return this.Apostille.address;
   }
 
-  get hashSigner(): PublicAccount {
+  get generator(): PublicAccount {
     return this.generatorAccount.publicAccount;
   }
 
@@ -296,8 +302,15 @@ class Apostille {
     return PublicAccount.createFromPublicKey(this.publicKey, this.networkType);
   }
 
-  get apostilleHash(): string {
+  get creationHash(): string | undefined {
     return this.hash;
+  }
+
+  get creator(): Account | PublicAccount | undefined {
+    if (this.creatorAccount.multisigAccount) {
+      return this.creatorAccount.multisigAccount;
+    }
+    return this.creatorAccount.acccount;
   }
 
   public async isCreated(): Promise<boolean> {
