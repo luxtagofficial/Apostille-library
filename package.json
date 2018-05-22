@@ -14,7 +14,8 @@
     "type": "git",
     "url": "https://github.com/NEM-Apostille/Apostille-library"
   },
-  "main": "dist/index.ts",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
   "scripts": {
     "commit": "git-cz",
     "prebuild": "rimraf dist",
@@ -29,6 +30,20 @@
     "semantic-release": "semantic-release"
   },
   "author": "gimyboya <amine@luxtag.io>",
+  "contributors": [
+    {
+      "name": "gimyboya",
+      "email": "amine@luxtag.io"
+    },
+    {
+      "name": "aiz",
+      "email": "aiz@luxtag.io"
+    },
+    {
+      "name": "jeff",
+      "email": "jeff@luxtag.io"
+    }
+  ],
   "license": "MIT",
   "dependencies": {
     "@types/crypto-js": "^3.1.39",
