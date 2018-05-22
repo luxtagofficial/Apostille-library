@@ -72,6 +72,11 @@
     "typescript": "^2.8.3",
     "validate-commit-msg": "^2.14.0"
   },
+  "peerDependencies": {
+    "nem2-sdk": "^0.9.2",
+    "nem-sdk": "^1.6.4",
+    "rxjs": "^5.5.2"
+  },
   "files": [
     "dist"
   ],
