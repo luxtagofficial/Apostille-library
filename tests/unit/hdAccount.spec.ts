@@ -13,9 +13,15 @@ const common = nem.model.objects.create('common')('', signer);
 const payload = nem.crypto.js.enc.Utf8.parse('Apostille is awesome !');
 
 // Create the Apostille
-let oldPrivateApostille = nem.model.apostille.create(common, 'NEM is Awesome!', payload, 'Test Apostille', nem.model.apostille.hashing['SHA256'], false, {}, true, nem.model.network.data.testnet.id);
+const oldPrivateApostille = nem.model.apostille.create(
+  common,
+  'NEM is Awesome!',
+  payload, 'Test Apostille',
+  nem.model.apostille.hashing['SHA256'],
+  false, {}, true,
+  nem.model.network.data.testnet.id);
 
-let newPrivateApostille = new Apostille(tag, signer, NetworkType.TEST_NET);
+const newPrivateApostille = new Apostille(tag, signer, NetworkType.TEST_NET);
 
 describe('HD account generation should be correct', () => {
   it('private key should be valid', () => {
@@ -27,6 +33,8 @@ describe('HD account generation should be correct', () => {
   });
 
   it('should generate the same HD account as old apostille', () => {
-    expect(oldPrivateApostille.data.dedicatedAccount.privateKey.toUpperCase() === newPrivateApostille.privateKey).toBeTruthy();
+    expect(
+      oldPrivateApostille.data.dedicatedAccount.privateKey.toUpperCase() === newPrivateApostille.privateKey
+    ).toBeTruthy();
   });
 });

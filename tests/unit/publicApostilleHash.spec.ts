@@ -1,9 +1,9 @@
-import nem from 'nem-sdk';
 import CryptoJS from 'crypto-js';
+import nem from 'nem-sdk';
 import { Account, NetworkType } from 'nem2-sdk';
-import { PublicApostille } from '../../src/PublicApostille';
-import { SHA256, MD5, SHA1, SHA3256, SHA3512 } from '../../src/hashFunctions';
 import { Initiator } from '../../src/Initiator';
+import { PublicApostille } from '../../src/PublicApostille';
+import { MD5, SHA1, SHA256, SHA3256, SHA3512 } from '../../src/hashFunctions';
 
 // prepare hashing object
 const chooseHash = (hashing) => {
@@ -36,8 +36,7 @@ let oldPublicApostille;
 let newPublicApostille;
 let hashType;
 
-
-hashArray.forEach(hash => {
+hashArray.forEach((hash) => {
   // Create the public Apostille
   oldPublicApostille = nem.model.apostille.create(
     common,

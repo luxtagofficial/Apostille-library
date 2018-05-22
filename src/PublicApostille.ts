@@ -1,19 +1,7 @@
-import {
-  NetworkType,
-  Address,
-  TransferTransaction,
-  Deadline,
-  PlainMessage,
-  XEM,
-  TransactionHttp,
-  AggregateTransaction,
-  SignedTransaction,
-  LockFundsTransaction,
-  UInt64,
-  Listener} from 'nem2-sdk';
+import { Address, AggregateTransaction, Deadline, Listener, LockFundsTransaction, NetworkType, PlainMessage, SignedTransaction, TransactionHttp, TransferTransaction, UInt64, XEM } from 'nem2-sdk';
+import { Initiator } from './Initiator';
 import { Sinks } from './Sinks';
 import { HashFunction } from './hashFunctions/HashFunction';
-import { Initiator } from './Initiator';
 
 // TODO: add tx hash
 
@@ -142,7 +130,7 @@ class PublicApostille {
           NetworkType.MIJIN_TEST);
 
         const signedLock = this.initiatorAccount.account.sign(lockFundsTransaction);
-
+        // we announce the signed lock and then the creation transaction
         listener.open().then(() => {
 
           transactionHttp.announce(signedLock).subscribe(
@@ -152,7 +140,7 @@ class PublicApostille {
           listener.confirmed(this.initiatorAccount.account.address)
               .filter((transaction) => transaction.transactionInfo !== undefined
                   && transaction.transactionInfo.hash === signedLock.hash)
-              .flatMap((ignored) => transactionHttp.announceAggregateBonded(signedCreation))
+              .flatMap(() => transactionHttp.announceAggregateBonded(signedCreation))
               .subscribe(
                 (announcedAggregateBonded) => console.log(announcedAggregateBonded),
                 (err) => console.error(err));
@@ -161,6 +149,7 @@ class PublicApostille {
     } else {
       // it's a normal account
       signedCreation = this.initiatorAccount.account.sign(this.creationTransaction);
+      // we announce the transaction
       transactionHttp.announce(signedCreation).subscribe(
         (res) => {
           console.log(res);
