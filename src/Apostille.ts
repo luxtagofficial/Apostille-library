@@ -1,5 +1,5 @@
 import * as nemSDK from 'nem-sdk';
-import { Account, AccountHttp, Address, AggregateTransaction, Deadline, InnerTransaction, Listener, LockFundsTransaction, Mosaic, NetworkType, PlainMessage, PublicAccount, QueryParams, SignedTransaction, TransactionHttp, TransactionType, TransferTransaction, UInt64, XEM } from 'nem2-sdk';
+import { Account, AccountHttp, Address, AggregateTransaction, Deadline, InnerTransaction, Listener, LockFundsTransaction, ModifyMultisigAccountTransaction, Mosaic, MultisigCosignatoryModification, MultisigCosignatoryModificationType, NetworkType, PlainMessage, PublicAccount, QueryParams, SignedTransaction, TransactionHttp, TransactionType, TransferTransaction, UInt64, XEM } from 'nem2-sdk';
 import { Initiator } from './Initiator';
 import { IReadyTransaction } from './ReadyTransaction';
 import { SHA256 } from './hashFunctions';
@@ -156,6 +156,31 @@ class Apostille {
     this.transactions.push(readyUpdate);
   }
 
+  public own(owners: PublicAccount[], quorum: number, minRemoval: number): void {
+    const modifications: MultisigCosignatoryModification[] = [];
+    owners.forEach((cosignatory) => {
+      modifications.push(
+        new MultisigCosignatoryModification(
+          MultisigCosignatoryModificationType.Add,
+          cosignatory));
+    });
+    const multisigCreation = ModifyMultisigAccountTransaction.create(
+      Deadline.create(),
+      quorum,
+      minRemoval,
+      modifications,
+      this.networkType,
+    );
+
+    const apostilleAccount = new Initiator(this.Apostille, this.networkType);
+    const readyModification: IReadyTransaction = {
+       initiator: apostilleAccount,
+       transaction: multisigCreation,
+       type: TransactionType.MODIFY_MULTISIG_ACCOUNT,
+    };
+    this.transactions.push(readyModification);
+  }
+
   public async announce(urls?: string): Promise<void> {
     await this.isAnnouced(this);
     if (!this.created) {
@@ -185,7 +210,8 @@ class Apostille {
     }
     let readyTransfer: IReadyTransaction[] = [];
     this.transactions.forEach((readyTransaction) => {
-      if (readyTransaction.type === TransactionType.TRANSFER) {
+      if (readyTransaction.type === TransactionType.TRANSFER
+          || readyTransaction.type === TransactionType.MODIFY_MULTISIG_ACCOUNT) {
         // if transfer transaction keep piling them in for an aggregate aggregate
         readyTransfer.push(readyTransaction);
       } else if (readyTransaction.type === TransactionType.AGGREGATE_COMPLETE) {
