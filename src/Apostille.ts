@@ -5,6 +5,7 @@ import { IReadyTransaction } from './ReadyTransaction';
 import { SHA256 } from './hashFunctions';
 import { HashFunction } from './hashFunctions/HashFunction';
 import uniqBy = require('lodash/uniqBy');
+import drop = require('lodash/drop');
 
 const nem = nemSDK.default;
 // TODO: add tx hash of creation
@@ -178,6 +179,69 @@ class Apostille {
        transaction: multisigCreation,
        type: TransactionType.MODIFY_MULTISIG_ACCOUNT,
     };
+    this.transactions.push(readyModification);
+  }
+
+  public transfer(signers: Account[],
+                  complete: boolean,
+                  newOwners: PublicAccount[],
+                  OwnersToRemove: PublicAccount[],
+                  quorumDelta: number,
+                  minRemovalDelta: number,
+  ): void {
+    // the initiator must be a multisig account
+    const modifications: MultisigCosignatoryModification[] = [];
+    newOwners.forEach((cosignatory) => {
+      modifications.push(
+        new MultisigCosignatoryModification(
+          MultisigCosignatoryModificationType.Add,
+          cosignatory));
+    });
+    OwnersToRemove.forEach((cosignatory) => {
+      modifications.push(
+        new MultisigCosignatoryModification(
+          MultisigCosignatoryModificationType.Remove,
+          cosignatory));
+    });
+    const multisigCreation = ModifyMultisigAccountTransaction.create(
+      Deadline.create(),
+      quorumDelta,
+      minRemovalDelta,
+      modifications,
+      this.networkType,
+    );
+    let initiatorApostille: Initiator;
+    const cosignatories = drop(signers);
+    let readyModification: IReadyTransaction;
+    if (complete) {
+      // create an incomplete initiator
+      initiatorApostille = new Initiator(
+        signers[0],
+        this.networkType,
+        this.Apostille.publicAccount,
+        true,
+        cosignatories);
+      // we prepare the ready transaction
+      readyModification = {
+        initiator: initiatorApostille,
+        transaction: multisigCreation,
+        type: TransactionType.AGGREGATE_COMPLETE,
+      };
+    } else {
+      // create a compleet initiator
+      initiatorApostille = new Initiator(
+        signers[0],
+        this.networkType,
+        this.Apostille.publicAccount,
+        false,
+        cosignatories);
+      // we prepare the ready transaction
+      readyModification = {
+        initiator: initiatorApostille,
+        transaction: multisigCreation,
+        type: TransactionType.AGGREGATE_BONDED,
+      };
+    }
     this.transactions.push(readyModification);
   }
 
