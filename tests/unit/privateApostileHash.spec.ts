@@ -3,7 +3,7 @@ import nem from 'nem-sdk';
 import { Account, NetworkType } from 'nem2-sdk';
 import { Apostille } from '../../src/Apostille';
 import { Initiator } from '../../src/Initiator';
-import { MD5, SHA1, SHA256, SHA3256, SHA3512 } from '../../src/hashFunctions';
+import { KECCAK256, KECCAK512, MD5, SHA1, SHA256 } from '../../src/hashFunctions';
 
 // prepare hashing object
 const chooseHash = (hashing) => {
@@ -14,9 +14,9 @@ const chooseHash = (hashing) => {
   } else if (hashing === 'SHA256') {
     return new SHA256();
   } else if (hashing === 'SHA3-256') {
-    return new SHA3256();
+    return new KECCAK256();
   } else {
-    return new SHA3512();
+    return new KECCAK512();
   }
 };
 

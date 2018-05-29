@@ -4,7 +4,7 @@ import { HashFunction } from './HashFunction';
 
 const nem = nemSDK.default;
 
-export class SHA3256 extends HashFunction {
+export class KECCAK256 extends HashFunction {
   constructor() {
     super('08', '88');
   }

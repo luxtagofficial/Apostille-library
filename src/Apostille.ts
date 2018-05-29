@@ -1,10 +1,11 @@
 import * as nemSDK from 'nem-sdk';
-import { Account, AccountHttp, Address, AggregateTransaction, Deadline, InnerTransaction, Listener, LockFundsTransaction, Mosaic, NetworkType, PlainMessage, PublicAccount, QueryParams, SignedTransaction, TransactionHttp, TransactionType, TransferTransaction, UInt64, XEM } from 'nem2-sdk';
+import { Account, AccountHttp, Address, AggregateTransaction, Deadline, InnerTransaction, Listener, LockFundsTransaction, ModifyMultisigAccountTransaction, Mosaic, MultisigCosignatoryModification, MultisigCosignatoryModificationType, NetworkType, PlainMessage, PublicAccount, QueryParams, SignedTransaction, TransactionHttp, TransactionType, TransferTransaction, UInt64, XEM } from 'nem2-sdk';
 import { Initiator } from './Initiator';
 import { IReadyTransaction } from './ReadyTransaction';
 import { SHA256 } from './hashFunctions';
 import { HashFunction } from './hashFunctions/HashFunction';
 import uniqBy = require('lodash/uniqBy');
+import drop = require('lodash/drop');
 
 const nem = nemSDK.default;
 // TODO: add tx hash of creation
@@ -156,6 +157,94 @@ class Apostille {
     this.transactions.push(readyUpdate);
   }
 
+  public own(owners: PublicAccount[], quorum: number, minRemoval: number): void {
+    const modifications: MultisigCosignatoryModification[] = [];
+    owners.forEach((cosignatory) => {
+      modifications.push(
+        new MultisigCosignatoryModification(
+          MultisigCosignatoryModificationType.Add,
+          cosignatory));
+    });
+    const multisigCreation = ModifyMultisigAccountTransaction.create(
+      Deadline.create(),
+      quorum,
+      minRemoval,
+      modifications,
+      this.networkType,
+    );
+
+    const apostilleAccount = new Initiator(this.Apostille, this.networkType);
+    const readyModification: IReadyTransaction = {
+       initiator: apostilleAccount,
+       transaction: multisigCreation,
+       type: TransactionType.MODIFY_MULTISIG_ACCOUNT,
+    };
+    this.transactions.push(readyModification);
+  }
+
+  public transfer(signers: Account[],
+                  complete: boolean,
+                  newOwners: PublicAccount[],
+                  OwnersToRemove: PublicAccount[],
+                  quorumDelta: number,
+                  minRemovalDelta: number,
+  ): void {
+    // the initiator must be a multisig account
+    const modifications: MultisigCosignatoryModification[] = [];
+    newOwners.forEach((cosignatory) => {
+      modifications.push(
+        new MultisigCosignatoryModification(
+          MultisigCosignatoryModificationType.Add,
+          cosignatory));
+    });
+    OwnersToRemove.forEach((cosignatory) => {
+      modifications.push(
+        new MultisigCosignatoryModification(
+          MultisigCosignatoryModificationType.Remove,
+          cosignatory));
+    });
+    const multisigCreation = ModifyMultisigAccountTransaction.create(
+      Deadline.create(),
+      quorumDelta,
+      minRemovalDelta,
+      modifications,
+      this.networkType,
+    );
+    let initiatorApostille: Initiator;
+    const cosignatories = drop(signers);
+    let readyModification: IReadyTransaction;
+    if (complete) {
+      // create an incomplete initiator
+      initiatorApostille = new Initiator(
+        signers[0],
+        this.networkType,
+        this.Apostille.publicAccount,
+        true,
+        cosignatories);
+      // we prepare the ready transaction
+      readyModification = {
+        initiator: initiatorApostille,
+        transaction: multisigCreation,
+        type: TransactionType.AGGREGATE_COMPLETE,
+      };
+    } else {
+      // create a compleet initiator
+      initiatorApostille = new Initiator(
+        signers[0],
+        this.networkType,
+        this.Apostille.publicAccount,
+        false,
+        cosignatories);
+      // we prepare the ready transaction
+      readyModification = {
+        initiator: initiatorApostille,
+        transaction: multisigCreation,
+        type: TransactionType.AGGREGATE_BONDED,
+      };
+    }
+    this.transactions.push(readyModification);
+  }
+
   public async announce(urls?: string): Promise<void> {
     await this.isAnnouced(this);
     if (!this.created) {
@@ -185,7 +274,8 @@ class Apostille {
     }
     let readyTransfer: IReadyTransaction[] = [];
     this.transactions.forEach((readyTransaction) => {
-      if (readyTransaction.type === TransactionType.TRANSFER) {
+      if (readyTransaction.type === TransactionType.TRANSFER
+          || readyTransaction.type === TransactionType.MODIFY_MULTISIG_ACCOUNT) {
         // if transfer transaction keep piling them in for an aggregate aggregate
         readyTransfer.push(readyTransaction);
       } else if (readyTransaction.type === TransactionType.AGGREGATE_COMPLETE) {
