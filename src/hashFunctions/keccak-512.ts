@@ -4,7 +4,7 @@ import { HashFunction } from './HashFunction';
 
 const nem = nemSDK.default;
 
-export class SHA3512 extends HashFunction {
+export class KECCAK512 extends HashFunction {
   constructor() {
     super('09', '89');
   }
