@@ -1,9 +1,9 @@
 import CryptoJS from 'crypto-js';
 import nem from 'nem-sdk';
 import { Account, NetworkType } from 'nem2-sdk';
-import { Apostille } from '../../src/Apostille';
-import { Initiator } from '../../src/Initiator';
-import { KECCAK256, KECCAK512, MD5, SHA1, SHA256 } from '../../src/hashFunctions';
+import { Apostille } from '../../../index';
+import { Initiator } from '../../../index';
+import { KECCAK256, KECCAK512, MD5, SHA1, SHA256 } from '../../../index';
 
 // prepare hashing object
 const chooseHash = (hashing) => {

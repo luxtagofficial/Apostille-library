@@ -1,8 +1,5 @@
-// TODO: test isCreated and isAnnounced
-// TODO: test account getters Generator Account, HD Account and Signer (creator) Account
-import nem from 'nem-sdk';
 import { NetworkType } from 'nem2-sdk';
-import { Apostille } from '../../src/Apostille';
+import { Apostille } from '../../../index';
 
 const tag = 'NEM is Awesome!';
 // A funny but valid private key

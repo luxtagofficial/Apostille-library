@@ -1,6 +1,6 @@
 import nem from 'nem-sdk';
 import { NetworkType } from 'nem2-sdk';
-import { Apostille } from '../../src/Apostille';
+import { Apostille } from '../../../index';
 
 const tag = 'NEM is Awesome!';
 // A funny but valid private key
@@ -17,6 +17,7 @@ const oldPrivateApostille = nem.model.apostille.create(
   common,
   'NEM is Awesome!',
   payload, 'Test Apostille',
+  // tslint:disable-next-line:no-string-literal
   nem.model.apostille.hashing['SHA256'],
   false, {}, true,
   nem.model.network.data.testnet.id);
