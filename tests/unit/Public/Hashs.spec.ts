@@ -48,7 +48,7 @@ hashArray.forEach((hash) => {
   newPublicApostille = new PublicApostille(initiator, fileName, NetworkType.TEST_NET);
 
   hashType = chooseHash(hash);
-  newPublicApostille.create(fileContent, hashType);
+  newPublicApostille.update(fileContent, hashType);
 
   describe('Public apostille hashes should be correct', () => {
     it(`should generate correct non-signed checksum with ${hash}`, () => {

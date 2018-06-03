@@ -1,9 +1,7 @@
 import CryptoJS from 'crypto-js';
 import nem from 'nem-sdk';
 import { Account, NetworkType } from 'nem2-sdk';
-import { Apostille } from '../../../index';
-import { Initiator } from '../../../index';
-import { KECCAK256, KECCAK512, MD5, SHA1, SHA256 } from '../../../index';
+import { Apostille, Initiator, KECCAK256, KECCAK512, MD5, SHA1, SHA256 } from '../../../index';
 
 // prepare hashing object
 const chooseHash = (hashing) => {
@@ -22,11 +20,12 @@ const chooseHash = (hashing) => {
 
 const seed = 'NEM is Awesome!';
 // A funny but valid private key
-const signer = 'aaaaaaaaaaeeeeeeeeeebbbbbbbbbb5555555555dddddddddd1111111111aaee';
-const initiator = new Initiator(Account.createFromPrivateKey(signer, NetworkType.TEST_NET), NetworkType.TEST_NET);
+const sk = 'aaaaaaaaaaeeeeeeeeeebbbbbbbbbb5555555555dddddddddd1111111111aaee';
+const generator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
+const initiator = new Initiator(generator, NetworkType.TEST_NET);
 
 // Create a common object holding key
-const common = nem.model.objects.create('common')('', signer);
+const common = nem.model.objects.create('common')('', sk);
 
 // Simulate the file content
 const payload = CryptoJS.enc.Utf8.parse('Private apostille is awesome !');
@@ -47,7 +46,7 @@ hashArray.forEach((hash) => {
     false, {}, true,
     nem.model.network.data.testnet.id);
 
-  newPrivateApostille = new Apostille(seed, signer, NetworkType.TEST_NET);
+  newPrivateApostille = new Apostille(seed, generator, NetworkType.TEST_NET);
 
   hashType = chooseHash(hash);
   newPrivateApostille.create(initiator, payload, [], hashType);
