@@ -392,10 +392,14 @@ class Apostille {
   }
 
   get creator(): Account | PublicAccount | undefined {
-    if (this.creatorAccount.multisigAccount) {
-      return this.creatorAccount.multisigAccount;
+    if (this.creatorAccount) {
+      if (this.creatorAccount.multisigAccount) {
+        return this.creatorAccount.multisigAccount;
+      } else {
+        return this.creatorAccount.account;
+      }
     }
-    return this.creatorAccount.acccount;
+    return undefined;
   }
 
   public async isCreated(): Promise<boolean> {
