@@ -15,20 +15,15 @@ class Apostille {
   private Apostille: Account = new Account();
   private created: boolean = false;
   private creationAnnounced: boolean = false;
-  private generatorAccount: Account = new Account();
   private creatorAccount;
   private hash;
 
   constructor(
     public readonly seed: string,
-    private genratorPrivateKey: string,
+    private generatorAccount: Account,
     public readonly networkType: NetworkType,
   ) {
-    if (!nem.utils.helpers.isPrivateKeyValid(genratorPrivateKey)) {
-      throw new Error('!invalid private key');
-    }
-    const keyPair = nem.crypto.keyPair.create(this.genratorPrivateKey);
-    this.generatorAccount = Account.createFromPrivateKey(this.genratorPrivateKey, this.networkType);
+    const keyPair = nem.crypto.keyPair.create(generatorAccount.privateKey);
     // hash the seed for the apostille account
     const hashSeed = SHA256.hash(this.seed);
     // signe the hashed seed to get the private key
