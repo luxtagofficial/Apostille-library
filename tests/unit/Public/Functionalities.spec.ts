@@ -1,11 +1,16 @@
 import CryptoJS from 'crypto-js';
 import { Account, NetworkType } from 'nem2-sdk';
+import sinon from 'sinon';
 import { Initiator, PublicApostille, SHA256 } from '../../../index';
 
 const fileName = 'FileName.pdf';
 // A funny but valid private key
 const pk = 'aaaaaaaaaaeeeeeeeeeebbbbbbbbbb5555555555dddddddddd1111111111aaee';
 const signer = Account.createFromPrivateKey(pk, NetworkType.MIJIN_TEST);
+
+beforeAll(() => {
+  jest.setTimeout(10000);
+});
 
 describe('constructor of public apostilee should work properly', () => {
   it('should throw error if network type of initiator and sink address dont match', () => {
@@ -80,9 +85,21 @@ describe('announce function should work properly', () => {
     await publicApostille.announce();
     publicApostille.update(CryptoJS.enc.Utf8.parse('Public apostille can be updated'), hashFunction);
     await publicApostille.announce();
-    publicApostille.update(CryptoJS.enc.Utf8.parse('Public apostille will be updated'), hashFunction);
-    await publicApostille.announce();
     publicApostille.update(CryptoJS.enc.Utf8.parse('as many times as we want'), hashFunction);
     await publicApostille.announce();
+  });
+
+  test('announce should work properly', async () => {
+    const stubannounce = sinon.stub(PublicApostille.prototype, 'announce');
+    const initiator = new Initiator(signer, NetworkType.MIJIN_TEST);
+    const publicApostille = new PublicApostille(
+      initiator,
+      fileName,
+      NetworkType.MIJIN_TEST,
+      'SCKPEZ-5ZAPYO-PXVF6U-YLHINF-CLYZHO-YCIO3P-KGVV');
+
+    publicApostille.update(CryptoJS.enc.Utf8.parse('Public apostille is awesome !'), hashFunction);
+    await publicApostille.announce();
+    expect(stubannounce.called).toBeTruthy();
   });
 });

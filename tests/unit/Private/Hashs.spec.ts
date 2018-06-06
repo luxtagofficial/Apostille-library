@@ -3,25 +3,10 @@ import nem from 'nem-sdk';
 import { Account, NetworkType } from 'nem2-sdk';
 import { Apostille, Initiator, KECCAK256, KECCAK512, MD5, SHA1, SHA256 } from '../../../index';
 
-// prepare hashing object
-const chooseHash = (hashing) => {
-  if (hashing === 'MD5') {
-    return new MD5();
-  } else if (hashing === 'SHA1') {
-    return new SHA1();
-  } else if (hashing === 'SHA256') {
-    return new SHA256();
-  } else if (hashing === 'SHA3-256') {
-    return new KECCAK256();
-  } else {
-    return new KECCAK512();
-  }
-};
-
 const seed = 'NEM is Awesome!';
 // A funny but valid private key
 const sk = 'aaaaaaaaaaeeeeeeeeeebbbbbbbbbb5555555555dddddddddd1111111111aaee';
-const generator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
+const generator = Account.createFromPrivateKey(sk, NetworkType.TEST_NET);
 const initiator = new Initiator(generator, NetworkType.TEST_NET);
 
 // Create a common object holding key
@@ -32,32 +17,167 @@ const payload = CryptoJS.enc.Utf8.parse('Private apostille is awesome !');
 
 /*** Test for MD5, SHA1, SHA256, SHA3-256, SHA3-512 ***/
 const hashArray = ['MD5', 'SHA1', 'SHA256', 'SHA3-256', 'SHA3-512'];
-let oldPrivateApostille;
-let newPrivateApostille;
-let hashType;
-hashArray.forEach((hash) => {
-  // Create the Apostille
-  oldPrivateApostille = nem.model.apostille.create(
-    common,
-    seed,
-    payload,
-    'Test Apostille',
-    nem.model.apostille.hashing[hash],
-    false, {}, true,
-    nem.model.network.data.testnet.id);
 
-  newPrivateApostille = new Apostille(seed, generator, NetworkType.TEST_NET);
+describe('private apostille hash should be correct', () => {
 
-  hashType = chooseHash(hash);
-  newPrivateApostille.create(initiator, payload, [], hashType);
-
-  describe('private apostille hash should be correct', () => {
-    it(`should generate correct signed checksum with ${hash}`, () => {
+  it(`should generate correct signed checksum with MD5`, () => {
+    const oldPrivateApostille = nem.model.apostille.create(
+      common,
+      seed,
+      payload,
+      'Test Apostille',
+      // tslint:disable-next-line:no-string-literal
+      nem.model.apostille.hashing['MD5'],
+      false, {}, true,
+      nem.model.network.data.testnet.id);
+    const newPrivateApostille = new Apostille(seed, generator, NetworkType.TEST_NET);
+    return newPrivateApostille.create(initiator, payload, [], new MD5()).then(() => {
       expect(newPrivateApostille.creationHash.substring(0, 10)).toMatch(oldPrivateApostille.data.checksum);
     });
+  });
 
-    it(`should generate correct hash with ${hash}`, () => {
+  it(`should generate correct hash with MD5`, () => {
+    const oldPrivateApostille = nem.model.apostille.create(
+      common,
+      seed,
+      payload,
+      'Test Apostille',
+      // tslint:disable-next-line:no-string-literal
+      nem.model.apostille.hashing['MD5'],
+      false, {}, true,
+      nem.model.network.data.testnet.id);
+    const newPrivateApostille = new Apostille(seed, generator, NetworkType.TEST_NET);
+    return newPrivateApostille.create(initiator, payload, [], new MD5()).then(() => {
       expect(newPrivateApostille.creationHash).toMatch(oldPrivateApostille.data.hash);
     });
   });
+
+  it(`should generate correct signed checksum with SHA1`, () => {
+    const oldPrivateApostille = nem.model.apostille.create(
+      common,
+      seed,
+      payload,
+      'Test Apostille',
+      // tslint:disable-next-line:no-string-literal
+      nem.model.apostille.hashing['SHA1'],
+      false, {}, true,
+      nem.model.network.data.testnet.id);
+    const newPrivateApostille = new Apostille(seed, generator, NetworkType.TEST_NET);
+    return newPrivateApostille.create(initiator, payload, [], new SHA1()).then(() => {
+      expect(newPrivateApostille.creationHash.substring(0, 10)).toMatch(oldPrivateApostille.data.checksum);
+    });
+  });
+
+  it(`should generate correct hash with SHA1`, () => {
+    const oldPrivateApostille = nem.model.apostille.create(
+      common,
+      seed,
+      payload,
+      'Test Apostille',
+      // tslint:disable-next-line:no-string-literal
+      nem.model.apostille.hashing['SHA1'],
+      false, {}, true,
+      nem.model.network.data.testnet.id);
+    const newPrivateApostille = new Apostille(seed, generator, NetworkType.TEST_NET);
+    return newPrivateApostille.create(initiator, payload, [], new SHA1()).then(() => {
+      expect(newPrivateApostille.creationHash).toMatch(oldPrivateApostille.data.hash);
+    });
+  });
+
+  it(`should generate correct signed checksum with SHA256`, () => {
+    const oldPrivateApostille = nem.model.apostille.create(
+      common,
+      seed,
+      payload,
+      'Test Apostille',
+      // tslint:disable-next-line:no-string-literal
+      nem.model.apostille.hashing['SHA256'],
+      false, {}, true,
+      nem.model.network.data.testnet.id);
+    const newPrivateApostille = new Apostille(seed, generator, NetworkType.TEST_NET);
+    return newPrivateApostille.create(initiator, payload, [], new SHA256()).then(() => {
+      expect(newPrivateApostille.creationHash.substring(0, 10)).toMatch(oldPrivateApostille.data.checksum);
+    });
+  });
+
+  it(`should generate correct hash with SHA256`, () => {
+    const oldPrivateApostille = nem.model.apostille.create(
+      common,
+      seed,
+      payload,
+      'Test Apostille',
+      // tslint:disable-next-line:no-string-literal
+      nem.model.apostille.hashing['SHA256'],
+      false, {}, true,
+      nem.model.network.data.testnet.id);
+    const newPrivateApostille = new Apostille(seed, generator, NetworkType.TEST_NET);
+    return newPrivateApostille.create(initiator, payload, [], new SHA256()).then(() => {
+      expect(newPrivateApostille.creationHash).toMatch(oldPrivateApostille.data.hash);
+    });
+  });
+
+  it(`should generate correct signed checksum with KECCAK-256`, () => {
+    const oldPrivateApostille = nem.model.apostille.create(
+      common,
+      seed,
+      payload,
+      'Test Apostille',
+      // tslint:disable-next-line:no-string-literal
+      nem.model.apostille.hashing['SHA3-256'],
+      false, {}, true,
+      nem.model.network.data.testnet.id);
+    const newPrivateApostille = new Apostille(seed, generator, NetworkType.TEST_NET);
+    return newPrivateApostille.create(initiator, payload, [], new KECCAK256()).then(() => {
+      expect(newPrivateApostille.creationHash.substring(0, 10)).toMatch(oldPrivateApostille.data.checksum);
+    });
+  });
+
+  it(`should generate correct hash with KECCAK-256`, () => {
+    const oldPrivateApostille = nem.model.apostille.create(
+      common,
+      seed,
+      payload,
+      'Test Apostille',
+      // tslint:disable-next-line:no-string-literal
+      nem.model.apostille.hashing['SHA3-256'],
+      false, {}, true,
+      nem.model.network.data.testnet.id);
+    const newPrivateApostille = new Apostille(seed, generator, NetworkType.TEST_NET);
+    return newPrivateApostille.create(initiator, payload, [], new KECCAK256()).then(() => {
+      expect(newPrivateApostille.creationHash).toMatch(oldPrivateApostille.data.hash);
+    });
+  });
+
+  it(`should generate correct signed checksum with KECCAK-512`, () => {
+    const oldPrivateApostille = nem.model.apostille.create(
+      common,
+      seed,
+      payload,
+      'Test Apostille',
+      // tslint:disable-next-line:no-string-literal
+      nem.model.apostille.hashing['SHA3-512'],
+      false, {}, true,
+      nem.model.network.data.testnet.id);
+    const newPrivateApostille = new Apostille(seed, generator, NetworkType.TEST_NET);
+    return newPrivateApostille.create(initiator, payload, [], new KECCAK512()).then(() => {
+      expect(newPrivateApostille.creationHash.substring(0, 10)).toMatch(oldPrivateApostille.data.checksum);
+    });
+  });
+
+  it(`should generate correct hash with KECCAK-512`, () => {
+    const oldPrivateApostille = nem.model.apostille.create(
+      common,
+      seed,
+      payload,
+      'Test Apostille',
+      // tslint:disable-next-line:no-string-literal
+      nem.model.apostille.hashing['SHA3-512'],
+      false, {}, true,
+      nem.model.network.data.testnet.id);
+    const newPrivateApostille = new Apostille(seed, generator, NetworkType.TEST_NET);
+    return newPrivateApostille.create(initiator, payload, [], new KECCAK512()).then(() => {
+      expect(newPrivateApostille.creationHash).toMatch(oldPrivateApostille.data.hash);
+    });
+  });
+
 });

@@ -1,7 +1,7 @@
 import { Account, NetworkType } from 'nem2-sdk';
 import { Apostille, Initiator } from '../../../index';
 
-const tag = 'NEM is Awesome!';
+const seed = 'KV_,x797taRe}Y<+';
 // A funny but valid private key
 const sk = 'aaaaaaaaaaeeeeeeeeeebbbbbbbbbb5555555555dddddddddd1111111111aaee';
 
@@ -11,13 +11,13 @@ const signer = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
 const payload = 'Apostille is awesome !';
 
 const hdAccountInformation = {
-  address: 'SCKPEZ-5ZAPYO-PXVF6U-YLHINF-CLYZHO-YCIO3P-KGVV',
-  privateKey: '2D0EFF8CE3509AE36487D7B8163D428FB71469FE0ACF1983A02F3E1655D5CC09'.toUpperCase(),
-  publicKey: '727472EBD5474CD3BB8698D0C6406C541A6EE1B7DF9A0273B95B2A3ACFC594A4'.toUpperCase(),
+  address: 'SCJQAL-SM4JXY-Z3MWTU-B5SJQP-HUF6M3-ODNSUA-D2KK',
+  privateKey: '4A9C3F528DA4F1A51FD4277F0BC8F72865B86B97F93EC3ED82BCD642EEC35F0F'.toUpperCase(),
+  publicKey: '8715355AC04966093A4C95A129DA51118C372677AD4BF2BBFEFE9A2A0C660157'.toUpperCase(),
 };
 
-const PrivateApostille1 = new Apostille(tag, generator, NetworkType.MIJIN_TEST);
-const PrivateApostille2 = new Apostille(tag, generator, NetworkType.MIJIN_TEST);
+const PrivateApostille1 = new Apostille(seed, generator, NetworkType.MIJIN_TEST);
+const PrivateApostille2 = new Apostille(seed, generator, NetworkType.MIJIN_TEST);
 
 describe('Getters should work properly', () => {
   it('should correctly generate a private apostille via a private key', () => {
@@ -48,3 +48,5 @@ describe('Getters should work properly', () => {
     expect(PrivateApostille2.creator.publicKey).toMatch(dumpMultisigCreator.multisigAccount.publicKey);
   });
 });
+
+// TODO: a getter function for getting all the owners of the apostille

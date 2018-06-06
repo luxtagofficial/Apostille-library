@@ -2,10 +2,10 @@ import nem from 'nem-sdk';
 import { Account, NetworkType } from 'nem2-sdk';
 import { Apostille } from '../../../index';
 
-const tag = 'NEM is Awesome!';
+const seed = 'NEM is Awesome!';
 // A funny but valid private key
 const sk = 'aaaaaaaaaaeeeeeeeeeebbbbbbbbbb5555555555dddddddddd1111111111aaee';
-const generator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
+const generator = Account.createFromPrivateKey(sk, NetworkType.TEST_NET);
 // Create a common object holding key
 const common = nem.model.objects.create('common')('', sk);
 
@@ -22,7 +22,7 @@ const oldPrivateApostille = nem.model.apostille.create(
   false, {}, true,
   nem.model.network.data.testnet.id);
 
-const newPrivateApostille = new Apostille(tag, generator, NetworkType.TEST_NET);
+const newPrivateApostille = new Apostille(seed, generator, NetworkType.TEST_NET);
 
 describe('HD account generation should be correct', () => {
   it('private key should be valid', () => {

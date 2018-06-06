@@ -3,7 +3,7 @@ import { Initiator } from './Initiator';
 import { Sinks } from './Sinks';
 import { HashFunction } from './hashFunctions/HashFunction';
 
-// TODO: add tx hash
+// TODO: add tx hash of the update
 
 class PublicApostille {
   public announced: boolean = false;
