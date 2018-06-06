@@ -3,13 +3,14 @@ import { Initiator } from './Initiator';
 import { Sinks } from './Sinks';
 import { HashFunction } from './hashFunctions/HashFunction';
 
-// TODO: add tx hash
+// TODO: add tx hash of the update
 
 class PublicApostille {
+  public announced: boolean = false;
   private address: Address;
   private hash;
-  private announced: boolean = false;
   private creationTransaction;
+
   constructor(
     private initiatorAccount: Initiator,
     public readonly fileName: string,
@@ -27,7 +28,7 @@ class PublicApostille {
     }
   }
 
-  public create(fileContent: string, hashFunction: HashFunction): void {
+  public update(fileContent: string, hashFunction: HashFunction): void {
     this.hash = hashFunction.nonSignedHashing(fileContent);
     this.creationTransaction = TransferTransaction.create(
       Deadline.create(),
@@ -41,7 +42,7 @@ class PublicApostille {
     this.announced = false;
   }
 
-  public announce(urls?: string) {
+  public announce(urls?: string): Promise<void> {
     if (this.announced) {
       throw new Error('This File has already been anounced to the network');
     }
@@ -95,13 +96,19 @@ class PublicApostille {
           signedCreation = this.initiatorAccount.account.sign(aggregateTransaction);
         }
         // announce the creation transaction to the network
-        transactionHttp.announce(signedCreation).subscribe(
-          (res) => {
-            console.log(res);
-            this.announced = true;
-          },
-          (err) => { console.error(err); },
-        );
+        return new Promise((resolve, reject) => {
+          transactionHttp.announce(signedCreation).subscribe(
+            (res) => {
+              console.log(res);
+              this.announced = true;
+              resolve(res);
+            },
+            (err) => {
+              console.error(err);
+              reject(err);
+             },
+          );
+        });
       } else {
         // we use aggregate bounded
         // we need a lock transaction
@@ -131,32 +138,47 @@ class PublicApostille {
 
         const signedLock = this.initiatorAccount.account.sign(lockFundsTransaction);
         // we announce the signed lock and then the creation transaction
-        listener.open().then(() => {
+        return new Promise((resolve, reject) => {
+          listener.open().then(() => {
 
-          transactionHttp.announce(signedLock).subscribe(
-            (res) => console.log(res),
-            (err) => console.error(err));
+            transactionHttp.announce(signedLock).subscribe(
+              (res) => console.log(res),
+              (err) => console.error(err));
 
-          listener.confirmed(this.initiatorAccount.account.address)
-              .filter((transaction) => transaction.transactionInfo !== undefined
-                  && transaction.transactionInfo.hash === signedLock.hash)
-              .flatMap(() => transactionHttp.announceAggregateBonded(signedCreation))
-              .subscribe(
-                (announcedAggregateBonded) => console.log(announcedAggregateBonded),
-                (err) => console.error(err));
+            listener.confirmed(this.initiatorAccount.account.address)
+                .filter((transaction) => transaction.transactionInfo !== undefined
+                    && transaction.transactionInfo.hash === signedLock.hash)
+                .flatMap(() => transactionHttp.announceAggregateBonded(signedCreation))
+                .subscribe(
+                  (announcedAggregateBonded) => {
+                    console.log(announcedAggregateBonded);
+                    this.announced = true;
+                    resolve(announcedAggregateBonded);
+                  },
+                  (err) => {
+                    console.error(err);
+                    reject(err);
+                  });
+          });
         });
       }
     } else {
       // it's a normal account
       signedCreation = this.initiatorAccount.account.sign(this.creationTransaction);
       // we announce the transaction
-      transactionHttp.announce(signedCreation).subscribe(
-        (res) => {
-          console.log(res);
-          this.announced = true;
-        },
-        (err) => { console.error(err); },
-      );
+      return new Promise((resolve, reject) => {
+        transactionHttp.announce(signedCreation).subscribe(
+          (res) => {
+            console.log(res);
+            this.announced = true;
+            resolve(res);
+          },
+          (err) => {
+            console.error(err);
+            reject(err);
+           },
+        );
+      });
     }
   }
 
@@ -164,13 +186,10 @@ class PublicApostille {
     return this.address.pretty();
   }
 
-  get networktype(): NetworkType {
-    return this.networkType;
-  }
-
   get apostilleHash(): string {
     return this.hash;
   }
+  // TODO: add last transaction hash
 }
 
 export { PublicApostille };
