@@ -1,19 +1,21 @@
+import { drop, uniqBy } from 'lodash';
 import * as nemSDK from 'nem-sdk';
 import { Account, AccountHttp, Address, AggregateTransaction, Deadline, InnerTransaction, Listener, LockFundsTransaction, ModifyMultisigAccountTransaction, Mosaic, MultisigCosignatoryModification, MultisigCosignatoryModificationType, NetworkType, PlainMessage, PublicAccount, QueryParams, SignedTransaction, TransactionHttp, TransactionType, TransferTransaction, UInt64, XEM } from 'nem2-sdk';
 import { Initiator } from './Initiator';
 import { IReadyTransaction } from './ReadyTransaction';
 import { SHA256 } from './hashFunctions';
 import { HashFunction } from './hashFunctions/HashFunction';
-import uniqBy = require('lodash/uniqBy');
-import drop = require('lodash/drop');
 
 const nem = nemSDK.default;
 // TODO: add tx hash of creation
+// TODO: a getter function for getting all the owners of the apostille
+// TODO: no transfer transaction should exist after a multisig modification
 class Apostille {
 
   private transactions: IReadyTransaction[] = [];
   private Apostille: Account = new Account();
-  private created: boolean = false;
+  // tslint:disable-next-line:variable-name
+  private _created: boolean = false;
   private creationAnnounced: boolean = false;
   private creatorAccount;
   private hash;
@@ -402,15 +404,23 @@ class Apostille {
     return undefined;
   }
 
-  public async isCreated(): Promise<boolean> {
-    await this.isAnnouced(this);
-    return this.created;
+  public isCreated(): Promise<boolean> {
+    return new Promise<boolean>((resolve, reject) => {
+      this.isAnnouced().then(() => {
+        resolve(this._created);
+      });
+    });
   }
 
-  public isAnnouced(apostille?: Apostille): boolean {
+  public isAnnouced(urls?: string): Promise<boolean> {
     // check if the apostille account has any transaction
-    if (apostille) {
-      let accountHttp ;
+    let accountHttp ;
+    if (urls) {
+      if (this.networkType === NetworkType.MAIN_NET || this.networkType === NetworkType.TEST_NET) {
+        console.warn('To fetch a far far away transaction a historical node is needed');
+      }
+      accountHttp = new AccountHttp(urls);
+    } else {
       if (this.networkType === NetworkType.MAIN_NET) {
         accountHttp  = new AccountHttp('http://88.99.192.82:7890');
       } else if (this.networkType === NetworkType.TEST_NET) {
