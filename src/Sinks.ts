@@ -1,3 +1,8 @@
+/**
+ * @description - sink address used by nanowallet
+ * @export
+ * @enum {number}
+ */
 export enum Sinks {
   // mainet
   'NCZSJHLTIMESERVBVKOW6US64YDZG2PFGQCSV23J' = 0x68,

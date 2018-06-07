@@ -4,13 +4,44 @@ import { Sinks } from './Sinks';
 import { HashFunction } from './hashFunctions/HashFunction';
 
 // TODO: add tx hash of the update
-
+/**
+ * @description - public apostille class
+ * @class PublicApostille
+ */
 class PublicApostille {
+  /**
+   * @description - whether the apostille was announced to the network
+   * @type {boolean}
+   * @memberof PublicApostille
+   */
   public announced: boolean = false;
+  /**
+   * @description - the sink address this public apostille is using
+   * @private
+   * @type {Address}
+   * @memberof PublicApostille
+   */
   private address: Address;
+  /**
+   * @description - the hash uncluding the magical byte of this public apostille
+   * @private
+   * @memberof PublicApostille
+   */
   private hash;
+  /**
+   * @description - the transaction to be sent to the sink address
+   * @private
+   * @memberof PublicApostille
+   */
   private creationTransaction;
-
+  /**
+   * Creates an instance of PublicApostille.
+   * @param {Initiator} initiatorAccount - initiator of the trnsaction
+   * @param {string} fileName - the digital file name
+   * @param {NetworkType} networkType - network type
+   * @param {string} [sinkAddress] - the sink address to use
+   * @memberof PublicApostille
+   */
   constructor(
     private initiatorAccount: Initiator,
     public readonly fileName: string,
@@ -27,7 +58,12 @@ class PublicApostille {
       this.address = Address.createFromRawAddress(Sinks[networkType]);
     }
   }
-
+  /**
+   * @description - update the file content to be notarised on the blockchain
+   * @param {string} fileContent - the content of the file
+   * @param {HashFunction} hashFunction - hash function to use
+   * @memberof PublicApostille
+   */
   public update(fileContent: string, hashFunction: HashFunction): void {
     this.hash = hashFunction.nonSignedHashing(fileContent);
     this.creationTransaction = TransferTransaction.create(
@@ -41,7 +77,12 @@ class PublicApostille {
     // if we want to provide a new content
     this.announced = false;
   }
-
+  /**
+   * @description - announce the public apostille to the sink address
+   * @param {string} [urls] - endpoint url
+   * @returns {Promise<void>}
+   * @memberof PublicApostille
+   */
   public announce(urls?: string): Promise<void> {
     if (this.announced) {
       throw new Error('This File has already been anounced to the network');
@@ -181,11 +222,21 @@ class PublicApostille {
       });
     }
   }
-
+  /**
+   * @description - gets the sink address that this public apostille use
+   * @readonly
+   * @type {string}
+   * @memberof PublicApostille
+   */
   get sinkAddress(): string {
     return this.address.pretty();
   }
-
+  /**
+   * @description - gets the public apostille hash (including the magic byte)
+   * @readonly
+   * @type {string}
+   * @memberof PublicApostille
+   */
   get apostilleHash(): string {
     return this.hash;
   }
