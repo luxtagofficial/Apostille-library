@@ -9,17 +9,60 @@ import { HashFunction } from './hashFunctions/HashFunction';
 const nem = nemSDK.default;
 // TODO: add tx hash of creation
 // TODO: a getter function for getting all the owners of the apostille
-// TODO: no transfer transaction should exist after a multisig modification
+/**
+ * @description the private apostille class
+ * @class Apostille
+ */
 class Apostille {
-
+  /**
+   * @description - an array of all the transaction before they get announced to the network
+   * @private
+   * @type {IReadyTransaction[]}
+   * @memberof Apostille
+   */
   private transactions: IReadyTransaction[] = [];
+  /**
+   * @description - the apostille account
+   * @private
+   * @type {Account}
+   * @memberof Apostille
+   */
   private Apostille: Account = new Account();
+  /**
+   * @description - whether the apostille was created or not
+   * @private
+   * @type {boolean}
+   * @memberof Apostille
+   */
   // tslint:disable-next-line:variable-name
   private _created: boolean = false;
+  /**
+   * @description - whether the apostille creation transaction was announced to the network
+   * @private
+   * @type {boolean}
+   * @memberof Apostille
+   */
   private creationAnnounced: boolean = false;
+  /**
+   * @description - the account that made the creation transaction
+   * @private
+   * @memberof Apostille
+   */
   private creatorAccount;
+  /**
+   * @description - the apostille hash (magical byte + hash)
+   * @private
+   * @memberof Apostille
+   */
   private hash;
 
+  /**
+   * Creates an instance of Apostille.
+   * @param {string} seed - the seed used to generate an initial hash
+   * @param {Account} generatorAccount - the account used to sign the hash to generate an HD account private key
+   * @param {NetworkType} networkType - network type of the apostille account
+   * @memberof Apostille
+   */
   constructor(
     public readonly seed: string,
     private generatorAccount: Account,
@@ -36,7 +79,15 @@ class Apostille {
     // create the HD acccount (appostille)
     this.Apostille = Account.createFromPrivateKey(privateKey, this.networkType);
   }
-
+  /**
+   * @description - create a creation transaction for the apostille account
+   * @param {Initiator} initiatorAccount - the initiator of the transaction
+   * @param {string} rawData - the raw data to send in the payload
+   * @param {(Mosaic[] | Mosaic[])} [mosaics=[]] - array of mosiacs to attache
+   * @param {HashFunction} [hashFunction] - if provided will hash the raw data and add a magical byte to the hash
+   * @returns {Promise<void>}
+   * @memberof Apostille
+   */
   public async create(
     initiatorAccount: Initiator,
     rawData: string,
@@ -105,7 +156,14 @@ class Apostille {
       this._created = true;
     });
   }
-
+  /**
+   * @description - creates an update transaction
+   * @param {Initiator} initiatorAccountthe - initiator of the transaction
+   * @param {string} message - message to add as a payload
+   * @param {(Mosaic[] | Mosaic[])} [mosaics=[]] - array of mosiacs to attache
+   * @returns {Promise<void>}
+   * @memberof Apostille
+   */
   public async update(
     initiatorAccount: Initiator,
     message: string,
@@ -154,7 +212,13 @@ class Apostille {
     }
     this.transactions.push(readyUpdate);
   }
-
+  /**
+   * @description - create a multisig contract to own the apostille account
+   * @param {PublicAccount[]} owners - array of public account that will become owners
+   * @param {number} quorum - the minimum number of owners necessary to agree on the apostille account activities
+   * @param {number} minRemoval - minimum number of owners necessary to agree to remove one or some owners
+   * @memberof Apostille
+   */
   public own(owners: PublicAccount[], quorum: number, minRemoval: number): void {
     const modifications: MultisigCosignatoryModification[] = [];
     owners.forEach((cosignatory) => {
@@ -179,7 +243,16 @@ class Apostille {
     };
     this.transactions.push(readyModification);
   }
-
+  /**
+   * @description - modify ownership of the apostille account by modifying the multisisg contratc
+   * @param {Account[]} signers - array of accounts that will sign the transaction
+   * @param {boolean} complete - whether the transaction is an aggregate compleet or bounded
+   * @param {PublicAccount[]} newOwners - array of new owners
+   * @param {PublicAccount[]} OwnersToRemove - array of owners to remove
+   * @param {number} quorumDelta - relative quorum (refer to own function above and/or http://bit.ly/2Jnff1r )
+   * @param {number} minRemovalDelta - relative number of minimum owners necessary to agree to remove one or some owners
+   * @memberof Apostille
+   */
   public transfer(signers: Account[],
                   complete: boolean,
                   newOwners: PublicAccount[],
@@ -242,7 +315,12 @@ class Apostille {
     }
     this.transactions.push(readyModification);
   }
-
+  /**
+   * @description - announce all transactions to the network
+   * @param {string} [urls] - endpoint url
+   * @returns {Promise<void>}
+   * @memberof Apostille
+   */
   public async announce(urls?: string): Promise<void> {
     await this.isAnnouced().then(async () => {
       if (!this._created) {
@@ -370,35 +448,73 @@ class Apostille {
       this.transactions = [];
     });
   }
-
+  /**
+   * @description - sets whether the apostille was created
+   * @memberof Apostille
+   */
   set created(value: boolean) {
     this._created = value;
   }
-
+  /**
+   * @description - gets the apostille account private key
+   * @readonly
+   * @type {string}
+   * @memberof Apostille
+   */
   get privateKey(): string {
     return this.Apostille.privateKey;
   }
-
+  /**
+   * @description - gets the apsotille account public key
+   * @readonly
+   * @type {string}
+   * @memberof Apostille
+   */
   get publicKey(): string {
     return this.Apostille.publicKey;
   }
-
+  /**
+   * @description - gets the apsotille account address
+   * @readonly
+   * @type {Address}
+   * @memberof Apostille
+   */
   get address(): Address {
     return this.Apostille.address;
   }
-
+  /**
+   * @description - gets the account that was used to generate the apostille account (HD account)
+   * @readonly
+   * @type {PublicAccount}
+   * @memberof Apostille
+   */
   get generator(): PublicAccount {
     return this.generatorAccount.publicAccount;
   }
-
+  /**
+   * @description - gets the public account of the generated apostille acount (HD account)
+   * @readonly
+   * @type {PublicAccount}
+   * @memberof Apostille
+   */
   get hdAccount(): PublicAccount {
     return PublicAccount.createFromPublicKey(this.publicKey, this.networkType);
   }
-
+  /**
+   * @description - gets the hash included in the payload of the creation transaction
+   * @readonly
+   * @type {(string | undefined)}
+   * @memberof Apostille
+   */
   get creationHash(): string | undefined {
     return this.hash;
   }
-
+  /**
+   * @description - gets the signer of the creation transaction
+   * @readonly
+   * @type {(Account | PublicAccount | undefined)}
+   * @memberof Apostille
+   */
   get creator(): Account | PublicAccount | undefined {
     if (this.creatorAccount) {
       if (this.creatorAccount.multisigAccount) {
@@ -409,7 +525,11 @@ class Apostille {
     }
     return undefined;
   }
-
+  /**
+   * @description - checks on chain if the apostille was created
+   * @returns {Promise<boolean>}
+   * @memberof Apostille
+   */
   public isCreated(): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       this.isAnnouced().then(() => {
@@ -417,7 +537,12 @@ class Apostille {
       });
     });
   }
-
+  /**
+   * @description - cheks on chain if there are any transactions announced
+   * @param {string} [urls] - enpoint url
+   * @returns {Promise<boolean>}
+   * @memberof Apostille
+   */
   public isAnnouced(urls?: string): Promise<boolean> {
     // check if the apostille account has any transaction
     let accountHttp ;
@@ -461,7 +586,14 @@ class Apostille {
         );
     });
   }
-
+  /**
+   * @description - announce transfer transactions as aggregate if more than 1
+   * @private
+   * @param {IReadyTransaction[]} transactions - array of transfer transactions and thier initiators
+   * @param {TransactionHttp} transactionHttp - transactionHTTP object
+   * @returns {Promise<void>}
+   * @memberof Apostille
+   */
   private async announceTransfer(transactions: IReadyTransaction[], transactionHttp: TransactionHttp): Promise<void> {
     if (transactions.length === 1 ) {
       // sign and announce the transfer transaction
