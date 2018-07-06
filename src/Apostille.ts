@@ -1,10 +1,10 @@
 import { drop, uniqBy } from 'lodash';
 import * as nemSDK from 'nem-sdk';
 import { Account, AccountHttp, Address, AggregateTransaction, Deadline, InnerTransaction, Listener, LockFundsTransaction, ModifyMultisigAccountTransaction, Mosaic, MultisigCosignatoryModification, MultisigCosignatoryModificationType, NetworkType, PlainMessage, PublicAccount, QueryParams, SignedTransaction, TransactionHttp, TransactionType, TransferTransaction, UInt64, XEM } from 'nem2-sdk';
-import { Initiator } from './Initiator';
-import { IReadyTransaction } from './ReadyTransaction';
 import { SHA256 } from './hashFunctions';
 import { HashFunction } from './hashFunctions/HashFunction';
+import { Initiator } from './Initiator';
+import { IReadyTransaction } from './ReadyTransaction';
 
 const nem = nemSDK.default;
 // TODO: add tx hash of creation
@@ -110,7 +110,7 @@ class Apostille {
       if (hashFunction) {
         // for digital files it's a good idea to hash the content of the file
         // but can be used for other types of information for real life assets
-        this.hash = hashFunction.signedHashing(rawData, initiatorAccount.account.privateKey);
+        this.hash = hashFunction.signedHashing(rawData, initiatorAccount.account.privateKey, this.networkType);
         creationTransaction = TransferTransaction.create(
           Deadline.create(),
           Address.createFromRawAddress(this.Apostille.address.plain()),
@@ -545,7 +545,7 @@ class Apostille {
    */
   public isAnnouced(urls?: string): Promise<boolean> {
     // check if the apostille account has any transaction
-    let accountHttp ;
+    let accountHttp;
     if (urls) {
       if (this.networkType === NetworkType.MAIN_NET || this.networkType === NetworkType.TEST_NET) {
         console.warn('To fetch a far far away transaction a historical node is needed');
