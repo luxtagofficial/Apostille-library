@@ -1,10 +1,9 @@
-import Fuse from 'fuse.js';
+import { findIndex, sortBy, toUpper } from 'lodash';
 import { AccountHttp, BlockchainHttp, PublicAccount } from 'nem2-sdk';
 
 export class ApostilleAccount {
     /**
-     * @param publicKey
-     * @param address
+     * @param account
      */
     constructor(
         /**
@@ -37,7 +36,6 @@ export class ApostilleAccount {
     /**
      * @description - get first transaction
      * @static
-     * @param {string} address
      * @param {string} urls
      * @returns {Promise<any>}
      * @memberof Verifier
@@ -51,13 +49,14 @@ export class ApostilleAccount {
                     const firstTransactionBlock = accountInfo.addressHeight.lower;
                     blockchainHttp.getBlockTransactions(firstTransactionBlock).subscribe(
                         (block) => {
-                            // search the object which hold the address from transactions
-                            const transactions =  this.searchRecipientAddressInsideArray(block);
-                            const innerTransactions = transactions[0].innerTransactions;
+                            // sort the block by index
+                            const sortedBlock = sortBy(block, ['transactionInfo.index']);
+                            // find the first index of current address from the blockTransactions
+                            const creationTransactionIndex = findIndex(sortedBlock, (o) => {
+                                return o.recipient.address === toUpper(this.account.address.plain());
+                            });
 
-                            // search the inner transaction which has the current address from first transactions
-                            const innerTransaction = this.searchRecipientAddressInsideArray(innerTransactions);
-                            resolve(innerTransaction[0]);
+                            resolve(sortedBlock[creationTransactionIndex]);
                         },
                         (err) => {
                             console.error(err.message);
@@ -69,26 +68,6 @@ export class ApostilleAccount {
                     reject(undefined);
                 });
         });
-    }
-
-    private searchRecipientAddressInsideArray(array: object[]): object {
-        const options = {
-            caseSensitive: true,
-            distance: 100,
-            keys: [
-                'innerTransactions.recipient.address',
-                'recipient.address',
-            ],
-            location: 0,
-            maxPatternLength: 32,
-            minMatchCharLength: 20,
-            shouldSort: true,
-            threshold: 0,
-        };
-        const fuse = new Fuse(array, options);
-        const result = fuse.search(this.account.address.plain());
-
-        return result;
     }
 
 }
