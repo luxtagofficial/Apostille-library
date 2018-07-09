@@ -71,11 +71,16 @@ class Apostille {
     if (generatorAccount.address.networkType !== networkType) {
       throw new Error('network type miss matched!');
     }
-    const keyPair = nem.crypto.keyPair.create(generatorAccount.privateKey);
     // hash the seed for the apostille account
     const hashSeed = SHA256.hash(this.seed);
+    let privateKey: string;
     // signe the hashed seed to get the private key
-    const privateKey = nem.utils.helpers.fixPrivateKey(keyPair.sign(hashSeed).toString());
+    if (networkType === NetworkType.MAIN_NET || networkType === NetworkType.TEST_NET) {
+      const keyPair = nem.crypto.keyPair.create(generatorAccount.privateKey);
+      privateKey = nem.utils.helpers.fixPrivateKey(keyPair.sign(hashSeed).toString());
+    } else {
+      privateKey = nem.utils.helpers.fixPrivateKey(generatorAccount.signData(hashSeed));
+    }
     // create the HD acccount (appostille)
     this.Apostille = Account.createFromPrivateKey(privateKey, this.networkType);
   }
@@ -580,6 +585,7 @@ class Apostille {
             },
             (err) => {
               // an error occurred
+              // can be true or fals depending on the last state
               console.log(err.message);
               resolve(this.creationAnnounced);
             },
