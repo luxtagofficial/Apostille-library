@@ -1,7 +1,7 @@
 import { NetworkType, PublicAccount } from 'nem2-sdk';
 import { Verifier } from '../../index';
 
-describe('verifier should work properly', () => {
+describe.skip('verifier should work properly', () => {
   describe('verify signature of public apostille', () => {
     it('Can verify signature of public apostille', () => {
         const fileContent = 'I am so so so awesome as always';
