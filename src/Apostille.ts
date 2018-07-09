@@ -1,10 +1,10 @@
 import { drop, uniqBy } from 'lodash';
 import * as nemSDK from 'nem-sdk';
 import { Account, AccountHttp, Address, AggregateTransaction, Deadline, InnerTransaction, Listener, LockFundsTransaction, ModifyMultisigAccountTransaction, Mosaic, MultisigCosignatoryModification, MultisigCosignatoryModificationType, NetworkType, PlainMessage, PublicAccount, QueryParams, SignedTransaction, TransactionHttp, TransactionType, TransferTransaction, UInt64, XEM } from 'nem2-sdk';
-import { Initiator } from './Initiator';
-import { IReadyTransaction } from './ReadyTransaction';
 import { SHA256 } from './hashFunctions';
 import { HashFunction } from './hashFunctions/HashFunction';
+import { Initiator } from './Initiator';
+import { IReadyTransaction } from './ReadyTransaction';
 
 const nem = nemSDK.default;
 // TODO: add tx hash of creation
@@ -71,11 +71,16 @@ class Apostille {
     if (generatorAccount.address.networkType !== networkType) {
       throw new Error('network type miss matched!');
     }
-    const keyPair = nem.crypto.keyPair.create(generatorAccount.privateKey);
     // hash the seed for the apostille account
     const hashSeed = SHA256.hash(this.seed);
+    let privateKey: string;
     // signe the hashed seed to get the private key
-    const privateKey = nem.utils.helpers.fixPrivateKey(keyPair.sign(hashSeed).toString());
+    if (networkType === NetworkType.MAIN_NET || networkType === NetworkType.TEST_NET) {
+      const keyPair = nem.crypto.keyPair.create(generatorAccount.privateKey);
+      privateKey = nem.utils.helpers.fixPrivateKey(keyPair.sign(hashSeed).toString());
+    } else {
+      privateKey = nem.utils.helpers.fixPrivateKey(generatorAccount.signData(hashSeed));
+    }
     // create the HD acccount (appostille)
     this.Apostille = Account.createFromPrivateKey(privateKey, this.networkType);
   }
@@ -110,7 +115,7 @@ class Apostille {
       if (hashFunction) {
         // for digital files it's a good idea to hash the content of the file
         // but can be used for other types of information for real life assets
-        this.hash = hashFunction.signedHashing(rawData, initiatorAccount.account.privateKey);
+        this.hash = hashFunction.signedHashing(rawData, initiatorAccount.account.privateKey, this.networkType);
         creationTransaction = TransferTransaction.create(
           Deadline.create(),
           Address.createFromRawAddress(this.Apostille.address.plain()),
@@ -545,7 +550,7 @@ class Apostille {
    */
   public isAnnouced(urls?: string): Promise<boolean> {
     // check if the apostille account has any transaction
-    let accountHttp ;
+    let accountHttp;
     if (urls) {
       if (this.networkType === NetworkType.MAIN_NET || this.networkType === NetworkType.TEST_NET) {
         console.warn('To fetch a far far away transaction a historical node is needed');
@@ -580,6 +585,7 @@ class Apostille {
             },
             (err) => {
               // an error occurred
+              // can be true or fals depending on the last state
               console.log(err.message);
               resolve(this.creationAnnounced);
             },

@@ -1,3 +1,5 @@
+import { NetworkType } from 'nem2-sdk';
+
 /**
  * Hashes functions interface
  *
@@ -27,7 +29,7 @@ export abstract class HashFunction {
    * @returns {string} - signed hash
    * @memberof HashFunction
    */
-  public abstract signedHashing(data: string, signerPrivateKey: string): string;
+  public abstract signedHashing(data: string, signerPrivateKey: string, networkType: NetworkType): string;
   /**
    * hashes data and adds a magical byte for private apostille
    *

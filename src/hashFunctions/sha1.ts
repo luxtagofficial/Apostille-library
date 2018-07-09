@@ -1,5 +1,6 @@
 import CryptoJS from 'crypto-js';
 import * as nemSDK from 'nem-sdk';
+import { Account, NetworkType } from 'nem2-sdk';
 import { HashFunction } from './HashFunction';
 
 const nem = nemSDK.default;
@@ -24,10 +25,17 @@ export class SHA1 extends HashFunction {
    * @returns - a signed hash with a magical byte
    * @memberof SHA1
    */
-  public signedHashing(data: string, signerPrivateKey: string) {
-    const keyPair = nem.crypto.keyPair.create(signerPrivateKey);
-    const CHEKSUM = 'fe4e5459' + this.signed;
-    return CHEKSUM + keyPair.sign(CryptoJS.SHA1(data).toString()).toString();
+  public signedHashing(data: string, signerPrivateKey: string, networkType: NetworkType) {
+    if (networkType === NetworkType.MAIN_NET || networkType === NetworkType.TEST_NET) {
+      const keyPair = nem.crypto.keyPair.create(signerPrivateKey);
+      const CHEKSUM = 'fe4e5459' + this.signed;
+      return CHEKSUM +  keyPair.sign(CryptoJS.SHA1(data).toString()).toString();
+    } else {
+      // sha-3 signing
+      const signer = Account.createFromPrivateKey(signerPrivateKey, networkType);
+      const CHEKSUM = 'fe4e5459' + this.signed;
+      return CHEKSUM +  signer.signData(CryptoJS.SHA1(data).toString());
+    }
   }
   /**
    * @description - creates a hash of the digital file for public apostille

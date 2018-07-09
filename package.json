@@ -24,6 +24,7 @@
     "build:watch": "tsc --watch",
     "lint": "tslint -c tslint.json 'src/**/*.ts'",
     "test": "jest --coverage --verbose",
+    "test1": "jest --coverage --verbose Verifier.spec.ts",
     "validate": "npm-run-all --parallel lint test",
     "report-coverage": "cat ./tests/unit/coverage/lcov.info | codecov",
     "travis-deploy-once": "travis-deploy-once",
@@ -55,9 +56,10 @@
     "js-sha3": "^0.7.0",
     "lodash": "^4.17.10",
     "nem-sdk": "^1.6.4",
-    "nem2-sdk": "^0.9.2",
+    "nem2-sdk": "^0.9.7",
+    "nem2-sdk": "^0.9.7",
     "npm-run-all": "^4.1.2",
-    "rxjs": "^6.1.0",
+    "rxjs": "^6.2.1",
     "vuepress-theme-vue": "^1.0.3"
   },
   "devDependencies": {
@@ -77,11 +79,6 @@
     "typescript": "^2.8.3",
     "validate-commit-msg": "^2.14.0",
     "vuepress": "^0.10.0"
-  },
-  "peerDependencies": {
-    "nem-sdk": "^1.6.4",
-    "nem2-sdk": "^0.9.2",
-    "rxjs": "^5.5.2"
   },
   "files": [
     "dist"
