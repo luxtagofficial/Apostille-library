@@ -1,10 +1,13 @@
 import { drop, uniqBy } from 'lodash';
 import * as nemSDK from 'nem-sdk';
-import { Account, AccountHttp, Address, AggregateTransaction, Deadline, InnerTransaction, Listener, LockFundsTransaction, ModifyMultisigAccountTransaction, Mosaic, MultisigCosignatoryModification, MultisigCosignatoryModificationType, NetworkType, PlainMessage, PublicAccount, QueryParams, SignedTransaction, TransactionHttp, TransactionType, TransferTransaction, UInt64, XEM } from 'nem2-sdk';
+import { Account, AccountHttp, Address, AggregateTransaction, Deadline, InnerTransaction, Listener, LockFundsTransaction, ModifyMultisigAccountTransaction, Mosaic, MultisigCosignatoryModification, MultisigCosignatoryModificationType, NetworkType, PlainMessage, PublicAccount, QueryParams, SignedTransaction, TransactionAnnounceResponse, TransactionHttp, TransactionType, TransferTransaction, UInt64, XEM } from 'nem2-sdk';
+import { filter, flatMap } from 'rxjs/operators';
+import { ApostilleAccount } from './ApostilleAccount';
 import { SHA256 } from './hashFunctions';
 import { HashFunction } from './hashFunctions/HashFunction';
 import { Initiator } from './Initiator';
 import { IReadyTransaction } from './ReadyTransaction';
+import { TransactionsStreams } from './TransactionsStreams';
 
 const nem = nemSDK.default;
 // TODO: add tx hash of creation
@@ -433,13 +436,13 @@ class Apostille {
             transactionHttp.announce(signedLock).subscribe(
                 (x) => console.log(x),
                 (err) => console.error(err));
-            listener.confirmed(readyTransaction.initiator.account.address)
-                .filter((transaction) => transaction.transactionInfo !== undefined
-                    && transaction.transactionInfo.hash === signedLock.hash)
-                .flatMap(() => transactionHttp.announceAggregateBonded(signedTransaction))
-                .subscribe(
-                  (announcedAggregateBonded) => console.log(announcedAggregateBonded),
-                  (err) => console.error(err));
+            listener.confirmed(readyTransaction.initiator.account.address).pipe(
+              filter((transaction) => transaction.transactionInfo !== undefined
+                    && transaction.transactionInfo.hash === signedLock.hash),
+              flatMap(() => transactionHttp.announceAggregateBonded(signedTransaction)) 
+            ).subscribe(
+              (announcedAggregateBonded) => console.log(announcedAggregateBonded),
+              (err) => console.error(err));
           });
         }
       });
@@ -499,11 +502,11 @@ class Apostille {
   /**
    * @description - gets the public account of the generated apostille acount (HD account)
    * @readonly
-   * @type {PublicAccount}
+   * @type {ApostilleAccount}
    * @memberof Apostille
    */
-  get hdAccount(): PublicAccount {
-    return PublicAccount.createFromPublicKey(this.publicKey, this.networkType);
+  get hdAccount(): ApostilleAccount {
+    return new ApostilleAccount(PublicAccount.createFromPublicKey(this.publicKey, this.networkType));
   }
   /**
    * @description - gets the hash included in the payload of the creation transaction
@@ -569,7 +572,7 @@ class Apostille {
     }
     return new Promise(async (resolve, reject) => {
         await accountHttp.transactions(
-          this.hdAccount,
+          this.hdAccount.publicAccount,
           new QueryParams(10),
         ).subscribe(
             (transactions) => {
@@ -600,11 +603,11 @@ class Apostille {
    * @returns {Promise<void>}
    * @memberof Apostille
    */
-  private async announceTransfer(transactions: IReadyTransaction[], transactionHttp: TransactionHttp): Promise<void> {
+  private async announceTransfer(transactions: IReadyTransaction[], transactionHttp: TransactionHttp): Promise<TransactionAnnounceResponse | void> {
     if (transactions.length === 1 ) {
       // sign and announce the transfer transaction
       const signedTransaction = transactions[0].initiator.account.sign(transactions[0].transaction);
-      return new Promise<void>((resolve, reject) => {
+      return new Promise<TransactionAnnounceResponse | void>((resolve, reject) => {
         transactionHttp.announce(signedTransaction).subscribe(
           (res) => {
             console.log(res);
@@ -642,7 +645,7 @@ class Apostille {
       const signedTransaction = initiators[0].initiator.account.signTransactionWithCosignatories(
         aggregateTransaction,
         cosignatories);
-      return new Promise<void>((resolve, reject) => {
+      return new Promise<TransactionAnnounceResponse | void>((resolve, reject) => {
         transactionHttp.announce(signedTransaction).subscribe(
           (res) => {
             console.log(res);
@@ -654,6 +657,13 @@ class Apostille {
         });
       });
     }
+  }
+
+  public monitor(urls?: string): TransactionsStreams {
+    if (urls) {
+      return new TransactionsStreams(this.hdAccount, urls);
+    }
+    return new TransactionsStreams(this.hdAccount);
   }
 
 }
