@@ -1,6 +1,7 @@
 import { AggregateTransaction, CosignatureSignedTransaction, Listener, NetworkType, Transaction, TransactionStatusError } from 'nem2-sdk';
 import { Observable } from 'rxjs';
 import { ApostilleAccount } from './ApostilleAccount';
+import { Errors } from './Errors';
 
 export class TransactionsStreams {
 
@@ -18,7 +19,7 @@ export class TransactionsStreams {
       } else if (apostilleAccount.publicAccount.address.networkType === NetworkType.TEST_NET) {
         this.listener = new Listener('http://104.128.226.60:7890');
       } else if (apostilleAccount.publicAccount.address.networkType === NetworkType.MIJIN) {
-        throw new Error('Missing Endpoint argument!');
+        throw new Error(Errors[Errors.MISSING_ENDPOINT_ARGUMENT]);
       } else {
         this.listener = new Listener('http://api.beta.catapult.mijin.io:3000');
       }

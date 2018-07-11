@@ -1,4 +1,5 @@
 import { Account, NetworkType, PublicAccount } from 'nem2-sdk';
+import { Errors } from './Errors';
 /**
  * @description - a class wrapping the transaction initiator account
  * @class Initiator
@@ -23,7 +24,7 @@ class Initiator {
   ) {
     if (multisigAccount) {
       if (isComplete === undefined) {
-        throw new Error('Missing argument "isCompleet"');
+        throw new Error(Errors[Errors.MISSING_IS_COMPLETE_ARGUMENT]);
       }
     }
   }

@@ -1,5 +1,6 @@
 import { Account, NetworkType, TransactionType } from 'nem2-sdk';
 import { Apostille, Initiator } from '../../../index';
+import { Errors } from '../../../src/Errors';
 
 const seed = '.N:@N%5SVj3Wkmr-';
 // A funny but valid private key
@@ -19,7 +20,7 @@ describe('Create functionn should work properly', () => {
     expect.assertions(1);
     await privateApostille.create(initiator, 'raw');
     return privateApostille.create(initiator, 'raw').catch((e) => {
-      expect(e.message).toMatch('you have already created this apostille');
+      expect(e.message).toMatch(Errors[Errors.APOSTILLE_ALREADY_CREATED]);
     });
   });
 
@@ -63,7 +64,7 @@ describe('update function should work properly', () => {
     const initiator = new Initiator(creator, NetworkType.MIJIN_TEST);
     expect.assertions(1);
     return privateApostille.update(initiator, 'raw').catch((e) => {
-      expect(e.message).toMatch('Apostille not created yet!');
+      expect(e.message).toMatch(Errors[Errors.APOSTILLE_NOT_CREATED]);
     });
   });
 
@@ -180,7 +181,7 @@ describe('isAnnounced function should work properly', () => {
     try {
       return apostilleMJ.isAnnouced();
     } catch (e) {
-      expect(e.message).toMatch('Missing Endpoint argument!');
+      expect(e.message).toMatch(Errors[Errors.MISSING_ENDPOINT_ARGUMENT]);
     }
   });
 

@@ -1,5 +1,6 @@
 export * from './src/Apostille';
 export * from './src/ApostilleAccount';
+export * from './src/Errors';
 export * from './src/hashFunctions';
 export * from './src/Initiator';
 export * from './src/PublicApostille';

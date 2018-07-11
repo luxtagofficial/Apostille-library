@@ -1,7 +1,8 @@
 import { Address, AggregateTransaction, Deadline, Listener, LockFundsTransaction, NetworkType, PlainMessage, SignedTransaction, TransactionHttp, TransferTransaction, UInt64, XEM } from 'nem2-sdk';
+import { Errors } from './Errors';
+import { HashFunction } from './hashFunctions/HashFunction';
 import { Initiator } from './Initiator';
 import { Sinks } from './Sinks';
-import { HashFunction } from './hashFunctions/HashFunction';
 
 // TODO: add tx hash of the update
 /**
@@ -51,7 +52,7 @@ class PublicApostille {
     if (sinkAddress) {
       const newSink = Address.createFromRawAddress(sinkAddress);
       if (newSink.networkType !== networkType) {
-        throw new Error('the address is of a wrong network type');
+        throw new Error(Errors[Errors.NETWORK_TYPE_MISMATCHED]);
       }
       this.address = newSink;
     } else {
@@ -85,7 +86,7 @@ class PublicApostille {
    */
   public announce(urls?: string): Promise<void> {
     if (this.announced) {
-      throw new Error('This File has already been anounced to the network');
+      throw new Error(Errors[Errors.FILE_ALREADY_ANNOUNCED]);
     }
     let transactionHttp;
     let listener;
@@ -105,14 +106,14 @@ class PublicApostille {
         transactionHttp = new TransactionHttp('http://104.128.226.60:7890');
         listener = new Listener('http://104.128.226.60:7890');
       } else if (this.networkType === NetworkType.MIJIN) {
-        throw new Error('Missing Endpoint argument!');
+        throw new Error(Errors[Errors.MISSING_ENDPOINT_ARGUMENT]);
       } else {
         transactionHttp = new TransactionHttp('http://api.beta.catapult.mijin.io:3000');
         listener = new Listener('http://api.beta.catapult.mijin.io:3000');
       }
     }
     if (this.initiatorAccount.network !== this.networkType) {
-      throw new Error('Netrowk type miss matched!');
+      throw new Error(Errors[Errors.NETWORK_TYPE_MISMATCHED]);
     }
 
     if (this.initiatorAccount.multisigAccount) {
