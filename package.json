@@ -22,7 +22,7 @@
     "prebuild:watch": "rimraf dist",
     "build": "tsc",
     "build:watch": "tsc --watch",
-    "lint": "tslint -c tslint.json -p tsconfig.json 'src/**/*.ts'",
+    "lint": "tslint 'src/**/*.ts'",
     "test": "jest --coverage --verbose",
     "validate": "npm-run-all --parallel lint test",
     "report-coverage": "cat ./tests/unit/coverage/lcov.info | codecov",
@@ -57,7 +57,6 @@
     "nem-sdk": "^1.6.4",
     "nem2-sdk": "^0.10.0",
     "rxjs": "^6.2.1",
-    "rxjs-tslint": "^0.1.5",
     "vuepress-theme-vue": "^1.0.3"
   },
   "devDependencies": {

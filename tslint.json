@@ -4,17 +4,11 @@
         "tslint:recommended"
     ],
     "jsRules": {},
-    "rulesDirectory": [
-        "node_modules/rxjs-tslint"
-    ],
+    "rulesDirectory": [],
     "rules": {
         "quotemark": [true, "single"],
         "no-console": false,
         "ordered-imports": false,
-        "max-line-length": [true, {"limit": 120, "ignore-pattern": "^import |^export {(.*?)}"}],
-        "rxjs-collapse-imports": true,
-        "rxjs-pipeable-operators-only": true,
-        "rxjs-no-static-observable-methods": true,
-        "rxjs-proper-imports": true
+        "max-line-length": [true, {"limit": 120, "ignore-pattern": "^import |^export {(.*?)}"}]
     }
 }

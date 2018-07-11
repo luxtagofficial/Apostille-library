@@ -439,7 +439,7 @@ class Apostille {
             listener.confirmed(readyTransaction.initiator.account.address).pipe(
               filter((transaction) => transaction.transactionInfo !== undefined
                     && transaction.transactionInfo.hash === signedLock.hash),
-              flatMap(() => transactionHttp.announceAggregateBonded(signedTransaction)) 
+              flatMap(() => transactionHttp.announceAggregateBonded(signedTransaction)),
             ).subscribe(
               (announcedAggregateBonded) => console.log(announcedAggregateBonded),
               (err) => console.error(err));
@@ -595,6 +595,14 @@ class Apostille {
         );
     });
   }
+
+  public monitor(urls?: string): TransactionsStreams {
+    if (urls) {
+      return new TransactionsStreams(this.hdAccount, urls);
+    }
+    return new TransactionsStreams(this.hdAccount);
+  }
+
   /**
    * @description - announce transfer transactions as aggregate if more than 1
    * @private
@@ -603,7 +611,9 @@ class Apostille {
    * @returns {Promise<void>}
    * @memberof Apostille
    */
-  private async announceTransfer(transactions: IReadyTransaction[], transactionHttp: TransactionHttp): Promise<TransactionAnnounceResponse | void> {
+  private async announceTransfer(
+    transactions: IReadyTransaction[],
+    transactionHttp: TransactionHttp): Promise<TransactionAnnounceResponse | void> {
     if (transactions.length === 1 ) {
       // sign and announce the transfer transaction
       const signedTransaction = transactions[0].initiator.account.sign(transactions[0].transaction);
@@ -657,13 +667,6 @@ class Apostille {
         });
       });
     }
-  }
-
-  public monitor(urls?: string): TransactionsStreams {
-    if (urls) {
-      return new TransactionsStreams(this.hdAccount, urls);
-    }
-    return new TransactionsStreams(this.hdAccount);
   }
 
 }
