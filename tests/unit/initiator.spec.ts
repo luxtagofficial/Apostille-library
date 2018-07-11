@@ -11,7 +11,7 @@ const PrivateApostille1 = new Apostille(tag, generator, NetworkType.MIJIN_TEST);
 describe('initiator should work properly', () => {
   it('multisisg without compleet boolean should throw an error', () => {
     expect(() => {
-      new Initiator(generator, NetworkType.MIJIN_TEST, generator.publicAccount);
+      const ini = new Initiator(generator, NetworkType.MIJIN_TEST, generator.publicAccount);
     }).toThrow('Missing argument "isCompleet"');
   });
 

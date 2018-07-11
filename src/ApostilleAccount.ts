@@ -1,5 +1,6 @@
 import { sortBy } from 'lodash';
 import { AccountHttp, Address, BlockchainHttp, PublicAccount, TransactionType } from 'nem2-sdk';
+import { TransactionsStreams } from './TransactionsStreams';
 
 export class ApostilleAccount {
     /**
@@ -49,7 +50,7 @@ export class ApostilleAccount {
                     const firstTransactionBlock = accountInfo.addressHeight.lower;
                     // find the first block of this account
                     blockchainHttp.getBlockTransactions(firstTransactionBlock).subscribe(
-                        (block) => {
+                        (block: any[]) => {
                             const filteredTransaction: any[] = [];
                             for (const transaction of block) {
                                 if (transaction.type === TransactionType.TRANSFER) {
@@ -101,6 +102,13 @@ export class ApostilleAccount {
      */
     public equals(address: Address) {
         return this.publicAccount.address.plain() === address.plain();
+    }
+
+    public monitor(urls?: string): TransactionsStreams {
+        if (urls) {
+            return new TransactionsStreams(this, urls);
+        }
+        return new TransactionsStreams(this);
     }
 
 }
