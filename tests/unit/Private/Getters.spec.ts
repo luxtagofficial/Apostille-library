@@ -16,8 +16,8 @@ const hdAccountInformation = {
   publicKey: '9C0C770BD1E1506FD207A8D783E0E4AC00D98B6D790401573519D82133474B90'.toUpperCase(),
 };
 
-const PrivateApostille1 = new Apostille(seed, generator, NetworkType.MIJIN_TEST);
-const PrivateApostille2 = new Apostille(seed, generator, NetworkType.MIJIN_TEST);
+const PrivateApostille1 = new Apostille(seed, generator);
+const PrivateApostille2 = new Apostille(seed, generator);
 
 describe('Getters should work properly', () => {
   it('should correctly generate a private apostille via a private key', () => {

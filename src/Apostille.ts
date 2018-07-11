@@ -18,6 +18,13 @@ const nem = nemSDK.default;
  */
 class Apostille {
   /**
+   * @description the network type of the HD apostille account
+   * @type {NetworkType}
+   * @memberof Apostille
+   */
+  public readonly networkType: NetworkType;
+
+  /**
    * @description - an array of all the transaction before they get announced to the network
    * @private
    * @type {IReadyTransaction[]}
@@ -63,22 +70,18 @@ class Apostille {
    * Creates an instance of Apostille.
    * @param {string} seed - the seed used to generate an initial hash
    * @param {Account} generatorAccount - the account used to sign the hash to generate an HD account private key
-   * @param {NetworkType} networkType - network type of the apostille account
    * @memberof Apostille
    */
   constructor(
     public readonly seed: string,
     private generatorAccount: Account,
-    public readonly networkType: NetworkType,
   ) {
-    if (generatorAccount.address.networkType !== networkType) {
-      throw new Error('network type miss matched!');
-    }
+    this.networkType = generatorAccount.address.networkType;
     // hash the seed for the apostille account
     const hashSeed = SHA256.hash(this.seed);
     let privateKey: string;
     // signe the hashed seed to get the private key
-    if (networkType === NetworkType.MAIN_NET || networkType === NetworkType.TEST_NET) {
+    if (this.networkType === NetworkType.MAIN_NET || this.networkType === NetworkType.TEST_NET) {
       const keyPair = nem.crypto.keyPair.create(generatorAccount.privateKey);
       privateKey = nem.utils.helpers.fixPrivateKey(keyPair.sign(hashSeed).toString());
     } else {
