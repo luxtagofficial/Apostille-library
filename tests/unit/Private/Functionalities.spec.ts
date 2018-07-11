@@ -10,27 +10,10 @@ beforeAll(() => {
   jest.setTimeout(10000);
 });
 
-describe('constructor should work properly', () => {
-  it('should throw an error if there is a network miss match', () => {
-    expect(() => {
-      const privateApostille = new Apostille(seed, generator, NetworkType.TEST_NET);
-    }).toThrow();
-  });
-});
-
-describe('create functionn should work properly', () => {
-
-  it('should throw an error if there is a network missmatch between initiator and apostille', () => {
-    const privateApostille = new Apostille(seed, generator, NetworkType.MIJIN_TEST);
-    const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN);
-    const initiator = new Initiator(creator, NetworkType.MIJIN);
-    return privateApostille.create(initiator, 'raw').catch((e) => {
-      expect(e.message).toMatch('Netrowk type miss matched!');
-    });
-  });
+describe('Create functionn should work properly', () => {
 
   it('should throw an error if you try to create an apostille more than once', async () => {
-    const privateApostille = new Apostille(seed, generator, NetworkType.MIJIN_TEST);
+    const privateApostille = new Apostille(seed, generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
     const initiator = new Initiator(creator, NetworkType.MIJIN_TEST);
     expect.assertions(1);
@@ -41,7 +24,7 @@ describe('create functionn should work properly', () => {
   });
 
   it('should create a transfer transaction', () => {
-    const privateApostille = new Apostille(seed, generator, NetworkType.MIJIN_TEST);
+    const privateApostille = new Apostille(seed, generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
     const initiator = new Initiator(creator, NetworkType.MIJIN_TEST);
     return privateApostille.create(initiator, 'raw').then(() => {
@@ -51,7 +34,7 @@ describe('create functionn should work properly', () => {
   });
 
   it('should create an aggregate complete transaction', () => {
-    const privateApostille = new Apostille(seed, generator, NetworkType.MIJIN_TEST);
+    const privateApostille = new Apostille(seed, generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
     const initiator = new Initiator(creator, NetworkType.MIJIN_TEST, creator.publicAccount, true);
     return privateApostille.create(initiator, 'raw').then(() => {
@@ -61,7 +44,7 @@ describe('create functionn should work properly', () => {
   });
 
   it('should create an aggregate bounded transaction', () => {
-    const privateApostille = new Apostille(seed, generator, NetworkType.MIJIN_TEST);
+    const privateApostille = new Apostille(seed, generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
     const initiator = new Initiator(creator, NetworkType.MIJIN_TEST, creator.publicAccount, false);
     return privateApostille.create(initiator, 'raw').then(() => {
@@ -75,7 +58,7 @@ describe('create functionn should work properly', () => {
 describe('update function should work properly', () => {
 
   it('should throw an error if we try to update before creating', async () => {
-    const privateApostille = new Apostille(seed, generator, NetworkType.MIJIN_TEST);
+    const privateApostille = new Apostille(seed, generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
     const initiator = new Initiator(creator, NetworkType.MIJIN_TEST);
     expect.assertions(1);
@@ -85,7 +68,7 @@ describe('update function should work properly', () => {
   });
 
   it('should create a transfer transaction', async () => {
-    const privateApostille = new Apostille(seed, generator, NetworkType.MIJIN_TEST);
+    const privateApostille = new Apostille(seed, generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
     const initiator = new Initiator(creator, NetworkType.MIJIN_TEST);
     expect.assertions(1);
@@ -96,7 +79,7 @@ describe('update function should work properly', () => {
   });
 
   it('should create an aggregate complete transaction', async () => {
-    const privateApostille = new Apostille(seed, generator, NetworkType.MIJIN_TEST);
+    const privateApostille = new Apostille(seed, generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
     const initiator = new Initiator(creator, NetworkType.MIJIN_TEST, creator.publicAccount, true);
     expect.assertions(1);
@@ -107,7 +90,7 @@ describe('update function should work properly', () => {
   });
 
   it('should create an aggregate bounded transaction', async () => {
-    const privateApostille = new Apostille(seed, generator, NetworkType.MIJIN_TEST);
+    const privateApostille = new Apostille(seed, generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
     const initiator = new Initiator(creator, NetworkType.MIJIN_TEST, creator.publicAccount, false);
     expect.assertions(1);
@@ -122,7 +105,7 @@ describe('update function should work properly', () => {
 describe('own function should work properly', () => {
 
   it('should create an aggregate bounded transaction', async () => {
-    const privateApostille = new Apostille(seed, generator, NetworkType.MIJIN_TEST);
+    const privateApostille = new Apostille(seed, generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
     const initiator = new Initiator(creator, NetworkType.MIJIN_TEST, creator.publicAccount, false);
     expect.assertions(1);
@@ -138,7 +121,7 @@ describe('own function should work properly', () => {
 describe('transafer function should work properly', () => {
 
   it('should create an aggregate complete transaction', async () => {
-    const privateApostille = new Apostille(seed, generator, NetworkType.MIJIN_TEST);
+    const privateApostille = new Apostille(seed, generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
     const initiator = new Initiator(creator, NetworkType.MIJIN_TEST, creator.publicAccount, false);
     expect.assertions(1);
@@ -148,7 +131,7 @@ describe('transafer function should work properly', () => {
   });
 
   it('should create an aggregate complete transaction', async () => {
-    const privateApostille = new Apostille(seed, generator, NetworkType.MIJIN_TEST);
+    const privateApostille = new Apostille(seed, generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
     const initiator = new Initiator(creator, NetworkType.MIJIN_TEST, creator.publicAccount, false);
     expect.assertions(1);
@@ -162,7 +145,7 @@ describe('transafer function should work properly', () => {
 describe('isCreated function should work properly', () => {
 
   it('should return false before creation', async () => {
-    const privateApostille = new Apostille('QUleqZedaOUtlSh', generator, NetworkType.MIJIN_TEST);
+    const privateApostille = new Apostille('QUleqZedaOUtlSh', generator);
     expect.assertions(1);
     return privateApostille.isCreated().then((result) => {
       expect(result).toBeFalsy();
@@ -170,7 +153,7 @@ describe('isCreated function should work properly', () => {
   });
 
   it('should return true after creation', async () => {
-    const privateApostille = new Apostille('new random seed', generator, NetworkType.MIJIN_TEST);
+    const privateApostille = new Apostille('new random seed', generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
     const initiator = new Initiator(creator, NetworkType.MIJIN_TEST);
     expect.assertions(1);
@@ -181,7 +164,7 @@ describe('isCreated function should work properly', () => {
   });
 
   it('should return true for an already created apostille', async () => {
-    const privateApostille = new Apostille('MIJIN_TEST', generator, NetworkType.MIJIN_TEST);
+    const privateApostille = new Apostille('MIJIN_TEST', generator);
     expect.assertions(1);
     return privateApostille.isCreated().then((result) => {
       expect(result).toBeTruthy();
@@ -193,7 +176,7 @@ describe('isCreated function should work properly', () => {
 describe('isAnnounced function should work properly', () => {
   it('should throw an error if we don\'t specefy mijin endpoint url', () => {
     const MJgenerator = Account.createFromPrivateKey(sk, NetworkType.MIJIN);
-    const apostilleMJ = new Apostille('k7u*VTsVCk6h,FdN', MJgenerator, NetworkType.MIJIN);
+    const apostilleMJ = new Apostille('k7u*VTsVCk6h,FdN', MJgenerator);
     try {
       return apostilleMJ.isAnnouced();
     } catch (e) {
@@ -206,10 +189,10 @@ describe('isAnnounced function should work properly', () => {
     const MJgenerator = Account.createFromPrivateKey(sk, NetworkType.MIJIN);
     const MNgenerator = Account.createFromPrivateKey(sk, NetworkType.MAIN_NET);
     const Tgenerator = Account.createFromPrivateKey(sk, NetworkType.TEST_NET);
-    const apostilleMT = new Apostille('QUleqZedaOUtlSh', MTgenerator, NetworkType.MIJIN_TEST);
-    const apostilleMJ = new Apostille('QUleqZedaOUtlSh', MJgenerator, NetworkType.MIJIN);
-    const apostilleMN = new Apostille('QUleqZedaOUtlSh', MNgenerator, NetworkType.MAIN_NET);
-    const apostilleT = new Apostille('QUleqZedaOUtlSh', Tgenerator, NetworkType.TEST_NET);
+    const apostilleMT = new Apostille('QUleqZedaOUtlSh', MTgenerator);
+    const apostilleMJ = new Apostille('QUleqZedaOUtlSh', MJgenerator);
+    const apostilleMN = new Apostille('QUleqZedaOUtlSh', MNgenerator);
+    const apostilleT = new Apostille('QUleqZedaOUtlSh', Tgenerator);
     return apostilleMT.isAnnouced().then((MT) => {
       expect(MT).toBeFalsy();
       return apostilleMJ.isAnnouced('http://b1.nem.foundation:7895').then((MJ) => {
@@ -225,7 +208,7 @@ describe('isAnnounced function should work properly', () => {
   });
 
   it('should return true after an announce', async () => {
-    const privateApostille = new Apostille('_934@Ve*,tM(3MN-', generator, NetworkType.MIJIN_TEST);
+    const privateApostille = new Apostille('_934@Ve*,tM(3MN-', generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
     const initiator = new Initiator(creator, NetworkType.MIJIN_TEST);
     privateApostille.created = true;
@@ -237,7 +220,7 @@ describe('isAnnounced function should work properly', () => {
   });
 
   it('should return true for an already announced apostille', () => {
-    const privateApostille = new Apostille('MIJIN_TEST', generator, NetworkType.MIJIN_TEST);
+    const privateApostille = new Apostille('MIJIN_TEST', generator);
     return privateApostille.isAnnouced().then((result) => {
       expect(result).toBeTruthy();
     });

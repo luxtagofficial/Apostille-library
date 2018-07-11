@@ -6,7 +6,7 @@ const tag = 'NEM is Awesome!';
 const sk = 'aaaaaaaaaaeeeeeeeeeebbbbbbbbbb5555555555dddddddddd1111111111aaee';
 const generator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
 
-const PrivateApostille1 = new Apostille(tag, generator, NetworkType.MIJIN_TEST);
+const PrivateApostille1 = new Apostille(tag, generator);
 
 describe('initiator should work properly', () => {
   it('multisisg without compleet boolean should throw an error', () => {
