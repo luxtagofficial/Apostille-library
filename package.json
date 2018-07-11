@@ -1,7 +1,7 @@
 {
   "name": "apostille-library",
   "version": "0.0.0-development",
-  "description": "Typescript implementation of apostille protocol and standards",
+  "description": "A novel & holistic blockchain notarization and timestamping with transferable, updatable, branded, and conjointly owned notarizations.",
   "keywords": [
     "blockchain",
     "nem",
@@ -24,7 +24,6 @@
     "build:watch": "tsc --watch",
     "lint": "tslint -c tslint.json -p tsconfig.json 'src/**/*.ts'",
     "test": "jest --coverage --verbose",
-    "test1": "jest --coverage --verbose Verifier.spec.ts",
     "validate": "npm-run-all --parallel lint test",
     "report-coverage": "cat ./tests/unit/coverage/lcov.info | codecov",
     "travis-deploy-once": "travis-deploy-once",
