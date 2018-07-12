@@ -1,8 +1,7 @@
 import { Address, AggregateTransaction, Deadline, Listener, LockFundsTransaction, NetworkType, PlainMessage, SignedTransaction, TransactionHttp, TransferTransaction, UInt64, XEM } from 'nem2-sdk';
-import { Errors } from './Errors';
-import { HashFunction } from './hashFunctions/HashFunction';
-import { Initiator } from './Initiator';
+import { Errors, HistoricalEndpoints, Initiator } from '../index';
 import { Sinks } from './Sinks';
+import { HashFunction } from './hashFunctions/HashFunction';
 
 // TODO: add tx hash of the update
 /**
@@ -99,18 +98,11 @@ class PublicApostille {
       transactionHttp = new TransactionHttp(urls);
       listener = new Listener(urls);
     } else {
-      if (this.networkType === NetworkType.MAIN_NET) {
-        transactionHttp = new TransactionHttp('http://88.99.192.82:7890');
-        listener = new Listener('http://88.99.192.82:7890');
-      } else if (this.networkType === NetworkType.TEST_NET) {
-        transactionHttp = new TransactionHttp('http://104.128.226.60:7890');
-        listener = new Listener('http://104.128.226.60:7890');
-      } else if (this.networkType === NetworkType.MIJIN) {
-        throw new Error(Errors[Errors.MISSING_ENDPOINT_ARGUMENT]);
-      } else {
-        transactionHttp = new TransactionHttp('http://api.beta.catapult.mijin.io:3000');
-        listener = new Listener('http://api.beta.catapult.mijin.io:3000');
+      if (this.networkType === NetworkType.MAIN_NET || this.networkType === NetworkType.TEST_NET) {
+        throw new Error(Errors[Errors.MIJIN_ENDPOINT_NEEDED]);
       }
+      transactionHttp = new TransactionHttp(HistoricalEndpoints[this.networkType]);
+      listener = new Listener(HistoricalEndpoints[this.networkType]);
     }
     if (this.initiatorAccount.network !== this.networkType) {
       throw new Error(Errors[Errors.NETWORK_TYPE_MISMATCHED]);
