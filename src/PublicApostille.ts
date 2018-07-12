@@ -1,7 +1,7 @@
 import { Address, AggregateTransaction, Deadline, Listener, LockFundsTransaction, NetworkType, PlainMessage, SignedTransaction, TransactionHttp, TransferTransaction, UInt64, XEM } from 'nem2-sdk';
 import { Errors, HistoricalEndpoints, Initiator } from '../index';
-import { Sinks } from './Sinks';
 import { HashFunction } from './hashFunctions/HashFunction';
+import { Sinks } from './Sinks';
 
 // TODO: add tx hash of the update
 /**
@@ -98,7 +98,7 @@ class PublicApostille {
       transactionHttp = new TransactionHttp(urls);
       listener = new Listener(urls);
     } else {
-      if (this.networkType === NetworkType.MAIN_NET || this.networkType === NetworkType.TEST_NET) {
+      if (this.networkType === NetworkType.MIJIN) {
         throw new Error(Errors[Errors.MIJIN_ENDPOINT_NEEDED]);
       }
       transactionHttp = new TransactionHttp(HistoricalEndpoints[this.networkType]);

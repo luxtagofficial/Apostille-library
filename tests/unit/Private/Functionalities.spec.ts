@@ -181,17 +181,17 @@ describe('isAnnounced function should work properly', () => {
     try {
       return apostilleMJ.isAnnouced();
     } catch (e) {
-      expect(e.message).toMatch(Errors[Errors.MISSING_ENDPOINT_ARGUMENT]);
+      expect(e.message).toMatch(Errors[Errors.MIJIN_ENDPOINT_NEEDED]);
     }
   });
 
-  it('should return false before an announce', () => {
+  it.skip('should return false before an announce', () => {
     const MTgenerator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
     const MJgenerator = Account.createFromPrivateKey(sk, NetworkType.MIJIN);
     const MNgenerator = Account.createFromPrivateKey(sk, NetworkType.MAIN_NET);
     const Tgenerator = Account.createFromPrivateKey(sk, NetworkType.TEST_NET);
     const apostilleMT = new Apostille('QUleqZedaOUtlSh', MTgenerator);
-    const apostilleMJ = new Apostille('QUleqZedaOUtlSh', MJgenerator);
+    const apostilleMJ = new Apostille('QUleqZedaOUtlSS', MJgenerator);
     const apostilleMN = new Apostille('QUleqZedaOUtlSh', MNgenerator);
     const apostilleT = new Apostille('QUleqZedaOUtlSh', Tgenerator);
     return apostilleMT.isAnnouced().then((MT) => {
