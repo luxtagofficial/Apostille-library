@@ -1,36 +1,72 @@
 import { sortBy } from 'lodash';
-import { AccountHttp, Address, BlockchainHttp, PublicAccount, TransactionType } from 'nem2-sdk';
-import { TransactionsStreams } from './TransactionsStreams';
+import { AccountHttp, Address, BlockchainHttp, MultisigAccountInfo, NetworkType, PublicAccount, Transaction, TransactionType } from 'nem2-sdk';
+import { Errors, HistoricalEndpoints, TransactionsStreams } from '../index';
 
 export class ApostilleAccount {
+    /**
+     * @description the network type of the HD apostille account
+     * @type {NetworkType}
+     * @memberof Apostille
+     */
+    public urls: string;
+
     /**
      * @param {PublicAccount} publicAccount
      */
     constructor(
-        /**
-         * The account apostille public account.
-         */
         public readonly publicAccount: PublicAccount,
+        urls?: string,
         ) {
+            if (urls) {
+                this.urls = urls;
+            } else {
+                if (publicAccount.address.networkType === NetworkType.MIJIN) {
+                    throw new Error(Errors[Errors.MIJIN_ENDPOINT_NEEDED]);
+                }
+                this.urls = HistoricalEndpoints[publicAccount.address.networkType];
+            }
         }
 
-    public async isOwned(urls: string) {
-        const cossignatories = await this.getCosignatories(urls);
+    /**
+     * @description - get first transaction
+     * @static
+     * @param {string} urls
+     * @returns {Promise<boolean>}
+     * @memberof ApostilleAccount
+     */
+    public async isOwned() {
+        const cossignatories = await this.getCosignatories();
         if (cossignatories.length > 0) {
             return true;
         }
         return false;
     }
 
-    public getCosignatories(urls: string): Promise<object[]> {
-        const accountHttp = new AccountHttp(urls);
+    /**
+     * @description - get cosignatories of the account
+     * @static
+     * @param {string} urls
+     * @returns {Promise<PublicAccount[]>}
+     * @memberof ApostilleAccount
+     */
+    public getCosignatories(): Promise<PublicAccount[]> {
+        const accountHttp = new AccountHttp(this.urls);
         return new Promise(async (resolve, reject) => {
             accountHttp.getMultisigAccountInfo(this.publicAccount.address).subscribe(
                 (accountInfo) => {
-                    resolve(accountInfo.cosignatories);
+                    const multisigAccountInfo: MultisigAccountInfo = Object.assign(MultisigAccountInfo, accountInfo);
+
+                    resolve(multisigAccountInfo.cosignatories);
                 },
                 (err) => reject(err),
             );
+        });
+    }
+
+    public getCreationTransactionHash(): Promise<string> {
+        // still on progress
+        return new Promise((resolve, reject) => {
+            this.getCreationTransaction();
         });
     }
 
@@ -38,15 +74,15 @@ export class ApostilleAccount {
      * @description - get first transaction
      * @static
      * @param {string} urls
-     * @returns {Promise<any>}
-     * @memberof Verifier
+     * @returns {Promise<Transaction>}
+     * @memberof ApostilleAccount
      */
-    public getCreationTransaction(urls: string): Promise<any> {
-        const accountHttp = new AccountHttp(urls);
-        return new Promise(async (resolve, reject) => {
+    public getCreationTransaction(): Promise<Transaction> {
+        const accountHttp = new AccountHttp(this.urls);
+        return new Promise((resolve, reject) => {
             accountHttp.getAccountInfo(this.publicAccount.address).subscribe(
                 (accountInfo) => {
-                    const blockchainHttp = new BlockchainHttp(urls);
+                    const blockchainHttp = new BlockchainHttp(this.urls);
                     const firstTransactionBlock = accountInfo.addressHeight.lower;
                     // find the first block of this account
                     blockchainHttp.getBlockTransactions(firstTransactionBlock).subscribe(
@@ -78,10 +114,11 @@ export class ApostilleAccount {
                                 // if the smallest index is aggregate transaction, then sort innertransaction by index
                                 const sortedAggregateTransaction = sortBy(
                                     sortedTransaction[0].innerTransactions, ['transactionInfo.index']);
-                                resolve(sortedAggregateTransaction[0]);
+                                resolve(Object.assign(
+                                    Transaction, sortedAggregateTransaction[0]));
                             }
 
-                            resolve(sortedTransaction[0]);
+                            resolve(Object.assign(Transaction, sortedTransaction[0]));
                         },
                         (err) => {
                             console.error(err.message);
@@ -99,16 +136,21 @@ export class ApostilleAccount {
      * Compares address for equality.
      * @param Address
      * @returns {boolean}
+     * @memberof ApostilleAccount
      */
     public equals(address: Address) {
         return this.publicAccount.address.plain() === address.plain();
     }
 
-    public monitor(urls?: string): TransactionsStreams {
-        if (urls) {
-            return new TransactionsStreams(this, urls);
-        }
-        return new TransactionsStreams(this);
+    /**
+     * @description - get transaction streams from the account
+     * @static
+     * @param {string} urls
+     * @returns {TransactionsStreams}
+     * @memberof ApostilleAccount
+     */
+    public monitor(): TransactionsStreams {
+        return new TransactionsStreams(this, this.urls);
     }
 
 }

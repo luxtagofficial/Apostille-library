@@ -2,12 +2,11 @@ import { drop, uniqBy } from 'lodash';
 import * as nemSDK from 'nem-sdk';
 import { Account, AccountHttp, Address, AggregateTransaction, Deadline, InnerTransaction, Listener, LockFundsTransaction, ModifyMultisigAccountTransaction, Mosaic, MultisigCosignatoryModification, MultisigCosignatoryModificationType, NetworkType, PlainMessage, PublicAccount, QueryParams, SignedTransaction, TransactionAnnounceResponse, TransactionHttp, TransactionType, TransferTransaction, UInt64, XEM } from 'nem2-sdk';
 import { filter, flatMap } from 'rxjs/operators';
-import { ApostilleAccount } from './ApostilleAccount';
+import { ApostilleAccount, HistoricalEndpoints, Initiator, TransactionsStreams } from '../index';
+import { Errors } from './Errors';
+import { IReadyTransaction } from './ReadyTransaction';
 import { SHA256 } from './hashFunctions';
 import { HashFunction } from './hashFunctions/HashFunction';
-import { Initiator } from './Initiator';
-import { IReadyTransaction } from './ReadyTransaction';
-import { TransactionsStreams } from './TransactionsStreams';
 
 const nem = nemSDK.default;
 // TODO: add tx hash of creation
@@ -106,13 +105,13 @@ class Apostille {
     hashFunction?: HashFunction,
   ): Promise<void> {
     if (initiatorAccount.network !== this.networkType) {
-      throw new Error('Netrowk type miss matched!');
+      throw new Error(Errors[Errors.NETWORK_TYPE_MISMATCHED]);
     }
     // check if the apostille was already created locally or on chain
     await this.isAnnouced().then(() => {
       if (this._created) {
         this._created = true;
-        throw new Error('you have already created this apostille');
+        throw new Error(Errors[Errors.APOSTILLE_ALREADY_CREATED]);
       }
       this.creatorAccount = initiatorAccount;
       let creationTransaction: TransferTransaction;
@@ -184,7 +183,7 @@ class Apostille {
       // we test locally first to avoid testing on chain evrytime we update
       await this.isAnnouced();
       if (!this._created) {
-        throw new Error('Apostille not created yet!');
+        throw new Error(Errors[Errors.APOSTILLE_NOT_CREATED]);
       }
     }
     // we create the update transaction
@@ -335,7 +334,7 @@ class Apostille {
   public async announce(urls?: string): Promise<void> {
     await this.isAnnouced().then(async () => {
       if (!this._created) {
-        throw new Error('Apostille not created yet!');
+        throw new Error(Errors[Errors.APOSTILLE_NOT_CREATED]);
       }
       let transactionHttp: TransactionHttp;
       let listener: Listener;
@@ -346,18 +345,11 @@ class Apostille {
         transactionHttp = new TransactionHttp(urls);
         listener = new Listener(urls);
       } else {
-        if (this.networkType === NetworkType.MAIN_NET) {
-          transactionHttp = new TransactionHttp('http://88.99.192.82:7890');
-          listener = new Listener('http://88.99.192.82:7890');
-        } else if (this.networkType === NetworkType.TEST_NET) {
-          transactionHttp = new TransactionHttp('http://104.128.226.60:7890');
-          listener = new Listener('http://104.128.226.60:7890');
-        } else if (this.networkType === NetworkType.MIJIN) {
-          throw new Error('Missing Endpoint argument!');
-        } else {
-          transactionHttp = new TransactionHttp('http://api.beta.catapult.mijin.io:3000');
-          listener = new Listener('http://api.beta.catapult.mijin.io:3000');
+        if (this.networkType === NetworkType.MIJIN) {
+          throw new Error(Errors[Errors.MIJIN_ENDPOINT_NEEDED]);
         }
+        transactionHttp = new TransactionHttp(HistoricalEndpoints[this.networkType]);
+        listener = new Listener(HistoricalEndpoints[this.networkType]);
       }
       let readyTransfer: IReadyTransaction[] = [];
       this.transactions.forEach(async (readyTransaction) => {
@@ -368,7 +360,7 @@ class Apostille {
         } else if (readyTransaction.type === TransactionType.AGGREGATE_COMPLETE) {
           // if aggregate complete check if trensfer transaction has transaction to announce
           if (!readyTransaction.initiator.multisigAccount) {
-            throw Error('This aggregate compleet needs a multisig account');
+            throw Error(Errors[Errors.AGGREGATE_COMPLETE_NEED_MULTISIG_ACCOUNT]);
           }
           if (readyTransfer.length > 0) {
             await this.announceTransfer(readyTransfer, transactionHttp);
@@ -399,7 +391,7 @@ class Apostille {
 
         } else if (readyTransaction.type === TransactionType.AGGREGATE_BONDED) {
           if (!readyTransaction.initiator.multisigAccount) {
-            throw Error('This aggregate bounded needs a multisig account');
+            throw Error(Errors[Errors.AGGREGATE_BOUNDED_NEED_MULTISIG_ACCOUNT]);
           }
           if (readyTransfer.length > 0) {
             await this.announceTransfer(readyTransfer, transactionHttp);
@@ -440,7 +432,7 @@ class Apostille {
                 (x) => console.log(x),
                 (err) => console.error(err));
             listener.confirmed(readyTransaction.initiator.account.address).pipe(
-              filter((transaction) => transaction.transactionInfo !== undefined
+              filter((transaction: any) => transaction.transactionInfo !== undefined
                     && transaction.transactionInfo.hash === signedLock.hash),
               flatMap(() => transactionHttp.announceAggregateBonded(signedTransaction)),
             ).subscribe(
@@ -563,15 +555,10 @@ class Apostille {
       }
       accountHttp = new AccountHttp(urls);
     } else {
-      if (this.networkType === NetworkType.MAIN_NET) {
-        accountHttp  = new AccountHttp('http://88.99.192.82:7890');
-      } else if (this.networkType === NetworkType.TEST_NET) {
-        accountHttp  = new AccountHttp('http://104.128.226.60:7890');
-      } else if (this.networkType === NetworkType.MIJIN) {
-        throw new Error('Missing Endpoint argument!');
-      } else {
-        accountHttp  = new AccountHttp('http://api.beta.catapult.mijin.io:3000');
+      if (this.networkType === NetworkType.MIJIN) {
+        throw new Error(Errors[Errors.MIJIN_ENDPOINT_NEEDED]);
       }
+      accountHttp  = new AccountHttp(HistoricalEndpoints[this.networkType]);
     }
     return new Promise(async (resolve, reject) => {
         await accountHttp.transactions(

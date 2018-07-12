@@ -1,5 +1,6 @@
 import { Account, NetworkType } from 'nem2-sdk';
 import { Apostille, Initiator } from '../../index';
+import { Errors } from '../../src/Errors';
 
 const tag = 'NEM is Awesome!';
 // A funny but valid private key
@@ -12,7 +13,7 @@ describe('initiator should work properly', () => {
   it('multisisg without compleet boolean should throw an error', () => {
     expect(() => {
       const ini = new Initiator(generator, NetworkType.MIJIN_TEST, generator.publicAccount);
-    }).toThrow('Missing argument "isCompleet"');
+    }).toThrow(Errors[Errors.MISSING_IS_COMPLETE_ARGUMENT]);
   });
 
   it('should compleet getter should work properly', () => {

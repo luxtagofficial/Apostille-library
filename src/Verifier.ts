@@ -1,8 +1,6 @@
 import CryptoJS from 'crypto-js';
 import { PublicAccount } from 'nem2-sdk';
 
-// const nem = nemSDK.default;
-
 /**
  * @description - a class with diffrent verifier function utilities
  * @class Verifier
@@ -36,21 +34,21 @@ class Verifier {
             version: '09',
         },
     };
+
     /**
-     * @description -
+     * @description - verify apostille message
      * @static
-     * @param {string} fileContent
-     * @param {string} payload
-     * @param {string} signer
-     * @param {NetworkType} networkType
+     * @param {PublicAccount} signer - the account used to sign the data
+     * @param {string} data - the data
+     * @param {string} payload - the hashed data
      * @returns
      * @memberof Verifier
      */
     public static verifyApostille(
         signer: PublicAccount,
-        fileContent: string,
+        data: string,
         payload: string,
-        signature: string) {
+    ) {
         const apostilleHash = payload;
 
         // Get the checksum
@@ -58,15 +56,12 @@ class Verifier {
         // Get the hashing byte
         const hashingByte = checksum.substring(8);
         // Retrieve the hashing method using the checksum in message and hash the file accordingly
-        const fileHash = Verifier.retrieveHash(apostilleHash, fileContent);
+        const fileHash = Verifier.retrieveHash(apostilleHash, data);
         // Check if apostille is signed
         if (Verifier.isSigned(hashingByte)) {
-            console.log('isSigned');
             // Verify signature
-            console.log(signature.length);
-            return signer.verifySignature(fileHash, signature);
+            return signer.verifySignature(fileHash, apostilleHash.substring(10));
         } else {
-            console.log('!isSigned');
             // Check if hashed file match hash in transaction (without checksum)
             return fileHash === apostilleHash.substring(10);
         }
@@ -76,26 +71,26 @@ class Verifier {
      * Hash a file according to version byte in checksum
      *
      * @param {string} apostilleHash - The hash contained in the apostille transaction
-     * @param {wordArray} fileContent - The file content
+     * @param {string} data - The data
      *
      * @return {string} - The file content hashed with correct hashing method
      */
-    private static retrieveHash(apostilleHash, fileContent) {
+    private static retrieveHash(apostilleHash, data) {
         // Get checksum
         const checksum = apostilleHash.substring(0, 10);
         // Get the version byte
         const hashingVersionBytes = checksum.substring(8);
         // Hash depending of version byte
         if (hashingVersionBytes === '01' || hashingVersionBytes === '81') {
-            return CryptoJS.MD5(fileContent).toString(CryptoJS.enc.Hex);
+            return CryptoJS.MD5(data).toString(CryptoJS.enc.Hex);
         } else if (hashingVersionBytes === '02' || hashingVersionBytes === '82') {
-            return CryptoJS.SHA1(fileContent).toString(CryptoJS.enc.Hex);
+            return CryptoJS.SHA1(data).toString(CryptoJS.enc.Hex);
         } else if (hashingVersionBytes === '03' || hashingVersionBytes === '83') {
-            return CryptoJS.SHA256(fileContent).toString(CryptoJS.enc.Hex);
+            return CryptoJS.SHA256(data).toString(CryptoJS.enc.Hex);
         } else if (hashingVersionBytes === '08' || hashingVersionBytes === '88') {
-            return CryptoJS.SHA3(fileContent, { outputLength: 256 }).toString(CryptoJS.enc.Hex);
+            return CryptoJS.SHA3(data, { outputLength: 256 }).toString(CryptoJS.enc.Hex);
         } else {
-            return CryptoJS.SHA3(fileContent, { outputLength: 512 }).toString(CryptoJS.enc.Hex);
+            return CryptoJS.SHA3(data, { outputLength: 512 }).toString(CryptoJS.enc.Hex);
         }
     }
 

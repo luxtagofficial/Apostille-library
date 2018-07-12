@@ -34,8 +34,7 @@ describe('verifier should work properly', () => {
     const apostilleAccount = new ApostilleAccount(PublicAccount.createFromPublicKey(publicKey, NetworkType.MIJIN_TEST));
 
     return apostilleAccount.getCreationTransaction('http://api.beta.catapult.mijin.io:3000').then((data) => {
-      console.log(data);
-      expect(true).toEqual(true);
+      expect(data.message.payload).toEqual('I am really really awesomeee');
     });
   });
 });
