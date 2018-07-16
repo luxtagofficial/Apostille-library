@@ -1,5 +1,6 @@
 import { sortBy } from 'lodash';
-import { AccountHttp, Address, BlockchainHttp, MultisigAccountInfo, NetworkType, PublicAccount, Transaction, TransactionType } from 'nem2-sdk';
+import { AccountHttp, Address, BlockchainHttp, MultisigAccountInfo, NetworkType, PublicAccount, Transaction, TransactionHttp, TransactionInfo, TransactionType } from 'nem2-sdk';
+import { Observable } from 'rxjs';
 import { Errors, HistoricalEndpoints, TransactionsStreams } from '../index';
 
 export class ApostilleAccount {
@@ -63,16 +64,34 @@ export class ApostilleAccount {
         });
     }
 
-    public getCreationTransactionHash(): Promise<string> {
-        // still on progress
-        return new Promise((resolve, reject) => {
-            this.getCreationTransaction();
-        });
+    /**
+     * @description - get Transaction by ID
+     * @param {string} transactionID
+     * @returns {Observable<Transaction>}
+     * @memberof ApostilleAccount
+     */
+    public getTransactionById(transactionID: string): Observable<Transaction> {
+        const transactionHttp = new TransactionHttp(this.urls);
+        return transactionHttp.getTransaction(transactionID);
+    }
+
+    /**
+     * @description - get creationTransaction Info
+     * @param {string} urls
+     * @returns {Promise<string>}
+     * @memberof ApostilleAccount
+     */
+    public async getCreationTransactionInfo(): Promise<TransactionInfo> {
+        const transaction: Transaction = await this.getCreationTransaction();
+        if (transaction.transactionInfo instanceof TransactionInfo) {
+            const transactionInfo: TransactionInfo = transaction.transactionInfo;
+            return transactionInfo;
+        }
+        throw new Error(Errors[Errors.COULD_NOT_FOUND_TRANSACTION_INFO]);
     }
 
     /**
      * @description - get first transaction
-     * @static
      * @param {string} urls
      * @returns {Promise<Transaction>}
      * @memberof ApostilleAccount

@@ -1,3 +1,4 @@
+
 /**
  * @description - Errors
  * @export
@@ -22,4 +23,12 @@ export enum Errors {
   AGGREGATE_BOUNDED_NEED_MULTISIG_ACCOUNT,
 
   FILE_ALREADY_ANNOUNCED,
+
+  COULD_NOT_FOUND_TRANSACTION_INFO,
+
+  NOT_PUBLIC_APOSTILLE,
+
+  NOT_PRIVATE_APOSTILLE,
+
+  NOT_APOSTILLE,
 }
