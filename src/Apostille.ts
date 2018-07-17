@@ -108,7 +108,7 @@ class Apostille {
       throw new Error(Errors[Errors.NETWORK_TYPE_MISMATCHED]);
     }
     // check if the apostille was already created locally or on chain
-    await this.isAnnouced().then(() => {
+    await this.isAnnounced().then(() => {
       if (this._created) {
         this._created = true;
         throw new Error(Errors[Errors.APOSTILLE_ALREADY_CREATED]);
@@ -181,7 +181,7 @@ class Apostille {
   ): Promise<void> {
     if (!this._created) {
       // we test locally first to avoid testing on chain evrytime we update
-      await this.isAnnouced();
+      await this.isAnnounced();
       if (!this._created) {
         throw new Error(Errors[Errors.APOSTILLE_NOT_CREATED]);
       }
@@ -330,7 +330,7 @@ class Apostille {
    * @memberof Apostille
    */
   public async announce(urls?: string): Promise<void> {
-    await this.isAnnouced().then(async () => {
+    await this.isAnnounced().then(async () => {
       if (!this._created) {
         throw new Error(Errors[Errors.APOSTILLE_NOT_CREATED]);
       }
@@ -533,7 +533,7 @@ class Apostille {
    */
   public isCreated(): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
-      this.isAnnouced().then(() => {
+      this.isAnnounced().then(() => {
         resolve(this._created);
       });
     });
@@ -544,7 +544,7 @@ class Apostille {
    * @returns {Promise<boolean>}
    * @memberof Apostille
    */
-  public isAnnouced(urls?: string): Promise<boolean> {
+  public isAnnounced(urls?: string): Promise<boolean> {
     // check if the apostille account has any transaction
     let accountHttp;
     if (urls) {

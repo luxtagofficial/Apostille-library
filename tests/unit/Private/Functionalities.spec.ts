@@ -179,7 +179,7 @@ describe('isAnnounced function should work properly', () => {
     const MJgenerator = Account.createFromPrivateKey(sk, NetworkType.MIJIN);
     const apostilleMJ = new Apostille('k7u*VTsVCk6h,FdN', MJgenerator);
     try {
-      return apostilleMJ.isAnnouced();
+      return apostilleMJ.isAnnounced();
     } catch (e) {
       expect(e.message).toMatch(Errors[Errors.MIJIN_ENDPOINT_NEEDED]);
     }
@@ -194,13 +194,13 @@ describe('isAnnounced function should work properly', () => {
     const apostilleMJ = new Apostille('QUleqZedaOUtlSS', MJgenerator);
     const apostilleMN = new Apostille('QUleqZedaOUtlSh', MNgenerator);
     const apostilleT = new Apostille('QUleqZedaOUtlSh', Tgenerator);
-    return apostilleMT.isAnnouced().then((MT) => {
+    return apostilleMT.isAnnounced().then((MT) => {
       expect(MT).toBeFalsy();
-      return apostilleMJ.isAnnouced('http://b1.nem.foundation:7895').then((MJ) => {
+      return apostilleMJ.isAnnounced('http://b1.nem.foundation:7895').then((MJ) => {
         expect(MJ).toBeFalsy();
-        return apostilleMN.isAnnouced().then((MN) => {
+        return apostilleMN.isAnnounced().then((MN) => {
           expect(MN).toBeFalsy();
-          return apostilleT.isAnnouced().then((T) => {
+          return apostilleT.isAnnounced().then((T) => {
             expect(T).toBeFalsy();
           });
         });
@@ -215,14 +215,14 @@ describe('isAnnounced function should work properly', () => {
     privateApostille.created = true;
     await privateApostille.update(initiator, 'update');
     await privateApostille.announce();
-    return privateApostille.isAnnouced().then((result) => {
+    return privateApostille.isAnnounced().then((result) => {
       expect(result).toBeTruthy();
     });
   });
 
   it('should return true for an already announced apostille', () => {
     const privateApostille = new Apostille('MIJIN_TEST', generator);
-    return privateApostille.isAnnouced().then((result) => {
+    return privateApostille.isAnnounced().then((result) => {
       expect(result).toBeTruthy();
     });
   });
