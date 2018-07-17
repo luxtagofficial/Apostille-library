@@ -12,45 +12,18 @@ beforeAll(() => {
   jest.setTimeout(10000);
 });
 
-describe('constructor of public apostilee should work properly', () => {
-  it('should throw error if network type of initiator and sink address dont match', () => {
-    expect(() => {
-      const initiator = new Initiator(signer);
-      const publicApostille = new PublicApostille(
-        initiator,
-        fileName,
-        NetworkType.MAIN_NET,
-        'SCKPEZ-5ZAPYO-PXVF6U-YLHINF-CLYZHO-YCIO3P-KGVV');
-    }).toThrow();
-  });
-});
-
 // Simulate the file content
 const fileContent = CryptoJS.enc.Utf8.parse('Public apostille is awesome !');
 const hashFunction = new SHA256();
 
 describe('announce function should work properly', () => {
 
-  it('should throw error if network type of initiator and the apostille dont match', () => {
-    expect(() => {
-      const initiator = new Initiator(signer);
-      const publicApostille = new PublicApostille(
-        initiator,
-        fileName,
-        NetworkType.MAIN_NET);
-
-      publicApostille.update(fileContent, hashFunction);
-      publicApostille.announce();
-    }).toThrow();
-  });
-
   it('should throw error if network type is mijin and we don\'t specefy an endpoint', () => {
     expect(() => {
       const initiator = new Initiator(signer);
       const publicApostille = new PublicApostille(
         initiator,
-        fileName,
-        NetworkType.MIJIN);
+        fileName,);
 
       publicApostille.update(fileContent, hashFunction);
       publicApostille.announce();
@@ -62,7 +35,6 @@ describe('announce function should work properly', () => {
     const publicApostille = new PublicApostille(
       initiator,
       fileName,
-      NetworkType.MIJIN_TEST,
       'SCKPEZ-5ZAPYO-PXVF6U-YLHINF-CLYZHO-YCIO3P-KGVV');
     publicApostille.update(fileContent, hashFunction);
     await publicApostille.announce();
@@ -78,7 +50,6 @@ describe('announce function should work properly', () => {
     const publicApostille = new PublicApostille(
       initiator,
       fileName,
-      NetworkType.MIJIN_TEST,
       'SCKPEZ-5ZAPYO-PXVF6U-YLHINF-CLYZHO-YCIO3P-KGVV');
 
     publicApostille.update(CryptoJS.enc.Utf8.parse('Public apostille is awesome !'), hashFunction);
@@ -95,7 +66,6 @@ describe('announce function should work properly', () => {
     const publicApostille = new PublicApostille(
       initiator,
       fileName,
-      NetworkType.MIJIN_TEST,
       'SCKPEZ-5ZAPYO-PXVF6U-YLHINF-CLYZHO-YCIO3P-KGVV');
 
     publicApostille.update(CryptoJS.enc.Utf8.parse('Public apostille is awesome !'), hashFunction);

@@ -23,6 +23,12 @@ class PublicApostille {
    */
   private address: Address;
   /**
+   * @description - the network type the public apostille
+   * @private
+   * @memberof PublicApostille
+   */
+  private networkType: NetworkType;
+  /**
    * @description - the hash uncluding the magical byte of this public apostille
    * @private
    * @memberof PublicApostille
@@ -45,17 +51,14 @@ class PublicApostille {
   constructor(
     private initiatorAccount: Initiator,
     public readonly fileName: string,
-    public readonly networkType: NetworkType,
     sinkAddress?: string,
   ) {
+    this.networkType = initiatorAccount.account.address.networkType;
     if (sinkAddress) {
       const newSink = Address.createFromRawAddress(sinkAddress);
-      if (newSink.networkType !== networkType) {
-        throw new Error(Errors[Errors.NETWORK_TYPE_MISMATCHED]);
-      }
       this.address = newSink;
     } else {
-      this.address = Address.createFromRawAddress(Sinks[networkType]);
+      this.address = Address.createFromRawAddress(Sinks[this.networkType]);
     }
   }
   /**
@@ -103,9 +106,6 @@ class PublicApostille {
       }
       transactionHttp = new TransactionHttp(HistoricalEndpoints[this.networkType]);
       listener = new Listener(HistoricalEndpoints[this.networkType]);
-    }
-    if (this.initiatorAccount.account.address.networkType !== this.networkType) {
-      throw new Error(Errors[Errors.NETWORK_TYPE_MISMATCHED]);
     }
 
     if (this.initiatorAccount.multisigAccount) {

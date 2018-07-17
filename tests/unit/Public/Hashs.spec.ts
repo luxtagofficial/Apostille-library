@@ -45,7 +45,7 @@ hashArray.forEach((hash) => {
     false, {}, false,
     nem.model.network.data.testnet.id);
 
-  newPublicApostille = new PublicApostille(initiator, fileName, NetworkType.TEST_NET);
+  newPublicApostille = new PublicApostille(initiator, fileName);
 
   hashType = chooseHash(hash);
   newPublicApostille.update(fileContent, hashType);

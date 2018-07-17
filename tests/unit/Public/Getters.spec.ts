@@ -10,7 +10,6 @@ const initiator = new Initiator(signer);
 const publicApostille = new PublicApostille(
   initiator,
   fileName,
-  NetworkType.MIJIN_TEST,
   'SCKPEZ-5ZAPYO-PXVF6U-YLHINF-CLYZHO-YCIO3P-KGVV');
 
 describe('getters should work properly', () => {
