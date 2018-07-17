@@ -1,7 +1,14 @@
-import { NetworkType, PublicAccount } from 'nem2-sdk';
-import { ApostilleAccount } from '../../index';
+import { NetworkType, PublicAccount, TransactionInfo, TransferTransaction } from 'nem2-sdk';
+import { ApostilleAccount, Errors } from '../../index';
 
 describe('apostille accound methods should work properly', () => {
+  it('throws error if publicAccount parameter made from MIJIN and urls parameter is empty', () => {
+    const publicKey = 'E15CAB00A5A34216A8A29034F950A18DFC6F4F27BCCFBF9779DC6886653B7E56';
+
+    expect(() => new ApostilleAccount(PublicAccount.createFromPublicKey(publicKey, NetworkType.MIJIN)))
+                .toThrow(Errors[Errors.MIJIN_ENDPOINT_NEEDED]);
+  });
+
   it(' should return 2 cosignataries of the accounts', () => {
     const publicKey = 'E15CAB00A5A34216A8A29034F950A18DFC6F4F27BCCFBF9779DC6886653B7E56';
     const apostilleAccount = new ApostilleAccount(PublicAccount.createFromPublicKey(publicKey, NetworkType.MIJIN_TEST));
@@ -29,12 +36,53 @@ describe('apostille accound methods should work properly', () => {
     });
   });
 
-  it('Should return creation transaction', () => {
+  it('Should return creation transaction when it is transfer transaction', () => {
+    const publicKey = '901C9D46840BB74F4649EF3AF65A910A9F162DFA0FD5AD7E2739E5B82C2579F0';
+    const apostilleAccount = new ApostilleAccount(PublicAccount.createFromPublicKey(publicKey, NetworkType.MIJIN_TEST));
+
+    return apostilleAccount.getCreationTransaction().then((data: TransferTransaction) => {
+      expect(data.message.payload).toEqual('');
+    });
+  });
+
+  it('Should return creation transaction when the it is an aggregate complete transaction', () => {
     const publicKey = 'E15CAB00A5A34216A8A29034F950A18DFC6F4F27BCCFBF9779DC6886653B7E56';
     const apostilleAccount = new ApostilleAccount(PublicAccount.createFromPublicKey(publicKey, NetworkType.MIJIN_TEST));
 
-    return apostilleAccount.getCreationTransaction().then((data: any) => {
+    return apostilleAccount.getCreationTransaction().then((data: TransferTransaction) => {
       expect(data.message.payload).toEqual('I am really really awesomeee');
     });
   });
+
+  it('Throws error if there is no first transactions', () => {
+    const publicKey = '043E9D2BB4F38348F4ECA088CF0E76B3749389CFDE3E8D091889477F9F33F630';
+    const apostilleAccount = new ApostilleAccount(PublicAccount.createFromPublicKey(publicKey, NetworkType.MIJIN_TEST));
+
+    return apostilleAccount.getCreationTransaction().then((data: TransferTransaction) => {
+      console.log(TransferTransaction);
+    }).catch((err) => {
+      expect(err.message).toEqual('Not Found');
+    });
+  });
+
+  it('Should return creation transaction info', () => {
+    const publicKey = 'E15CAB00A5A34216A8A29034F950A18DFC6F4F27BCCFBF9779DC6886653B7E56';
+    const apostilleAccount = new ApostilleAccount(PublicAccount.createFromPublicKey(publicKey, NetworkType.MIJIN_TEST));
+
+    return apostilleAccount.getCreationTransactionInfo().then((transactionInfo: TransactionInfo) => {
+      expect(transactionInfo.id).toEqual('5B160E18C60E680001790BA2');
+    });
+  });
+
+  it('returns correct transaction by ID', () => {
+    const transactionID = '5B160E18C60E680001790BA2';
+    const publicKey = 'E15CAB00A5A34216A8A29034F950A18DFC6F4F27BCCFBF9779DC6886653B7E56';
+    const apostilleAccount = new ApostilleAccount(PublicAccount.createFromPublicKey(publicKey, NetworkType.MIJIN_TEST));
+
+    apostilleAccount.getTransactionById(transactionID)
+      .subscribe((transaction) => {
+        expect(transaction.transactionInfo.id).toEqual(transactionID);
+      });
+  });
+
 });
