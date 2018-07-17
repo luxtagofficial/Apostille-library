@@ -1,4 +1,4 @@
-import { Account, NetworkType, PublicAccount } from 'nem2-sdk';
+import { Account, PublicAccount } from 'nem2-sdk';
 import { Errors } from './Errors';
 /**
  * @description - a class wrapping the transaction initiator account
