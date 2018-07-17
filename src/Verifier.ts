@@ -1,5 +1,6 @@
 import CryptoJS from 'crypto-js';
 import { PublicAccount } from 'nem2-sdk';
+import { Errors } from '../index';
 
 /**
  * @description - a class with diffrent verifier function utilities
@@ -7,64 +8,80 @@ import { PublicAccount } from 'nem2-sdk';
  */
 class Verifier {
 
-    public static hashing = {
-        'MD5': {
-            name: 'MD5',
-            signedVersion: '81',
-            version: '01',
-        },
-        'SHA1': {
-            name: 'SHA1',
-            signedVersion: '82',
-            version: '02',
-        },
-        'SHA256' : {
-            name: 'SHA256',
-            signedVersion: '83',
-            version: '03',
-        },
-        'SHA3-256': {
-            name: 'SHA3-256',
-            signedVersion: '88',
-            version: '08',
-        },
-        'SHA3-512': {
-            name: 'SHA3-512',
-            signedVersion: '89',
-            version: '09',
-        },
-    };
+    /**
+     * @description - verify public apostille message
+     * @static
+     * @param {string} data - the data
+     * @param {string} payload - the hashed data
+     * @return {boolean}
+     * @memberof Verifier
+     */
+    public static verifyPublicApostille(data: string, payload: string): boolean {
+        if (this.isApostille(payload)) {
+            if (this.isPublicApostille(payload)) {
+                const fileHash = Verifier.retrieveHash(payload, data);
+                return fileHash === payload.substring(10);
+            }
+            throw new Error(Errors[Errors.NOT_PUBLIC_APOSTILLE]);
+        }
+        throw new Error(Errors[Errors.NOT_APOSTILLE]);
+    }
 
     /**
-     * @description - verify apostille message
+     * @description - verify private apostille message
      * @static
      * @param {PublicAccount} signer - the account used to sign the data
      * @param {string} data - the data
      * @param {string} payload - the hashed data
-     * @returns
+     * @return {boolean}
      * @memberof Verifier
      */
-    public static verifyApostille(
-        signer: PublicAccount,
-        data: string,
-        payload: string,
-    ) {
-        const apostilleHash = payload;
-
-        // Get the checksum
-        const checksum = apostilleHash.substring(0, 10);
-        // Get the hashing byte
-        const hashingByte = checksum.substring(8);
-        // Retrieve the hashing method using the checksum in message and hash the file accordingly
-        const fileHash = Verifier.retrieveHash(apostilleHash, data);
-        // Check if apostille is signed
-        if (Verifier.isSigned(hashingByte)) {
-            // Verify signature
-            return signer.verifySignature(fileHash, apostilleHash.substring(10));
-        } else {
-            // Check if hashed file match hash in transaction (without checksum)
-            return fileHash === apostilleHash.substring(10);
+    public static verifyPrivateApostille(signer: PublicAccount, data: string, payload: string): boolean {
+        if (this.isApostille(payload)) {
+            if (this.isPrivateApostille(payload)) {
+                const fileHash = Verifier.retrieveHash(payload, data);
+                return signer.verifySignature(fileHash, payload.substring(10));
+            }
+            throw new Error(Errors[Errors.NOT_PRIVATE_APOSTILLE]);
         }
+        throw new Error(Errors[Errors.NOT_APOSTILLE]);
+    }
+
+    /**
+     * Check if payload is apostile
+     *
+     * @param {string} payload - The hash contained in the apostille transaction
+     *
+     * @return {boolean}
+     */
+    public static isApostille(payload: string): boolean {
+        return (payload.substring(0, 8) === 'fe4e5459');
+    }
+
+    /**
+     * Check if payload is public apostile
+     *
+     * @param {string} payload - The hash contained in the apostille transaction
+     *
+     * @return {boolean}
+     */
+    public static isPublicApostille(payload: string): boolean {
+        const hashingByte = payload.substring(8, 10);
+        return (hashingByte === '01' || hashingByte === '02' || hashingByte === '03' ||
+            hashingByte === '08' || hashingByte === '09');
+    }
+
+    /**
+     * Check if payload is private apostile
+     *
+     * @param {string} payload - The hash contained in the apostille transaction
+     *
+     * @return {boolean}
+     */
+    public static isPrivateApostille(payload: string): boolean {
+        const hashingByte = payload.substring(8, 10);
+        return (hashingByte === '81' || hashingByte === '82' || hashingByte === '83' ||
+            hashingByte === '88' || hashingByte === '89');
     }
 
     /**
@@ -80,6 +97,7 @@ class Verifier {
         const checksum = apostilleHash.substring(0, 10);
         // Get the version byte
         const hashingVersionBytes = checksum.substring(8);
+
         // Hash depending of version byte
         if (hashingVersionBytes === '01' || hashingVersionBytes === '81') {
             return CryptoJS.MD5(data).toString(CryptoJS.enc.Hex);
@@ -94,22 +112,6 @@ class Verifier {
         }
     }
 
-    /**
-     * Check if an apostille is signed
-     *
-     * @param {string} hashingByte - An hashing version byte
-     *
-     * @return {boolean} - True if signed, false otherwise
-     */
-    private static isSigned(hashingByte) {
-        const array = Object.keys(Verifier.hashing);
-        for (let i = 0; array.length > i; i++) {
-            if (Verifier.hashing[array[i]].signedVersion === hashingByte) {
-                return true;
-            }
-        }
-        return false;
-    }
 }
 
 export { Verifier };
