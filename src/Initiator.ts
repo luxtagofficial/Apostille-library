@@ -17,7 +17,6 @@ class Initiator {
    */
   constructor(
     public readonly account: Account,
-    public readonly network: NetworkType,
     public readonly multisigAccount?: PublicAccount,
     private isComplete?: boolean,
     public readonly cosignatories?: Account[],

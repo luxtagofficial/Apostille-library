@@ -36,13 +36,13 @@ describe('Getters should work properly', () => {
   });
 
   it('creator sould be a valid account', async () => {
-    const creator = new Initiator(signer, NetworkType.MIJIN_TEST);
+    const creator = new Initiator(signer);
     await PrivateApostille1.create(creator, payload);
     expect(PrivateApostille1.creator).toMatchObject(creator.account);
   });
 
   it('multisig creator sould be a valid public account', async () => {
-    const dumpMultisigCreator = new Initiator(signer, NetworkType.MIJIN_TEST, signer.publicAccount, true);
+    const dumpMultisigCreator = new Initiator(signer, signer.publicAccount, true);
     await PrivateApostille2.create(dumpMultisigCreator, payload);
     expect(PrivateApostille2.creator).toMatchObject(dumpMultisigCreator.multisigAccount);
     expect(PrivateApostille2.creator.publicKey).toMatch(dumpMultisigCreator.multisigAccount.publicKey);

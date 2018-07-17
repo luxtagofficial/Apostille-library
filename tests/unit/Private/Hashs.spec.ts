@@ -7,7 +7,7 @@ const seed = 'NEM is Awesome!';
 // A funny but valid private key
 const sk = 'aaaaaaaaaaeeeeeeeeeebbbbbbbbbb5555555555dddddddddd1111111111aaee';
 const generator = Account.createFromPrivateKey(sk, NetworkType.TEST_NET);
-const initiator = new Initiator(generator, NetworkType.TEST_NET);
+const initiator = new Initiator(generator);
 
 // Create a common object holding key
 const common = nem.model.objects.create('common')('', sk);
