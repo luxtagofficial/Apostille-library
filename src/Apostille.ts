@@ -4,9 +4,9 @@ import { Account, AccountHttp, Address, AggregateTransaction, Deadline, InnerTra
 import { filter, flatMap } from 'rxjs/operators';
 import { ApostilleAccount, HistoricalEndpoints, Initiator, TransactionsStreams } from '../index';
 import { Errors } from './Errors';
-import { IReadyTransaction } from './ReadyTransaction';
 import { SHA256 } from './hashFunctions';
 import { HashFunction } from './hashFunctions/HashFunction';
+import { IReadyTransaction } from './ReadyTransaction';
 
 const nem = nemSDK.default;
 // TODO: add tx hash of creation
@@ -104,7 +104,7 @@ class Apostille {
     mosaics: Mosaic[] | Mosaic[] = [],
     hashFunction?: HashFunction,
   ): Promise<void> {
-    if (initiatorAccount.network !== this.networkType) {
+    if (initiatorAccount.account.address.networkType !== this.networkType) {
       throw new Error(Errors[Errors.NETWORK_TYPE_MISMATCHED]);
     }
     // check if the apostille was already created locally or on chain
@@ -245,7 +245,7 @@ class Apostille {
       this.networkType,
     );
 
-    const apostilleAccount = new Initiator(this.Apostille, this.networkType);
+    const apostilleAccount = new Initiator(this.Apostille);
     const readyModification: IReadyTransaction = {
        initiator: apostilleAccount,
        transaction: multisigCreation,
@@ -298,7 +298,6 @@ class Apostille {
       // create an incomplete initiator
       initiatorApostille = new Initiator(
         signers[0],
-        this.networkType,
         this.Apostille.publicAccount,
         true,
         cosignatories);
@@ -312,7 +311,6 @@ class Apostille {
       // create a compleet initiator
       initiatorApostille = new Initiator(
         signers[0],
-        this.networkType,
         this.Apostille.publicAccount,
         false,
         cosignatories);

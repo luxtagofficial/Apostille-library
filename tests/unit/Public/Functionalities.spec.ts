@@ -15,7 +15,7 @@ beforeAll(() => {
 describe('constructor of public apostilee should work properly', () => {
   it('should throw error if network type of initiator and sink address dont match', () => {
     expect(() => {
-      const initiator = new Initiator(signer, NetworkType.MIJIN_TEST);
+      const initiator = new Initiator(signer);
       const publicApostille = new PublicApostille(
         initiator,
         fileName,
@@ -33,7 +33,7 @@ describe('announce function should work properly', () => {
 
   it('should throw error if network type of initiator and the apostille dont match', () => {
     expect(() => {
-      const initiator = new Initiator(signer, NetworkType.MIJIN_TEST);
+      const initiator = new Initiator(signer);
       const publicApostille = new PublicApostille(
         initiator,
         fileName,
@@ -46,7 +46,7 @@ describe('announce function should work properly', () => {
 
   it('should throw error if network type is mijin and we don\'t specefy an endpoint', () => {
     expect(() => {
-      const initiator = new Initiator(signer, NetworkType.MIJIN);
+      const initiator = new Initiator(signer);
       const publicApostille = new PublicApostille(
         initiator,
         fileName,
@@ -58,7 +58,7 @@ describe('announce function should work properly', () => {
   });
 
   it('should throw error if try to announce more than once', async () => {
-    const initiator = new Initiator(signer, NetworkType.MIJIN_TEST);
+    const initiator = new Initiator(signer);
     const publicApostille = new PublicApostille(
       initiator,
       fileName,
@@ -74,7 +74,7 @@ describe('announce function should work properly', () => {
   });
 
   test('updating an public apostille should be allowed as many times as we want', async () => {
-    const initiator = new Initiator(signer, NetworkType.MIJIN_TEST);
+    const initiator = new Initiator(signer);
     const publicApostille = new PublicApostille(
       initiator,
       fileName,
@@ -91,7 +91,7 @@ describe('announce function should work properly', () => {
 
   test('announce should work properly', async () => {
     const stubannounce = sinon.stub(PublicApostille.prototype, 'announce');
-    const initiator = new Initiator(signer, NetworkType.MIJIN_TEST);
+    const initiator = new Initiator(signer);
     const publicApostille = new PublicApostille(
       initiator,
       fileName,

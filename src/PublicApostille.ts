@@ -104,7 +104,7 @@ class PublicApostille {
       transactionHttp = new TransactionHttp(HistoricalEndpoints[this.networkType]);
       listener = new Listener(HistoricalEndpoints[this.networkType]);
     }
-    if (this.initiatorAccount.network !== this.networkType) {
+    if (this.initiatorAccount.account.address.networkType !== this.networkType) {
       throw new Error(Errors[Errors.NETWORK_TYPE_MISMATCHED]);
     }
 

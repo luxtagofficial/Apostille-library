@@ -6,7 +6,7 @@ const fileName = 'FileName.pdf';
 const pk = 'aaaaaaaaaaeeeeeeeeeebbbbbbbbbb5555555555dddddddddd1111111111aaee';
 const signer = Account.createFromPrivateKey(pk, NetworkType.MIJIN_TEST);
 
-const initiator = new Initiator(signer, NetworkType.MIJIN_TEST);
+const initiator = new Initiator(signer);
 const publicApostille = new PublicApostille(
   initiator,
   fileName,

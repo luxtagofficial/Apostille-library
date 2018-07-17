@@ -16,7 +16,7 @@ describe('Create functionn should work properly', () => {
   it('should throw an error if you try to create an apostille more than once', async () => {
     const privateApostille = new Apostille(seed, generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
-    const initiator = new Initiator(creator, NetworkType.MIJIN_TEST);
+    const initiator = new Initiator(creator);
     expect.assertions(1);
     await privateApostille.create(initiator, 'raw');
     return privateApostille.create(initiator, 'raw').catch((e) => {
@@ -27,7 +27,7 @@ describe('Create functionn should work properly', () => {
   it('should create a transfer transaction', () => {
     const privateApostille = new Apostille(seed, generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
-    const initiator = new Initiator(creator, NetworkType.MIJIN_TEST);
+    const initiator = new Initiator(creator);
     return privateApostille.create(initiator, 'raw').then(() => {
       // tslint:disable-next-line:no-string-literal
       expect(privateApostille['transactions'][0].type).toEqual(TransactionType.TRANSFER);
@@ -37,7 +37,7 @@ describe('Create functionn should work properly', () => {
   it('should create an aggregate complete transaction', () => {
     const privateApostille = new Apostille(seed, generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
-    const initiator = new Initiator(creator, NetworkType.MIJIN_TEST, creator.publicAccount, true);
+    const initiator = new Initiator(creator, creator.publicAccount, true);
     return privateApostille.create(initiator, 'raw').then(() => {
       // tslint:disable-next-line:no-string-literal
       expect(privateApostille['transactions'][0].type).toEqual(TransactionType.AGGREGATE_COMPLETE);
@@ -47,7 +47,7 @@ describe('Create functionn should work properly', () => {
   it('should create an aggregate bounded transaction', () => {
     const privateApostille = new Apostille(seed, generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
-    const initiator = new Initiator(creator, NetworkType.MIJIN_TEST, creator.publicAccount, false);
+    const initiator = new Initiator(creator, creator.publicAccount, false);
     return privateApostille.create(initiator, 'raw').then(() => {
       // tslint:disable-next-line:no-string-literal
       expect(privateApostille['transactions'][0].type).toEqual(TransactionType.AGGREGATE_BONDED);
@@ -61,7 +61,7 @@ describe('update function should work properly', () => {
   it('should throw an error if we try to update before creating', async () => {
     const privateApostille = new Apostille(seed, generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
-    const initiator = new Initiator(creator, NetworkType.MIJIN_TEST);
+    const initiator = new Initiator(creator);
     expect.assertions(1);
     return privateApostille.update(initiator, 'raw').catch((e) => {
       expect(e.message).toMatch(Errors[Errors.APOSTILLE_NOT_CREATED]);
@@ -71,7 +71,7 @@ describe('update function should work properly', () => {
   it('should create a transfer transaction', async () => {
     const privateApostille = new Apostille(seed, generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
-    const initiator = new Initiator(creator, NetworkType.MIJIN_TEST);
+    const initiator = new Initiator(creator);
     expect.assertions(1);
     await privateApostille.create(initiator, 'raw');
     await privateApostille.update(initiator, 'update');
@@ -82,7 +82,7 @@ describe('update function should work properly', () => {
   it('should create an aggregate complete transaction', async () => {
     const privateApostille = new Apostille(seed, generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
-    const initiator = new Initiator(creator, NetworkType.MIJIN_TEST, creator.publicAccount, true);
+    const initiator = new Initiator(creator, creator.publicAccount, true);
     expect.assertions(1);
     await privateApostille.create(initiator, 'raw');
     await privateApostille.update(initiator, 'update');
@@ -93,7 +93,7 @@ describe('update function should work properly', () => {
   it('should create an aggregate bounded transaction', async () => {
     const privateApostille = new Apostille(seed, generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
-    const initiator = new Initiator(creator, NetworkType.MIJIN_TEST, creator.publicAccount, false);
+    const initiator = new Initiator(creator, creator.publicAccount, false);
     expect.assertions(1);
     await privateApostille.create(initiator, 'raw');
     await privateApostille.update(initiator, 'update');
@@ -108,7 +108,7 @@ describe('own function should work properly', () => {
   it('should create an aggregate bounded transaction', async () => {
     const privateApostille = new Apostille(seed, generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
-    const initiator = new Initiator(creator, NetworkType.MIJIN_TEST, creator.publicAccount, false);
+    const initiator = new Initiator(creator, creator.publicAccount, false);
     expect.assertions(1);
     await privateApostille.create(initiator, 'raw');
     await privateApostille.update(initiator, 'update');
@@ -124,7 +124,7 @@ describe('transafer function should work properly', () => {
   it('should create an aggregate complete transaction', async () => {
     const privateApostille = new Apostille(seed, generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
-    const initiator = new Initiator(creator, NetworkType.MIJIN_TEST, creator.publicAccount, false);
+    const initiator = new Initiator(creator, creator.publicAccount, false);
     expect.assertions(1);
     privateApostille.transfer([creator], true, [creator.publicAccount], [creator.publicAccount], 0, 0);
     // tslint:disable-next-line:no-string-literal
@@ -134,7 +134,7 @@ describe('transafer function should work properly', () => {
   it('should create an aggregate complete transaction', async () => {
     const privateApostille = new Apostille(seed, generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
-    const initiator = new Initiator(creator, NetworkType.MIJIN_TEST, creator.publicAccount, false);
+    const initiator = new Initiator(creator, creator.publicAccount, false);
     expect.assertions(1);
     privateApostille.transfer([creator], false, [], [], 0, 0);
     // tslint:disable-next-line:no-string-literal
@@ -156,7 +156,7 @@ describe('isCreated function should work properly', () => {
   it('should return true after creation', async () => {
     const privateApostille = new Apostille('new random seed', generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
-    const initiator = new Initiator(creator, NetworkType.MIJIN_TEST);
+    const initiator = new Initiator(creator);
     expect.assertions(1);
     await privateApostille.create(initiator, 'raw');
     return privateApostille.isCreated().then((result) => {
@@ -211,7 +211,7 @@ describe('isAnnounced function should work properly', () => {
   it('should return true after an announce', async () => {
     const privateApostille = new Apostille('_934@Ve*,tM(3MN-', generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
-    const initiator = new Initiator(creator, NetworkType.MIJIN_TEST);
+    const initiator = new Initiator(creator);
     privateApostille.created = true;
     await privateApostille.update(initiator, 'update');
     await privateApostille.announce();
