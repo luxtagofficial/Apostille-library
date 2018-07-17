@@ -1,5 +1,5 @@
 import { sortBy } from 'lodash';
-import { AccountHttp, Address, BlockchainHttp, MultisigAccountInfo, NetworkType, PublicAccount, Transaction, TransactionHttp, TransactionInfo, TransactionType } from 'nem2-sdk';
+import { AccountHttp, AccountInfo, Address, AggregateTransaction, BlockchainHttp, NetworkType, PublicAccount, Transaction, TransactionHttp, TransactionInfo, TransactionType, TransferTransaction } from 'nem2-sdk';
 import { Observable } from 'rxjs';
 import { Errors, HistoricalEndpoints, TransactionsStreams } from '../index';
 
@@ -35,7 +35,7 @@ export class ApostilleAccount {
      * @returns {Promise<boolean>}
      * @memberof ApostilleAccount
      */
-    public async isOwned() {
+    public async isOwned(): Promise<boolean> {
         const cossignatories = await this.getCosignatories();
         if (cossignatories.length > 0) {
             return true;
@@ -54,9 +54,7 @@ export class ApostilleAccount {
         const accountHttp = new AccountHttp(this.urls);
         return new Promise(async (resolve, reject) => {
             accountHttp.getMultisigAccountInfo(this.publicAccount.address).subscribe(
-                (accountInfo) => {
-                    const multisigAccountInfo: MultisigAccountInfo = Object.assign(MultisigAccountInfo, accountInfo);
-
+                (multisigAccountInfo) => {
                     resolve(multisigAccountInfo.cosignatories);
                 },
                 (err) => reject(err),
@@ -82,10 +80,9 @@ export class ApostilleAccount {
      * @memberof ApostilleAccount
      */
     public async getCreationTransactionInfo(): Promise<TransactionInfo> {
-        const transaction: Transaction = await this.getCreationTransaction();
+        const transaction: TransferTransaction = await this.getCreationTransaction();
         if (transaction.transactionInfo instanceof TransactionInfo) {
-            const transactionInfo: TransactionInfo = transaction.transactionInfo;
-            return transactionInfo;
+            return transaction.transactionInfo;
         }
         throw new Error(Errors[Errors.COULD_NOT_FOUND_TRANSACTION_INFO]);
     }
@@ -93,60 +90,72 @@ export class ApostilleAccount {
     /**
      * @description - get first transaction
      * @param {string} urls
-     * @returns {Promise<Transaction>}
+     * @returns {Promise<TransferTransaction>}
      * @memberof ApostilleAccount
      */
-    public getCreationTransaction(): Promise<Transaction> {
+    public getCreationTransaction(): Promise<TransferTransaction> {
         const accountHttp = new AccountHttp(this.urls);
         return new Promise((resolve, reject) => {
             accountHttp.getAccountInfo(this.publicAccount.address).subscribe(
-                (accountInfo) => {
+                (accountInfo: AccountInfo) => {
                     const blockchainHttp = new BlockchainHttp(this.urls);
                     const firstTransactionBlock = accountInfo.addressHeight.lower;
                     // find the first block of this account
                     blockchainHttp.getBlockTransactions(firstTransactionBlock).subscribe(
-                        (block: any[]) => {
-                            const filteredTransaction: any[] = [];
+                        (block: Transaction[]) => {
+                            // console.log(JSON.stringify(block));
+                            const filteredTransaction: Transaction[] = [];
                             for (const transaction of block) {
-                                if (transaction.type === TransactionType.TRANSFER) {
-                                    const address = Address.createFromRawAddress(transaction.recipient.address);
-                                    if (this.equals(address)) {
+                                if (transaction instanceof TransferTransaction) {
+                                    const transferTransaction: TransferTransaction = transaction;
+                                    if (this.equals(transferTransaction.recipient)) {
                                         filteredTransaction.push(transaction);
                                     }
-                                } else if (transaction.type === TransactionType.AGGREGATE_COMPLETE) {
-                                    for (const innerTransaction of transaction.innerTransactions) {
-                                        if (innerTransaction.type === TransactionType.TRANSFER) {
-                                            const address = Address.createFromRawAddress(
-                                                innerTransaction.recipient.address);
-                                            if (this.equals(address)) {
-                                                filteredTransaction.push(transaction);
+                                } else if (transaction instanceof AggregateTransaction) {
+                                    if (transaction.type === TransactionType.AGGREGATE_COMPLETE) {
+                                        for (const innerTransaction of transaction.innerTransactions) {
+                                            if (innerTransaction instanceof TransferTransaction) {
+                                                if (this.equals(innerTransaction.recipient)) {
+                                                    filteredTransaction.push(transaction);
+                                                }
+                                                break;
                                             }
-                                            break;
                                         }
                                     }
                                 }
                             }
 
                             // sort the block by index
-                            const sortedTransaction = sortBy(filteredTransaction, ['transactionInfo.index']);
-                            if (sortedTransaction[0].type === TransactionType.AGGREGATE_COMPLETE) {
-                                // if the smallest index is aggregate transaction, then sort innertransaction by index
-                                const sortedAggregateTransaction = sortBy(
-                                    sortedTransaction[0].innerTransactions, ['transactionInfo.index']);
-                                resolve(Object.assign(
-                                    Transaction, sortedAggregateTransaction[0]));
+                            const sortedTransaction: Transaction[] = sortBy(
+                                filteredTransaction, ['transactionInfo.index']);
+                            if (sortedTransaction.length > 0) {
+                                const firstTransaction = sortedTransaction[0];
+                                if (firstTransaction instanceof TransferTransaction) {
+                                    resolve (firstTransaction);
+                                } else if (firstTransaction instanceof AggregateTransaction) {
+                                    // if the smallest index is aggregate transaction, then sort it by index
+                                    const innerTransactions = firstTransaction.innerTransactions;
+                                    const sortedInnerTransactions = sortBy(
+                                        innerTransactions, ['transactionInfo.index']);
+                                    const firstInnerTransaction = sortedInnerTransactions[0];
+                                    if (firstInnerTransaction instanceof TransferTransaction) {
+                                        resolve (firstInnerTransaction);
+                                    } else {
+                                        reject (Errors[Errors.CREATION_TRANSACTIONS_NOT_FOUND]);
+                                    }
+                                } else {
+                                    reject (Errors[Errors.CREATION_TRANSACTIONS_NOT_FOUND]);
+                                }
+                            } else {
+                                reject (Errors[Errors.CREATION_TRANSACTIONS_NOT_FOUND]);
                             }
-
-                            resolve(Object.assign(Transaction, sortedTransaction[0]));
                         },
                         (err) => {
-                            console.error(err.message);
-                            reject(undefined);
+                            reject(err);
                         });
                 },
                 (err) => {
-                    console.error(err.message);
-                    reject(undefined);
+                    reject(err);
                 });
         });
     }
