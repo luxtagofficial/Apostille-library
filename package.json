@@ -27,9 +27,7 @@
     "validate": "npm-run-all --parallel lint test",
     "report-coverage": "cat ./tests/unit/coverage/lcov.info | codecov",
     "travis-deploy-once": "travis-deploy-once",
-    "semantic-release": "semantic-release",
-    "docs:dev": "vuepress dev docs",
-    "docs:build": "vuepress build docs"
+    "semantic-release": "semantic-release"
   },
   "author": "gimyboya <amine@luxtag.io>",
   "contributors": [
@@ -56,18 +54,17 @@
     "lodash": "^4.17.10",
     "nem-sdk": "^1.6.4",
     "nem2-sdk": "^0.10.0",
-    "rxjs": "^6.2.1",
-    "vuepress-theme-vue": "^1.0.3"
+    "rxjs": "^6.2.1"
   },
   "devDependencies": {
     "@types/jest": "^22.2.2",
     "@types/sinon": "^5.0.1",
     "codecov": "^3.0.1",
-    "npm-run-all": "^4.1.2",
     "commitlint": "^6.2.0",
     "cz-conventional-changelog": "^2.1.0",
     "ghooks": "^2.0.4",
     "jest": "^22.4.3",
+    "npm-run-all": "^4.1.2",
     "rimraf": "^2.6.2",
     "semantic-release": "^15.2.0",
     "sinon": "^5.0.10",
@@ -75,8 +72,7 @@
     "ts-jest": "^22.4.2",
     "tslint": "^5.10.0",
     "typescript": "^2.8.3",
-    "validate-commit-msg": "^2.14.0",
-    "vuepress": "^0.10.0"
+    "validate-commit-msg": "^2.14.0"
   },
   "files": [
     "dist"

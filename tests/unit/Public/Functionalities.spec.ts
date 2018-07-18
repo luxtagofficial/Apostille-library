@@ -23,7 +23,7 @@ describe('announce function should work properly', () => {
       const initiator = new Initiator(signer);
       const publicApostille = new PublicApostille(
         initiator,
-        fileName,);
+        fileName);
 
       publicApostille.update(fileContent, hashFunction);
       publicApostille.announce();
