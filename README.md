@@ -32,7 +32,7 @@ For questions and support please [join](http://beta.catapult.mijin.io/slack) the
 
 The issue list of this repo is exclusively for bug reports and feature requests.
 # Contribution
-For future contributers please make sure to read the [Contributing Guide](./.github/CONTRIBUTING.md) before making a pull request
+For future contributors please make sure to read the [Contributing Guide](./.github/CONTRIBUTING.md) before making a pull request
 # Acknowledgments
 A big thanks to all the people who already contributed!
 
