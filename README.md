@@ -28,11 +28,11 @@ npm install apostille-library # OR yarn add apostille-library
 # Documentation
 To check out examples and docs, visit [apostille.io](https://apostille.io)
 # Questions
-For questions and support please [join](http://beta.catapult.mijin.io/slack) the official [nem2.slack](https://nem2.slack.com/#apostille) community chat where there is a specefic apostille channel there. 
+For questions and support please [join](http://beta.catapult.mijin.io/slack) the official [nem2.slack](https://nem2.slack.com/#apostille) community chat where there is a specific apostille channel there. 
 
 The issue list of this repo is exclusively for bug reports and feature requests.
 # Contribution
-For futur contributers please make sure to read the [Contributing Guide](./.github/CONTRIBUTING.md) before making a pull request
+For future contributers please make sure to read the [Contributing Guide](./.github/CONTRIBUTING.md) before making a pull request
 # Acknowledgments
 A big thanks to all the people who already contributed!
 
