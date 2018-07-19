@@ -110,7 +110,6 @@ class Apostille {
     // check if the apostille was already created locally or on chain
     await this.isAnnounced().then(() => {
       if (this._created) {
-        this._created = true;
         throw new Error(Errors[Errors.APOSTILLE_ALREADY_CREATED]);
       }
       this.creatorAccount = initiatorAccount;
@@ -584,6 +583,12 @@ class Apostille {
     });
   }
 
+  /**
+   * @description - a function to monitor error and transactions from and to the apostille account
+   * @param {string} [urls]
+   * @returns {TransactionsStreams}
+   * @memberof Apostille
+   */
   public monitor(urls?: string): TransactionsStreams {
     if (urls) {
       return new TransactionsStreams(this.hdAccount, urls);

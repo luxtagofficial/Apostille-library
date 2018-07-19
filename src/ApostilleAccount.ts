@@ -9,29 +9,15 @@ export class ApostilleAccount {
      * @type {NetworkType}
      * @memberof Apostille
      */
-    public urls: string;
 
     /**
      * @param {PublicAccount} publicAccount
      */
-    constructor(
-        public readonly publicAccount: PublicAccount,
-        urls?: string,
-        ) {
-            if (urls) {
-                this.urls = urls;
-            } else {
-                if (publicAccount.address.networkType === NetworkType.MIJIN) {
-                    throw new Error(Errors[Errors.MIJIN_ENDPOINT_NEEDED]);
-                }
-                this.urls = HistoricalEndpoints[publicAccount.address.networkType];
-            }
-        }
+    constructor(public readonly publicAccount: PublicAccount) {}
 
     /**
      * @description - get first transaction
      * @static
-     * @param {string} urls
      * @returns {Promise<boolean>}
      * @memberof ApostilleAccount
      */
@@ -50,8 +36,16 @@ export class ApostilleAccount {
      * @returns {Promise<PublicAccount[]>}
      * @memberof ApostilleAccount
      */
-    public getCosignatories(): Promise<PublicAccount[]> {
-        const accountHttp = new AccountHttp(this.urls);
+    public getCosignatories(urls?: string): Promise<PublicAccount[]> {
+        let accountHttp: AccountHttp;
+        if (urls) {
+            accountHttp = new AccountHttp(urls);
+        } else {
+            if (this.publicAccount.address.networkType === NetworkType.MIJIN) {
+                throw new Error(Errors[Errors.MIJIN_ENDPOINT_NEEDED]);
+            }
+            accountHttp = new AccountHttp(HistoricalEndpoints[this.publicAccount.address.networkType]);
+        }
         return new Promise(async (resolve, reject) => {
             accountHttp.getMultisigAccountInfo(this.publicAccount.address).subscribe(
                 (multisigAccountInfo) => {
@@ -68,8 +62,16 @@ export class ApostilleAccount {
      * @returns {Observable<Transaction>}
      * @memberof ApostilleAccount
      */
-    public getTransactionById(transactionID: string): Observable<Transaction> {
-        const transactionHttp = new TransactionHttp(this.urls);
+    public getTransactionById(transactionID: string, urls?: string): Observable<Transaction> {
+        let transactionHttp: TransactionHttp;
+        if (urls) {
+            transactionHttp = new TransactionHttp(urls);
+        } else {
+            if (this.publicAccount.address.networkType === NetworkType.MIJIN) {
+                throw new Error(Errors[Errors.MIJIN_ENDPOINT_NEEDED]);
+            }
+            transactionHttp = new TransactionHttp(HistoricalEndpoints[this.publicAccount.address.networkType]);
+        }
         return transactionHttp.getTransaction(transactionID);
     }
 
@@ -93,12 +95,22 @@ export class ApostilleAccount {
      * @returns {Promise<TransferTransaction>}
      * @memberof ApostilleAccount
      */
-    public getCreationTransaction(): Promise<TransferTransaction> {
-        const accountHttp = new AccountHttp(this.urls);
+    public getCreationTransaction(urls?: string): Promise<TransferTransaction> {
+        let accountHttp: AccountHttp;
+        let blockchainHttp: BlockchainHttp;
+        if (urls) {
+            accountHttp = new AccountHttp(urls);
+            blockchainHttp = new BlockchainHttp(urls);
+        } else {
+            if (this.publicAccount.address.networkType === NetworkType.MIJIN) {
+                throw new Error(Errors[Errors.MIJIN_ENDPOINT_NEEDED]);
+            }
+            accountHttp = new AccountHttp(HistoricalEndpoints[this.publicAccount.address.networkType]);
+            blockchainHttp = new BlockchainHttp(HistoricalEndpoints[this.publicAccount.address.networkType]);
+        }
         return new Promise((resolve, reject) => {
             accountHttp.getAccountInfo(this.publicAccount.address).subscribe(
                 (accountInfo: AccountInfo) => {
-                    const blockchainHttp = new BlockchainHttp(this.urls);
                     const firstTransactionBlock = accountInfo.addressHeight.lower;
                     // find the first block of this account
                     blockchainHttp.getBlockTransactions(firstTransactionBlock).subscribe(
@@ -177,8 +189,8 @@ export class ApostilleAccount {
      * @returns {TransactionsStreams}
      * @memberof ApostilleAccount
      */
-    public monitor(): TransactionsStreams {
-        return new TransactionsStreams(this, this.urls);
+    public monitor(urls?: string): TransactionsStreams {
+        return new TransactionsStreams(this, urls);
     }
 
 }

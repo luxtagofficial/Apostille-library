@@ -185,7 +185,7 @@ describe('isAnnounced function should work properly', () => {
     }
   });
 
-  it.skip('should return false before an announce', () => {
+  it('should return false before an announce', () => {
     const MTgenerator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
     const MJgenerator = Account.createFromPrivateKey(sk, NetworkType.MIJIN);
     const MNgenerator = Account.createFromPrivateKey(sk, NetworkType.MAIN_NET);
