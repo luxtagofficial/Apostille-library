@@ -14,8 +14,32 @@ const initiator = new Initiator(gensignr);
 
 describe('TransactionStreams should work properly', () => {
   privateApostille.created = true;
-  it('should catch unconfirmed transactions', async () => {
+  it('should catch unconfirmed when added transactions', async () => {
     privateApostille.monitor().onUnconfirmedAdded().then((channel) => {
+      channel.subscribe((transaction: any) => {
+        console.log('UNCONFIRMED ADDED:', transaction.message.payload);
+        return expect(transaction.message.payload).toMatch('transactions stream test unconfirmed');
+      },
+      (err) => console.error(err));
+    });
+    await privateApostille.update(initiator, 'transactions stream test unconfirmed')
+    .then(async () => await privateApostille.announce());
+  });
+
+  it('should catch unconfirmed when removed transactions', async () => {
+    privateApostille.monitor().onUnconfirmedRemoved().then((channel) => {
+      channel.subscribe((transaction: any) => {
+        console.log('UNCONFIRMED REMOVED:', transaction.message.payload);
+        return expect(transaction.message.payload).toMatch('transactions stream test unconfirmed');
+      },
+      (err) => console.error(err));
+    });
+    await privateApostille.update(initiator, 'transactions stream test unconfirmed')
+    .then(async () => await privateApostille.announce());
+  });
+
+  it('should catch confirmed transactions', async () => {
+    privateApostille.monitor().onConfirmed().then((channel) => {
       channel.subscribe((transaction: any) => {
         console.log('CONFIRMED:', transaction.message.payload);
         return expect(transaction.message.payload).toMatch('transactions stream test unconfirmed');

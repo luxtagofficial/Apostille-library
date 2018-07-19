@@ -1,14 +1,7 @@
 import { NetworkType, PublicAccount, TransactionInfo, TransferTransaction } from 'nem2-sdk';
-import { ApostilleAccount, Errors } from '../../index';
+import { ApostilleAccount } from '../../index';
 
 describe('apostille accound methods should work properly', () => {
-  it('throws error if publicAccount parameter made from MIJIN and urls parameter is empty', () => {
-    const publicKey = 'E15CAB00A5A34216A8A29034F950A18DFC6F4F27BCCFBF9779DC6886653B7E56';
-
-    expect(() => new ApostilleAccount(PublicAccount.createFromPublicKey(publicKey, NetworkType.MIJIN)))
-                .toThrow(Errors[Errors.MIJIN_ENDPOINT_NEEDED]);
-  });
-
   it(' should return 2 cosignataries of the accounts', () => {
     const publicKey = 'E15CAB00A5A34216A8A29034F950A18DFC6F4F27BCCFBF9779DC6886653B7E56';
     const apostilleAccount = new ApostilleAccount(PublicAccount.createFromPublicKey(publicKey, NetworkType.MIJIN_TEST));
