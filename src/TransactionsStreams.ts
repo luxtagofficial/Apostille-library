@@ -10,8 +10,9 @@ export class TransactionsStreams {
     public readonly apostilleAccount: ApostilleAccount,
     private urls?: string,
   ) {
-    if (this.urls) {
-      this.listener = new Listener(apostilleAccount.urls);
+    if (urls) {
+      this.urls = urls;
+      this.listener = new Listener(this.urls);
     } else {
       if (this.apostilleAccount.publicAccount.address.networkType === NetworkType.MIJIN) {
         throw new Error(Errors[Errors.MIJIN_ENDPOINT_NEEDED]);
