@@ -8,7 +8,6 @@ class Initiator {
   /**
    * Creates an instance of Initiator.
    * @param {Account} account - the first signing account
-   * @param {NetworkType} network - network type
    * @param {PublicAccount} [multisigAccount] - public account of the multisisg account if
    *                                            transaction is coming from a multisisg account
    * @param {boolean} [isComplete] - whetehr the transaction is aggregate complete or bounded
