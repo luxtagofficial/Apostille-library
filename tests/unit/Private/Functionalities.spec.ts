@@ -2,7 +2,7 @@ import { Account, NetworkType, TransactionType } from 'nem2-sdk';
 import { Apostille, Initiator } from '../../../index';
 import { Errors } from '../../../src/Errors';
 
-const seed = '.N:@N%5SVj3Wkmr-';
+const seed = '.N:@N%5SVjj3Wkmr-';
 // A funny but valid private key
 const sk = 'aaaaaaaaaaeeeeeeeeeebbbbbbbbbb5555555555dddddddddd1111111111aaee';
 const generator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
@@ -30,7 +30,7 @@ describe('Create functionn should work properly', () => {
     const initiator = new Initiator(creator);
     return privateApostille.create(initiator, 'raw').then(() => {
       // tslint:disable-next-line:no-string-literal
-      expect(privateApostille['transactions'][0].type).toEqual(TransactionType.TRANSFER);
+      expect(privateApostille.hdAccount['transactions'][0].type).toEqual(TransactionType.TRANSFER);
     });
   });
 
@@ -40,7 +40,7 @@ describe('Create functionn should work properly', () => {
     const initiator = new Initiator(creator, creator.publicAccount, true);
     return privateApostille.create(initiator, 'raw').then(() => {
       // tslint:disable-next-line:no-string-literal
-      expect(privateApostille['transactions'][0].type).toEqual(TransactionType.AGGREGATE_COMPLETE);
+      expect(privateApostille.hdAccount['transactions'][0].type).toEqual(TransactionType.AGGREGATE_COMPLETE);
     });
   });
 
@@ -50,7 +50,7 @@ describe('Create functionn should work properly', () => {
     const initiator = new Initiator(creator, creator.publicAccount, false);
     return privateApostille.create(initiator, 'raw').then(() => {
       // tslint:disable-next-line:no-string-literal
-      expect(privateApostille['transactions'][0].type).toEqual(TransactionType.AGGREGATE_BONDED);
+      expect(privateApostille.hdAccount['transactions'][0].type).toEqual(TransactionType.AGGREGATE_BONDED);
     });
   });
 
@@ -76,7 +76,7 @@ describe('update function should work properly', () => {
     await privateApostille.create(initiator, 'raw');
     await privateApostille.update(initiator, 'update');
     // tslint:disable-next-line:no-string-literal
-    expect(privateApostille['transactions'][1].type).toEqual(TransactionType.TRANSFER);
+    expect(privateApostille.hdAccount['transactions'][1].type).toEqual(TransactionType.TRANSFER);
   });
 
   it('should create an aggregate complete transaction', async () => {
@@ -87,7 +87,7 @@ describe('update function should work properly', () => {
     await privateApostille.create(initiator, 'raw');
     await privateApostille.update(initiator, 'update');
     // tslint:disable-next-line:no-string-literal
-    expect(privateApostille['transactions'][0].type).toEqual(TransactionType.AGGREGATE_COMPLETE);
+    expect(privateApostille.hdAccount['transactions'][0].type).toEqual(TransactionType.AGGREGATE_COMPLETE);
   });
 
   it('should create an aggregate bounded transaction', async () => {
@@ -98,7 +98,7 @@ describe('update function should work properly', () => {
     await privateApostille.create(initiator, 'raw');
     await privateApostille.update(initiator, 'update');
     // tslint:disable-next-line:no-string-literal
-    expect(privateApostille['transactions'][0].type).toEqual(TransactionType.AGGREGATE_BONDED);
+    expect(privateApostille.hdAccount['transactions'][0].type).toEqual(TransactionType.AGGREGATE_BONDED);
   });
 
 });
@@ -114,12 +114,12 @@ describe('own function should work properly', () => {
     await privateApostille.update(initiator, 'update');
     privateApostille.own([initiator.account.publicAccount], 1, 1);
     // tslint:disable-next-line:no-string-literal
-    expect(privateApostille['transactions'][2].type).toEqual(TransactionType.MODIFY_MULTISIG_ACCOUNT);
+    expect(privateApostille.hdAccount['transactions'][2].type).toEqual(TransactionType.MODIFY_MULTISIG_ACCOUNT);
   });
 
 });
 
-describe('transafer function should work properly', () => {
+describe('transfer function should work properly', () => {
 
   it('should create an aggregate complete transaction', async () => {
     const privateApostille = new Apostille(seed, generator);
@@ -128,7 +128,7 @@ describe('transafer function should work properly', () => {
     expect.assertions(1);
     privateApostille.transfer([creator], true, [creator.publicAccount], [creator.publicAccount], 0, 0);
     // tslint:disable-next-line:no-string-literal
-    expect(privateApostille['transactions'][0].type).toEqual(TransactionType.AGGREGATE_COMPLETE);
+    expect(privateApostille.hdAccount['transactions'][0].type).toEqual(TransactionType.AGGREGATE_COMPLETE);
   });
 
   it('should create an aggregate complete transaction', async () => {
@@ -138,7 +138,7 @@ describe('transafer function should work properly', () => {
     expect.assertions(1);
     privateApostille.transfer([creator], false, [], [], 0, 0);
     // tslint:disable-next-line:no-string-literal
-    expect(privateApostille['transactions'][0].type).toEqual(TransactionType.AGGREGATE_BONDED);
+    expect(privateApostille.hdAccount['transactions'][0].type).toEqual(TransactionType.AGGREGATE_BONDED);
   });
 
 });

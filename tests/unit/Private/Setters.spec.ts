@@ -14,11 +14,11 @@ const PrivateApostille = new Apostille(seed, generator);
 
 describe('Setters should work properly', () => {
 
-  it('creat setter should work properly', () => {
+  it('create setter should work properly', () => {
     // tslint:disable-next-line:no-string-literal
-    expect(PrivateApostille['_created']).toBeFalsy();
+    expect(PrivateApostille.hdAccount['_created']).toBeFalsy();
     PrivateApostille.created = true;
-    expect(PrivateApostille['_created']).toBeTruthy();
+    expect(PrivateApostille.hdAccount['_created']).toBeTruthy();
   });
 
 });

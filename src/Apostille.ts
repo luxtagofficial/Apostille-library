@@ -1,12 +1,9 @@
-import { drop, uniqBy } from 'lodash';
 import * as nemSDK from 'nem-sdk';
-import { Account, AccountHttp, Address, AggregateTransaction, Deadline, InnerTransaction, Listener, LockFundsTransaction, ModifyMultisigAccountTransaction, Mosaic, MultisigCosignatoryModification, MultisigCosignatoryModificationType, NetworkType, PlainMessage, PublicAccount, QueryParams, SignedTransaction, TransactionAnnounceResponse, TransactionHttp, TransactionType, TransferTransaction, UInt64, XEM } from 'nem2-sdk';
-import { filter, flatMap } from 'rxjs/operators';
-import { ApostilleAccount, HistoricalEndpoints, Initiator, TransactionsStreams } from '../index';
-import { Errors } from './Errors';
+import { Account, Address, Deadline, ModifyMultisigAccountTransaction, Mosaic, MultisigCosignatoryModification, MultisigCosignatoryModificationType, NetworkType, PublicAccount, TransactionType } from 'nem2-sdk';
+import { ApostilleAccount, Initiator, TransactionsStreams } from '../index';
+import { IReadyTransaction } from './IReadyTransaction';
 import { SHA256 } from './hashFunctions';
 import { HashFunction } from './hashFunctions/HashFunction';
-import { IReadyTransaction } from './ReadyTransaction';
 
 const nem = nemSDK.default;
 // TODO: add tx hash of creation
@@ -24,13 +21,6 @@ class Apostille {
   public readonly networkType: NetworkType;
 
   /**
-   * @description - an array of all the transaction before they get announced to the network
-   * @private
-   * @type {IReadyTransaction[]}
-   * @memberof Apostille
-   */
-  private transactions: IReadyTransaction[] = [];
-  /**
    * @description - the apostille account
    * @private
    * @type {Account}
@@ -43,27 +33,14 @@ class Apostille {
    * @type {boolean}
    * @memberof Apostille
    */
-  // tslint:disable-next-line:variable-name
-  private _created: boolean = false;
-  /**
-   * @description - whether the apostille creation transaction was announced to the network
-   * @private
-   * @type {boolean}
-   * @memberof Apostille
-   */
-  private creationAnnounced: boolean = false;
-  /**
-   * @description - the account that made the creation transaction
-   * @private
-   * @memberof Apostille
-   */
   private creatorAccount;
   /**
-   * @description - the apostille hash (magical byte + hash)
+   * @description - the apostille public account
    * @private
+   * @type {ApostilleAccount}
    * @memberof Apostille
    */
-  private hash;
+  private apostilleAccount;
 
   /**
    * Creates an instance of Apostille.
@@ -88,7 +65,9 @@ class Apostille {
     }
     // create the HD acccount (appostille)
     this.Apostille = Account.createFromPrivateKey(privateKey, this.networkType);
+    this.apostilleAccount = new ApostilleAccount(this.Apostille.publicAccount);
   }
+
   /**
    * @description - create a creation transaction for the apostille account
    * @param {Initiator} initiatorAccount - the initiator of the transaction
@@ -104,67 +83,15 @@ class Apostille {
     mosaics: Mosaic[] | Mosaic[] = [],
     hashFunction?: HashFunction,
   ): Promise<void> {
-    if (initiatorAccount.account.address.networkType !== this.networkType) {
-      throw new Error(Errors[Errors.NETWORK_TYPE_MISMATCHED]);
-    }
-    // check if the apostille was already created locally or on chain
-    await this.isAnnounced().then(() => {
-      if (this._created) {
-        throw new Error(Errors[Errors.APOSTILLE_ALREADY_CREATED]);
-      }
-      this.creatorAccount = initiatorAccount;
-      let creationTransaction: TransferTransaction;
-      let readyCreation: IReadyTransaction;
-      // first we create the creation transaction as a transfer transaction
-      if (hashFunction) {
-        // for digital files it's a good idea to hash the content of the file
-        // but can be used for other types of information for real life assets
-        this.hash = hashFunction.signedHashing(rawData, initiatorAccount.account.privateKey, this.networkType);
-        creationTransaction = TransferTransaction.create(
-          Deadline.create(),
-          Address.createFromRawAddress(this.Apostille.address.plain()),
-          mosaics,
-          PlainMessage.create(this.hash),
-          this.networkType,
-        );
-      } else {
-        creationTransaction = TransferTransaction.create(
-          Deadline.create(),
-          Address.createFromRawAddress(this.Apostille.address.plain()),
-          mosaics,
-          PlainMessage.create(rawData),
-          this.networkType,
-        );
-      }
-      // we prepare the transaction to push it in the array
-      if (initiatorAccount.multisigAccount) {
-        if (initiatorAccount.complete) {
-          // aggregate compleet transaction
-          readyCreation = {
-            initiator: initiatorAccount,
-            transaction: creationTransaction,
-            type: TransactionType.AGGREGATE_COMPLETE,
-          };
-        } else {
-          // aggregate bounded
-          readyCreation = {
-            initiator: initiatorAccount,
-            transaction: creationTransaction,
-            type: TransactionType.AGGREGATE_BONDED,
-          };
-        }
-      } else {
-        // transafer transaction
-        readyCreation = {
-          initiator: initiatorAccount,
-          transaction: creationTransaction,
-          type: TransactionType.TRANSFER,
-        };
-      }
-      this.transactions.push(readyCreation);
-      this._created = true;
-    });
+    this.creatorAccount = initiatorAccount;
+    await this.hdAccount.create(
+      initiatorAccount,
+      rawData,
+      mosaics,
+      hashFunction,
+    );
   }
+
   /**
    * @description - creates an update transaction
    * @param {Initiator} initiatorAccountthe - initiator of the transaction
@@ -178,49 +105,42 @@ class Apostille {
     message: string,
     mosaics: Mosaic[] | Mosaic[] = [],
   ): Promise<void> {
-    if (!this._created) {
-      // we test locally first to avoid testing on chain evrytime we update
-      await this.isAnnounced();
-      if (!this._created) {
-        throw new Error(Errors[Errors.APOSTILLE_NOT_CREATED]);
-      }
-    }
-    // we create the update transaction
-    const updateTransaction = TransferTransaction.create(
-      Deadline.create(),
-      Address.createFromRawAddress(this.Apostille.address.plain()),
+    await this.hdAccount.update(
+      initiatorAccount,
+      message,
       mosaics,
-      PlainMessage.create(message),
-      this.networkType,
     );
-    // we prepare the transaction to push it in the array
-    let readyUpdate: IReadyTransaction;
-    if (initiatorAccount.multisigAccount) {
-      if (initiatorAccount.complete) {
-        // aggregate compleet transaction
-        readyUpdate = {
-          initiator: initiatorAccount,
-          transaction: updateTransaction,
-          type: TransactionType.AGGREGATE_COMPLETE,
-        };
-      } else {
-        // aggregate bounded
-        readyUpdate = {
-          initiator: initiatorAccount,
-          transaction: updateTransaction,
-          type: TransactionType.AGGREGATE_BONDED,
-        };
-      }
-    } else {
-      // transafer transaction
-      readyUpdate = {
-        initiator: initiatorAccount,
-        transaction: updateTransaction,
-        type: TransactionType.TRANSFER,
-      };
-    }
-    this.transactions.push(readyUpdate);
   }
+
+  /**
+   * @description - announce all transactions to the network
+   * @param {string} [urls] - endpoint url
+   * @returns {Promise<void>}
+   * @memberof Apostille
+   */
+  public async announce(urls?: string): Promise<void> {
+    await this.hdAccount.announce();
+  }
+
+  /**
+   * @description - checks on chain if the apostille was created
+   * @returns {Promise<boolean>}
+   * @memberof Apostille
+   */
+  public isCreated(): Promise<boolean> {
+    return this.hdAccount.isCreated();
+  }
+
+  /**
+   * @description - cheks on chain if there are any transactions announced
+   * @param {string} [urls] - enpoint url
+   * @returns {Promise<boolean>}
+   * @memberof Apostille
+   */
+  public isAnnounced(urls?: string): Promise<boolean> {
+    return this.hdAccount.isAnnounced(urls);
+  }
+
   /**
    * @description - create a multisig contract to own the apostille account
    * @param {PublicAccount[]} owners - array of public account that will become owners
@@ -250,7 +170,7 @@ class Apostille {
        transaction: multisigCreation,
        type: TransactionType.MODIFY_MULTISIG_ACCOUNT,
     };
-    this.transactions.push(readyModification);
+    this.hdAccount.pushToTransactions(readyModification);
   }
   /**
    * @description - modify ownership of the apostille account by modifying the multisisg contratc
@@ -265,195 +185,25 @@ class Apostille {
   public transfer(signers: Account[],
                   complete: boolean,
                   newOwners: PublicAccount[],
-                  OwnersToRemove: PublicAccount[],
+                  ownersToRemove: PublicAccount[],
                   quorumDelta: number,
                   minRemovalDelta: number,
   ): void {
-    // the initiator must be a multisig account
-    const modifications: MultisigCosignatoryModification[] = [];
-    newOwners.forEach((cosignatory) => {
-      modifications.push(
-        new MultisigCosignatoryModification(
-          MultisigCosignatoryModificationType.Add,
-          cosignatory));
-    });
-    OwnersToRemove.forEach((cosignatory) => {
-      modifications.push(
-        new MultisigCosignatoryModification(
-          MultisigCosignatoryModificationType.Remove,
-          cosignatory));
-    });
-    const multisigCreation = ModifyMultisigAccountTransaction.create(
-      Deadline.create(),
+    this.hdAccount.transfer(
+      signers,
+      complete,
+      newOwners,
+      ownersToRemove,
       quorumDelta,
       minRemovalDelta,
-      modifications,
-      this.networkType,
     );
-    let initiatorApostille: Initiator;
-    const cosignatories = drop(signers);
-    let readyModification: IReadyTransaction;
-    if (complete) {
-      // create an incomplete initiator
-      initiatorApostille = new Initiator(
-        signers[0],
-        this.Apostille.publicAccount,
-        true,
-        cosignatories);
-      // we prepare the ready transaction
-      readyModification = {
-        initiator: initiatorApostille,
-        transaction: multisigCreation,
-        type: TransactionType.AGGREGATE_COMPLETE,
-      };
-    } else {
-      // create a compleet initiator
-      initiatorApostille = new Initiator(
-        signers[0],
-        this.Apostille.publicAccount,
-        false,
-        cosignatories);
-      // we prepare the ready transaction
-      readyModification = {
-        initiator: initiatorApostille,
-        transaction: multisigCreation,
-        type: TransactionType.AGGREGATE_BONDED,
-      };
-    }
-    this.transactions.push(readyModification);
-  }
-  /**
-   * @description - announce all transactions to the network
-   * @param {string} [urls] - endpoint url
-   * @returns {Promise<void>}
-   * @memberof Apostille
-   */
-  public async announce(urls?: string): Promise<void> {
-    await this.isAnnounced().then(async () => {
-      if (!this._created) {
-        throw new Error(Errors[Errors.APOSTILLE_NOT_CREATED]);
-      }
-      let transactionHttp: TransactionHttp;
-      let listener: Listener;
-      if (urls) {
-        if (this.networkType === NetworkType.MAIN_NET || this.networkType === NetworkType.TEST_NET) {
-          console.warn('To fetch a far far away transaction a historical node is needed');
-        }
-        transactionHttp = new TransactionHttp(urls);
-        listener = new Listener(urls);
-      } else {
-        if (this.networkType === NetworkType.MIJIN) {
-          throw new Error(Errors[Errors.MIJIN_ENDPOINT_NEEDED]);
-        }
-        transactionHttp = new TransactionHttp(HistoricalEndpoints[this.networkType]);
-        listener = new Listener(HistoricalEndpoints[this.networkType]);
-      }
-      let readyTransfer: IReadyTransaction[] = [];
-      this.transactions.forEach(async (readyTransaction) => {
-        if (readyTransaction.type === TransactionType.TRANSFER
-            || readyTransaction.type === TransactionType.MODIFY_MULTISIG_ACCOUNT) {
-          // if transfer transaction keep piling them in for an aggregate aggregate
-          readyTransfer.push(readyTransaction);
-        } else if (readyTransaction.type === TransactionType.AGGREGATE_COMPLETE) {
-          // if aggregate complete check if trensfer transaction has transaction to announce
-          if (!readyTransaction.initiator.multisigAccount) {
-            throw Error(Errors[Errors.AGGREGATE_COMPLETE_NEED_MULTISIG_ACCOUNT]);
-          }
-          if (readyTransfer.length > 0) {
-            await this.announceTransfer(readyTransfer, transactionHttp);
-            readyTransfer = [];
-          }
-          const aggregateTransaction = AggregateTransaction.createComplete(
-            Deadline.create(),
-            [
-              readyTransaction.transaction.toAggregate(readyTransaction.initiator.multisigAccount),
-            ],
-            NetworkType.MIJIN_TEST,
-            [],
-          );
-          // then announce aggregate compleet
-          let signedTransaction: SignedTransaction;
-          if (readyTransaction.initiator.cosignatories) {
-            // if we have cosignatories that needs to sign
-            signedTransaction = readyTransaction.initiator.account.signTransactionWithCosignatories(
-              aggregateTransaction,
-              readyTransaction.initiator.cosignatories);
-          } else {
-            // it should be a 1-n account
-            signedTransaction = readyTransaction.initiator.account.sign(aggregateTransaction);
-          }
-          await transactionHttp.announce(signedTransaction).subscribe(
-            (x) => console.log(x),
-            (err) => console.error(err));
-
-        } else if (readyTransaction.type === TransactionType.AGGREGATE_BONDED) {
-          if (!readyTransaction.initiator.multisigAccount) {
-            throw Error(Errors[Errors.AGGREGATE_BOUNDED_NEED_MULTISIG_ACCOUNT]);
-          }
-          if (readyTransfer.length > 0) {
-            await this.announceTransfer(readyTransfer, transactionHttp);
-            readyTransfer = [];
-          }
-          // we need a lock transaction for the aggregate bounded
-          const aggregateTransaction = AggregateTransaction.createBonded(
-            Deadline.create(),
-            [
-              readyTransaction.transaction.toAggregate(readyTransaction.initiator.multisigAccount),
-            ],
-            NetworkType.MIJIN_TEST,
-            [],
-          );
-          let signedTransaction: SignedTransaction;
-          if (readyTransaction.initiator.cosignatories) {
-            // if we have cosignatories that needs to sign
-            signedTransaction = readyTransaction.initiator.account.signTransactionWithCosignatories(
-              aggregateTransaction,
-              readyTransaction.initiator.cosignatories);
-          } else {
-            // it should be a 1-n account
-            signedTransaction = readyTransaction.initiator.account.sign(aggregateTransaction);
-          }
-          // the lock need the signed aggregate transaction
-          const lockFundsTransaction = LockFundsTransaction.create(
-            Deadline.create(),
-            XEM.createRelative(10),
-            UInt64.fromUint(480),
-            signedTransaction,
-            NetworkType.MIJIN_TEST);
-          // we sign the lock
-          const signedLock = readyTransaction.initiator.account.sign(lockFundsTransaction);
-          // announce the lock then the aggregate bounded
-          await listener.open().then(() => {
-
-            transactionHttp.announce(signedLock).subscribe(
-                (x) => console.log(x),
-                (err) => console.error(err));
-            listener.confirmed(readyTransaction.initiator.account.address).pipe(
-              filter((transaction: any) => transaction.transactionInfo !== undefined
-                    && transaction.transactionInfo.hash === signedLock.hash),
-              flatMap(() => transactionHttp.announceAggregateBonded(signedTransaction)),
-            ).subscribe(
-              (announcedAggregateBonded) => console.log(announcedAggregateBonded),
-              (err) => console.error(err));
-          });
-        }
-      });
-      // finally check if the transafer transaction arraay has transactions to announce
-      if (readyTransfer.length > 0) {
-        await this.announceTransfer(readyTransfer, transactionHttp);
-        readyTransfer = [];
-        // empty the array
-      }
-      // empty the array
-      this.transactions = [];
-    });
   }
   /**
    * @description - sets whether the apostille was created
    * @memberof Apostille
    */
   set created(value: boolean) {
-    this._created = value;
+    this.hdAccount.created = value;
   }
   /**
    * @description - gets the apostille account private key
@@ -498,7 +248,7 @@ class Apostille {
    * @memberof Apostille
    */
   get hdAccount(): ApostilleAccount {
-    return new ApostilleAccount(PublicAccount.createFromPublicKey(this.publicKey, this.networkType));
+    return this.apostilleAccount;
   }
   /**
    * @description - gets the hash included in the payload of the creation transaction
@@ -507,7 +257,7 @@ class Apostille {
    * @memberof Apostille
    */
   get creationHash(): string | undefined {
-    return this.hash;
+    return this.hdAccount.creationHash;
   }
   /**
    * @description - gets the signer of the creation transaction
@@ -525,63 +275,6 @@ class Apostille {
     }
     return undefined;
   }
-  /**
-   * @description - checks on chain if the apostille was created
-   * @returns {Promise<boolean>}
-   * @memberof Apostille
-   */
-  public isCreated(): Promise<boolean> {
-    return new Promise<boolean>((resolve, reject) => {
-      this.isAnnounced().then(() => {
-        resolve(this._created);
-      });
-    });
-  }
-  /**
-   * @description - cheks on chain if there are any transactions announced
-   * @param {string} [urls] - enpoint url
-   * @returns {Promise<boolean>}
-   * @memberof Apostille
-   */
-  public isAnnounced(urls?: string): Promise<boolean> {
-    // check if the apostille account has any transaction
-    let accountHttp;
-    if (urls) {
-      if (this.networkType === NetworkType.MAIN_NET || this.networkType === NetworkType.TEST_NET) {
-        console.warn('To fetch a far far away transaction a historical node is needed');
-      }
-      accountHttp = new AccountHttp(urls);
-    } else {
-      if (this.networkType === NetworkType.MIJIN) {
-        throw new Error(Errors[Errors.MIJIN_ENDPOINT_NEEDED]);
-      }
-      accountHttp  = new AccountHttp(HistoricalEndpoints[this.networkType]);
-    }
-    return new Promise(async (resolve, reject) => {
-        await accountHttp.transactions(
-          this.hdAccount.publicAccount,
-          new QueryParams(10),
-        ).subscribe(
-            (transactions) => {
-              if (transactions.length) {
-                // the apostille has been announced
-                this._created = true;
-                this.creationAnnounced = true;
-                resolve(true);
-              } else {
-                // is not announced and the value should be false
-                resolve(this.creationAnnounced);
-              }
-            },
-            (err) => {
-              // an error occurred
-              // can be true or fals depending on the last state
-              console.log(err.message);
-              resolve(this.creationAnnounced);
-            },
-        );
-    });
-  }
 
   /**
    * @description - a function to monitor error and transactions from and to the apostille account
@@ -590,76 +283,7 @@ class Apostille {
    * @memberof Apostille
    */
   public monitor(urls?: string): TransactionsStreams {
-    if (urls) {
-      return new TransactionsStreams(this.hdAccount, urls);
-    }
-    return new TransactionsStreams(this.hdAccount);
-  }
-
-  /**
-   * @description - announce transfer transactions as aggregate if more than 1
-   * @private
-   * @param {IReadyTransaction[]} transactions - array of transfer transactions and thier initiators
-   * @param {TransactionHttp} transactionHttp - transactionHTTP object
-   * @returns {Promise<void>}
-   * @memberof Apostille
-   */
-  private async announceTransfer(
-    transactions: IReadyTransaction[],
-    transactionHttp: TransactionHttp): Promise<TransactionAnnounceResponse | void> {
-    if (transactions.length === 1 ) {
-      // sign and announce the transfer transaction
-      const signedTransaction = transactions[0].initiator.account.sign(transactions[0].transaction);
-      return new Promise<TransactionAnnounceResponse | void>((resolve, reject) => {
-        transactionHttp.announce(signedTransaction).subscribe(
-          (res) => {
-            console.log(res);
-            resolve(res);
-          },
-          (err) => {
-            console.error(err);
-            reject(err);
-        });
-      });
-    } else {
-      // TODO: limit the aggregate to a 1000
-      // we can use chunk from loadash
-
-      // we extract unique initiators
-      const initiators = uniqBy(transactions, 'initiator');
-      const cosignatories: Account[] = [];
-      for (let index = 1; index < initiators.length; index++) {
-        // we create a cosignatory array excluding the first initioator
-        cosignatories.push(initiators[index].initiator.account);
-      }
-      // we prepare the inner transaction for the aggregate transaction
-      const innerTransactions: InnerTransaction[] = [];
-      transactions.forEach((transaction) => {
-        innerTransactions.push(transaction.transaction.toAggregate(
-          transaction.initiator.account.publicAccount,
-        ));
-      });
-      const aggregateTransaction = AggregateTransaction.createComplete(
-        Deadline.create(),
-        innerTransactions,
-        NetworkType.MIJIN_TEST,
-        [],
-      );
-      const signedTransaction = initiators[0].initiator.account.signTransactionWithCosignatories(
-        aggregateTransaction,
-        cosignatories);
-      return new Promise<TransactionAnnounceResponse | void>((resolve, reject) => {
-        transactionHttp.announce(signedTransaction).subscribe(
-          (res) => {
-            console.log(res);
-            resolve(res);
-          },
-          (err) => {
-            console.error(err);
-            reject(err);
-        });
-      });
-    }
+    return this.hdAccount.monitor(urls);
   }
 
 }
