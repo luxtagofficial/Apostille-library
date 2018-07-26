@@ -16,9 +16,10 @@ describe('Setters should work properly', () => {
 
   it('create setter should work properly', () => {
     // tslint:disable-next-line:no-string-literal
-    expect(PrivateApostille.hdAccount['_created']).toBeFalsy();
+    expect(PrivateApostille['_created']).toBeFalsy();
     PrivateApostille.created = true;
-    expect(PrivateApostille.hdAccount['_created']).toBeTruthy();
+    // tslint:disable-next-line:no-string-literal
+    expect(PrivateApostille['_created']).toBeTruthy();
   });
 
 });

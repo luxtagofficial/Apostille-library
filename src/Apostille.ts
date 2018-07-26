@@ -1,8 +1,9 @@
 import * as nemSDK from 'nem-sdk';
 import { Account, Address, Deadline, ModifyMultisigAccountTransaction, MultisigCosignatoryModification, MultisigCosignatoryModificationType, NetworkType, PublicAccount, TransactionType } from 'nem2-sdk';
-import { ApostilleAccount, Initiator } from '../index';
-import { IReadyTransaction } from './IReadyTransaction';
+import { ApostilleAccount } from './ApostilleAccount';
 import { SHA256 } from './hashFunctions';
+import { Initiator } from './Initiator';
+import { IReadyTransaction } from './IReadyTransaction';
 
 const nem = nemSDK.default;
 // TODO: add tx hash of creation
@@ -28,36 +29,21 @@ class Apostille extends ApostilleAccount {
       privateKey = nem.utils.helpers.fixPrivateKey(generatorAccount.signData(hashSeed));
     }
     // create the HD acccount (appostille)
-    const apostille = Account.createFromPrivateKey(privateKey, networkType);
-    return new Apostille(apostille, generatorAccount);
+    const hdAccount = Account.createFromPrivateKey(privateKey, networkType);
+    return new Apostille(hdAccount, generatorAccount);
   }
 
   /**
-   * @description - the apostille account
-   * @private
-   * @type {Account}
-   * @memberof Apostille
-   */
-  private Apostille: Account = new Account();
-  /**
-   * @description - whether the apostille was created or not
-   * @private
-   * @type {boolean}
-   * @memberof Apostille
-   */
-  private creatorAccount;
-
-  /**
    * Creates an instance of Apostille.
-   * @param {string} seed - the seed used to generate an initial hash
-   * @param {Account} generatorAccount - the account used to sign the hash to generate an HD account private key
+   * @param {Account} hdAccount - the apostille account (HD account)
+   * @param {Account} generatorAccount - the account used to sign the hash to generate the HD account private key
    * @memberof Apostille
    */
   private constructor(
-    public readonly apostille: Account,
+    private hdAccount: Account,
     private readonly generatorAccount: Account,
   ) {
-    super(apostille.publicAccount);
+    super(hdAccount.publicAccount);
   }
 
   /**
@@ -80,26 +66,26 @@ class Apostille extends ApostilleAccount {
       quorum,
       minRemoval,
       modifications,
-      this.apostille.address.networkType,
+      this.hdAccount.address.networkType,
     );
 
-    const apostilleAccount = new Initiator(this.Apostille);
+    const apostilleAccount = new Initiator(this.hdAccount);
     const readyModification: IReadyTransaction = {
        initiator: apostilleAccount,
        transaction: multisigCreation,
        type: TransactionType.MODIFY_MULTISIG_ACCOUNT,
     };
-    this.pushToTransactions(readyModification);
+    this.transactions.push(readyModification);
   }
 
   /**
-   * @description - gets the apostille account private key
+   * @description - gets the hdAccount account private key
    * @readonly
    * @type {string}
    * @memberof Apostille
    */
   get privateKey(): string {
-    return this.Apostille.privateKey;
+    return this.hdAccount.privateKey;
   }
   /**
    * @description - gets the apsotille account public key
@@ -108,7 +94,7 @@ class Apostille extends ApostilleAccount {
    * @memberof Apostille
    */
   get publicKey(): string {
-    return this.Apostille.publicKey;
+    return this.hdAccount.publicKey;
   }
   /**
    * @description - gets the apsotille account address
@@ -117,7 +103,7 @@ class Apostille extends ApostilleAccount {
    * @memberof Apostille
    */
   get address(): Address {
-    return this.Apostille.address;
+    return this.hdAccount.address;
   }
   /**
    * @description - gets the account that was used to generate the apostille account (HD account)

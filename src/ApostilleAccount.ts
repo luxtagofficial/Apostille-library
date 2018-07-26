@@ -2,11 +2,30 @@ import { drop, sortBy, uniqBy } from 'lodash';
 import { Account, AccountHttp, AccountInfo, Address, AggregateTransaction, BlockchainHttp, Deadline, InnerTransaction, Listener, LockFundsTransaction, ModifyMultisigAccountTransaction, Mosaic, MultisigCosignatoryModification, MultisigCosignatoryModificationType, NetworkType, PlainMessage, PublicAccount, QueryParams, SignedTransaction, Transaction, TransactionAnnounceResponse, TransactionHttp, TransactionInfo, TransactionType, TransferTransaction, UInt64, XEM } from 'nem2-sdk';
 import { Observable } from 'rxjs';
 import { filter, flatMap } from 'rxjs/operators';
-import { Errors, HistoricalEndpoints, Initiator, TransactionsStreams } from '../index';
-import { IReadyTransaction } from './IReadyTransaction';
+import { Errors } from './Errors';
 import { HashFunction } from './hashFunctions/HashFunction';
+import { HistoricalEndpoints } from './HistoricalEndpoints';
+import { Initiator } from './Initiator';
+import { IReadyTransaction } from './IReadyTransaction';
+import { TransactionsStreams } from './TransactionsStreams';
 
 export class ApostilleAccount {
+
+    /**
+     * @description - an array of all the transaction before they get announced to the network
+     * @private
+     * @type {IReadyTransaction[]}
+     * @memberof ApostilleAccount
+     */
+    protected transactions: IReadyTransaction[] = [];
+
+    /**
+     * @description - whether the apostille was created or not
+     * @private
+     * @type {boolean}
+     * @memberof Apostille
+     */
+    protected creatorAccount;
     // tslint:disable-next-line:variable-name
     private _created: boolean = false;
     /**
@@ -27,13 +46,6 @@ export class ApostilleAccount {
      * @memberof ApostilleAccount
      */
     private hash;
-    /**
-     * @description - an array of all the transaction before they get announced to the network
-     * @private
-     * @type {IReadyTransaction[]}
-     * @memberof ApostilleAccount
-     */
-    private transactions: IReadyTransaction[] = [];
 
     /**
      * @param {PublicAccount} publicAccount
@@ -59,10 +71,11 @@ export class ApostilleAccount {
             throw new Error(Errors[Errors.NETWORK_TYPE_MISMATCHED]);
         }
         // check if the apostille was already created locally or on chain
-        await this.isAnnounced().then(() => {
+        await this.isCreated().then(() => {
         if (this._created) {
             throw new Error(Errors[Errors.APOSTILLE_ALREADY_CREATED]);
         }
+        this.creatorAccount = initiatorAccount;
         let plainMessage: PlainMessage;
         // first we create the creation transaction as a transfer transaction
         if (hashFunction) {
@@ -107,7 +120,7 @@ export class ApostilleAccount {
     ): Promise<void> {
         if (!this._created) {
             // we test locally first to avoid testing on chain evrytime we update
-            await this.isAnnounced();
+            await this.isCreated();
             if (!this._created) {
                 throw new Error(Errors[Errors.APOSTILLE_NOT_CREATED]);
             }
@@ -133,7 +146,7 @@ export class ApostilleAccount {
      * @memberof ApostilleAccount
      */
     public async announce(urls?: string): Promise<void> {
-        await this.isAnnounced().then(async () => {
+        await this.isCreated().then(async () => {
             if (!this._created) {
                 throw new Error(Errors[Errors.APOSTILLE_NOT_CREATED]);
             }
@@ -177,24 +190,12 @@ export class ApostilleAccount {
     }
 
     /**
-     * @description - checks on chain if the apostille was created
-     * @returns {Promise<boolean>}
-     * @memberof ApostilleAccount
-     */
-    public isCreated(): Promise<boolean> {
-        return new Promise<boolean>((resolve, reject) => {
-            this.isAnnounced().then(() => {
-                resolve(this._created);
-            });
-        });
-    }
-    /**
      * @description - cheks on chain if there are any transactions announced
      * @param {string} [urls] - enpoint url
      * @returns {Promise<boolean>}
      * @memberof ApostilleAccount
      */
-    public isAnnounced(urls?: string): Promise<boolean> {
+    public isCreated(urls?: string): Promise<boolean> {
         // check if the apostille account has any transaction
         const accountHttp = new AccountHttp(this.filterUrls(urls));
         return new Promise(async (resolve, reject) => {
@@ -294,7 +295,7 @@ export class ApostilleAccount {
                 type: TransactionType.AGGREGATE_BONDED,
             };
         }
-        this.pushToTransactions(readyModification);
+        this.transactions.push(readyModification);
     }
 
     /**
@@ -462,15 +463,6 @@ export class ApostilleAccount {
      */
     public equals(address: Address) {
         return this.publicAccount.address.plain() === address.plain();
-    }
-
-    /**
-     * @description - add readyTransaction to transactions
-     * * @param {IReadyTransaction}readyTransaction
-     * @memberof ApostilleAccount
-     */
-    public pushToTransactions(readyTransaction: IReadyTransaction): void {
-        this.transactions.push(readyTransaction);
     }
 
     /**
