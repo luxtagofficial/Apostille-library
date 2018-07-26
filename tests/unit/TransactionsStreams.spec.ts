@@ -9,7 +9,7 @@ beforeAll(() => {
 const seed = '.N:@N%5SVj3Wkmr-';
 const sk = '0F30BA45EF341096493CD793D17D4808DAB5EC20A6CC0EB2354DDD687A3A8CF8';
 const gensignr = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
-const privateApostille = new Apostille(seed, gensignr);
+const privateApostille = Apostille.init(seed, gensignr);
 const initiator = new Initiator(gensignr);
 
 describe('TransactionStreams should work properly', () => {

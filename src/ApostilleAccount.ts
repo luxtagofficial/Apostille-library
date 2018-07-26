@@ -13,25 +13,25 @@ export class ApostilleAccount {
      * @description - whether the apostille creation transaction was announced to the network
      * @private
      * @type {boolean}
-     * @memberof Apostille
+     * @memberof ApostilleAccount
      */
     private creationAnnounced: boolean = false;
     /**
      * @description - the account that made the creation transaction
      * @private
-     * @memberof Apostille
+     * @memberof ApostilleAccount
      */
     /**
      * @description - the apostille hash (magical byte + hash)
      * @private
-     * @memberof Apostille
+     * @memberof ApostilleAccount
      */
     private hash;
     /**
      * @description - an array of all the transaction before they get announced to the network
      * @private
      * @type {IReadyTransaction[]}
-     * @memberof Apostille
+     * @memberof ApostilleAccount
      */
     private transactions: IReadyTransaction[] = [];
 
@@ -47,7 +47,7 @@ export class ApostilleAccount {
      * @param {(Mosaic[] | Mosaic[])} [mosaics=[]] - array of mosiacs to attache
      * @param {HashFunction} [hashFunction] - if provided will hash the raw data and add a magical byte to the hash
      * @returns {Promise<void>}
-     * @memberof Apostille
+     * @memberof ApostilleAccount
      */
     public async create(
         initiatorAccount: Initiator,
@@ -98,7 +98,7 @@ export class ApostilleAccount {
      * @param {string} message - message to add as a payload
      * @param {(Mosaic[] | Mosaic[])} [mosaics=[]] - array of mosiacs to attache
      * @returns {Promise<void>}
-     * @memberof Apostille
+     * @memberof ApostilleAccount
      */
     public async update(
         initiatorAccount: Initiator,
@@ -130,7 +130,7 @@ export class ApostilleAccount {
      * @description - announce all transactions to the network
      * @param {string} [urls] - endpoint url
      * @returns {Promise<void>}
-     * @memberof Apostille
+     * @memberof ApostilleAccount
      */
     public async announce(urls?: string): Promise<void> {
         await this.isAnnounced().then(async () => {
@@ -179,7 +179,7 @@ export class ApostilleAccount {
     /**
      * @description - checks on chain if the apostille was created
      * @returns {Promise<boolean>}
-     * @memberof Apostille
+     * @memberof ApostilleAccount
      */
     public isCreated(): Promise<boolean> {
         return new Promise<boolean>((resolve, reject) => {
@@ -192,7 +192,7 @@ export class ApostilleAccount {
      * @description - cheks on chain if there are any transactions announced
      * @param {string} [urls] - enpoint url
      * @returns {Promise<boolean>}
-     * @memberof Apostille
+     * @memberof ApostilleAccount
      */
     public isAnnounced(urls?: string): Promise<boolean> {
         // check if the apostille account has any transaction
@@ -231,7 +231,7 @@ export class ApostilleAccount {
      * @param {PublicAccount[]} OwnersToRemove - array of owners to remove
      * @param {number} quorumDelta - relative quorum (refer to own function above and/or http://bit.ly/2Jnff1r )
      * @param {number} minRemovalDelta - relative number of minimum owners necessary to agree to remove 1/n owners
-     * @memberof Apostille
+     * @memberof ApostilleAccount
      */
     public transfer(
         signers: Account[],
@@ -467,7 +467,7 @@ export class ApostilleAccount {
     /**
      * @description - add readyTransaction to transactions
      * * @param {IReadyTransaction}readyTransaction
-     * @memberof Apostille
+     * @memberof ApostilleAccount
      */
     public pushToTransactions(readyTransaction: IReadyTransaction): void {
         this.transactions.push(readyTransaction);
@@ -486,7 +486,7 @@ export class ApostilleAccount {
 
     /**
      * @description - sets whether the apostille was created
-     * @memberof Apostille
+     * @memberof ApostilleAccount
      */
     set created(value: boolean) {
         this._created = value;
@@ -496,7 +496,7 @@ export class ApostilleAccount {
      * @description - gets the hash included in the payload of the creation transaction
      * @readonly
      * @type {(string | undefined)}
-     * @memberof Apostille
+     * @memberof ApostilleAccount
      */
     get creationHash(): string | undefined {
         return this.hash;
@@ -549,7 +549,7 @@ export class ApostilleAccount {
      * @param {IReadyTransaction[]} transactions - array of transfer transactions and thier initiators
      * @param {TransactionHttp} transactionHttp - transactionHTTP object
      * @returns {Promise<void>}
-     * @memberof Apostille
+     * @memberof ApostilleAccount
      */
     private async announceTransfer(
         transactions: IReadyTransaction[],

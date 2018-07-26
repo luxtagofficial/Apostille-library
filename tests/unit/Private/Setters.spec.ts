@@ -10,7 +10,7 @@ const signer = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
 // creation payload
 const payload = 'Apostille is awesome !';
 
-const PrivateApostille = new Apostille(seed, generator);
+const PrivateApostille = Apostille.init(seed, generator);
 
 describe('Setters should work properly', () => {
 
