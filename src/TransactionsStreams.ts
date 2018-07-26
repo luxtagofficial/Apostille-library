@@ -1,25 +1,13 @@
-import { AggregateTransaction, CosignatureSignedTransaction, Listener, NetworkType, Transaction, TransactionStatusError } from 'nem2-sdk';
+import { AggregateTransaction, CosignatureSignedTransaction, Listener, Transaction, TransactionStatusError } from 'nem2-sdk';
 import { Observable } from 'rxjs';
-import { ApostilleAccount, Errors, HistoricalEndpoints } from '../index';
+import { ApostilleAccount } from '../index';
 
 export class TransactionsStreams {
 
-  private listener: Listener;
-
   constructor(
     public readonly apostilleAccount: ApostilleAccount,
-    private urls?: string,
-  ) {
-    if (urls) {
-      this.urls = urls;
-      this.listener = new Listener(this.urls);
-    } else {
-      if (this.apostilleAccount.publicAccount.address.networkType === NetworkType.MIJIN) {
-        throw new Error(Errors[Errors.MIJIN_ENDPOINT_NEEDED]);
-      }
-      this.listener = new Listener(HistoricalEndpoints[this.apostilleAccount.publicAccount.address.networkType]);
-    }
-  }
+    public readonly listener: Listener,
+  ) {}
 
   /**
    * @description Returns an observable stream of Transaction for this Apostille Account.

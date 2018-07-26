@@ -48,7 +48,7 @@ describe('apostille accound methods should work properly', () => {
   });
 
   it('Throws error if there is no first transactions', () => {
-    const publicKey = '043E9D2BB4F38348F4ECA088CF0E76B3749389CFDE3E8D091889477F9F33F630';
+    const publicKey = '95361ED8C94048BD5B0BDB229C19DF817DB7D66B59F4162E3F3A1D0D813B2AB9';
     const apostilleAccount = new ApostilleAccount(PublicAccount.createFromPublicKey(publicKey, NetworkType.MIJIN_TEST));
 
     return apostilleAccount.getCreationTransaction().then((data: TransferTransaction) => {
