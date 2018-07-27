@@ -10,15 +10,16 @@ const signer = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
 // creation payload
 const payload = 'Apostille is awesome !';
 
-const PrivateApostille = new Apostille(seed, generator);
+const PrivateApostille = Apostille.init(seed, generator);
 
 describe('Setters should work properly', () => {
 
   it('create setter should work properly', () => {
     // tslint:disable-next-line:no-string-literal
-    expect(PrivateApostille.hdAccount['_created']).toBeFalsy();
+    expect(PrivateApostille['_created']).toBeFalsy();
     PrivateApostille.created = true;
-    expect(PrivateApostille.hdAccount['_created']).toBeTruthy();
+    // tslint:disable-next-line:no-string-literal
+    expect(PrivateApostille['_created']).toBeTruthy();
   });
 
 });

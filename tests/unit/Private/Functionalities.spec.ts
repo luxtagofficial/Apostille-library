@@ -14,7 +14,7 @@ beforeAll(() => {
 describe('Create functionn should work properly', () => {
 
   it('should throw an error if you try to create an apostille more than once', async () => {
-    const privateApostille = new Apostille(seed, generator);
+    const privateApostille = Apostille.init(seed, generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
     const initiator = new Initiator(creator);
     expect.assertions(1);
@@ -25,32 +25,32 @@ describe('Create functionn should work properly', () => {
   });
 
   it('should create a transfer transaction', () => {
-    const privateApostille = new Apostille(seed, generator);
+    const privateApostille = Apostille.init(seed, generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
     const initiator = new Initiator(creator);
     return privateApostille.create(initiator, 'raw').then(() => {
       // tslint:disable-next-line:no-string-literal
-      expect(privateApostille.hdAccount['transactions'][0].type).toEqual(TransactionType.TRANSFER);
+      expect(privateApostille['transactions'][0].type).toEqual(TransactionType.TRANSFER);
     });
   });
 
   it('should create an aggregate complete transaction', () => {
-    const privateApostille = new Apostille(seed, generator);
+    const privateApostille = Apostille.init(seed, generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
     const initiator = new Initiator(creator, creator.publicAccount, true);
     return privateApostille.create(initiator, 'raw').then(() => {
       // tslint:disable-next-line:no-string-literal
-      expect(privateApostille.hdAccount['transactions'][0].type).toEqual(TransactionType.AGGREGATE_COMPLETE);
+      expect(privateApostille['transactions'][0].type).toEqual(TransactionType.AGGREGATE_COMPLETE);
     });
   });
 
   it('should create an aggregate bounded transaction', () => {
-    const privateApostille = new Apostille(seed, generator);
+    const privateApostille = Apostille.init(seed, generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
     const initiator = new Initiator(creator, creator.publicAccount, false);
     return privateApostille.create(initiator, 'raw').then(() => {
       // tslint:disable-next-line:no-string-literal
-      expect(privateApostille.hdAccount['transactions'][0].type).toEqual(TransactionType.AGGREGATE_BONDED);
+      expect(privateApostille['transactions'][0].type).toEqual(TransactionType.AGGREGATE_BONDED);
     });
   });
 
@@ -59,7 +59,7 @@ describe('Create functionn should work properly', () => {
 describe('update function should work properly', () => {
 
   it('should throw an error if we try to update before creating', async () => {
-    const privateApostille = new Apostille(seed, generator);
+    const privateApostille = Apostille.init(seed, generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
     const initiator = new Initiator(creator);
     expect.assertions(1);
@@ -69,36 +69,36 @@ describe('update function should work properly', () => {
   });
 
   it('should create a transfer transaction', async () => {
-    const privateApostille = new Apostille(seed, generator);
+    const privateApostille = Apostille.init(seed, generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
     const initiator = new Initiator(creator);
     expect.assertions(1);
     await privateApostille.create(initiator, 'raw');
     await privateApostille.update(initiator, 'update');
     // tslint:disable-next-line:no-string-literal
-    expect(privateApostille.hdAccount['transactions'][1].type).toEqual(TransactionType.TRANSFER);
+    expect(privateApostille['transactions'][1].type).toEqual(TransactionType.TRANSFER);
   });
 
   it('should create an aggregate complete transaction', async () => {
-    const privateApostille = new Apostille(seed, generator);
+    const privateApostille = Apostille.init(seed, generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
     const initiator = new Initiator(creator, creator.publicAccount, true);
     expect.assertions(1);
     await privateApostille.create(initiator, 'raw');
     await privateApostille.update(initiator, 'update');
     // tslint:disable-next-line:no-string-literal
-    expect(privateApostille.hdAccount['transactions'][0].type).toEqual(TransactionType.AGGREGATE_COMPLETE);
+    expect(privateApostille['transactions'][0].type).toEqual(TransactionType.AGGREGATE_COMPLETE);
   });
 
   it('should create an aggregate bounded transaction', async () => {
-    const privateApostille = new Apostille(seed, generator);
+    const privateApostille = Apostille.init(seed, generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
     const initiator = new Initiator(creator, creator.publicAccount, false);
     expect.assertions(1);
     await privateApostille.create(initiator, 'raw');
     await privateApostille.update(initiator, 'update');
     // tslint:disable-next-line:no-string-literal
-    expect(privateApostille.hdAccount['transactions'][0].type).toEqual(TransactionType.AGGREGATE_BONDED);
+    expect(privateApostille['transactions'][0].type).toEqual(TransactionType.AGGREGATE_BONDED);
   });
 
 });
@@ -106,7 +106,7 @@ describe('update function should work properly', () => {
 describe('own function should work properly', () => {
 
   it('should create an aggregate bounded transaction', async () => {
-    const privateApostille = new Apostille(seed, generator);
+    const privateApostille = Apostille.init(seed, generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
     const initiator = new Initiator(creator, creator.publicAccount, false);
     expect.assertions(1);
@@ -114,7 +114,7 @@ describe('own function should work properly', () => {
     await privateApostille.update(initiator, 'update');
     privateApostille.own([initiator.account.publicAccount], 1, 1);
     // tslint:disable-next-line:no-string-literal
-    expect(privateApostille.hdAccount['transactions'][2].type).toEqual(TransactionType.MODIFY_MULTISIG_ACCOUNT);
+    expect(privateApostille['transactions'][2].type).toEqual(TransactionType.MODIFY_MULTISIG_ACCOUNT);
   });
 
 });
@@ -122,23 +122,23 @@ describe('own function should work properly', () => {
 describe('transfer function should work properly', () => {
 
   it('should create an aggregate complete transaction', async () => {
-    const privateApostille = new Apostille(seed, generator);
+    const privateApostille = Apostille.init(seed, generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
     const initiator = new Initiator(creator, creator.publicAccount, false);
     expect.assertions(1);
     privateApostille.transfer([creator], true, [creator.publicAccount], [creator.publicAccount], 0, 0);
     // tslint:disable-next-line:no-string-literal
-    expect(privateApostille.hdAccount['transactions'][0].type).toEqual(TransactionType.AGGREGATE_COMPLETE);
+    expect(privateApostille['transactions'][0].type).toEqual(TransactionType.AGGREGATE_COMPLETE);
   });
 
   it('should create an aggregate complete transaction', async () => {
-    const privateApostille = new Apostille(seed, generator);
+    const privateApostille = Apostille.init(seed, generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
     const initiator = new Initiator(creator, creator.publicAccount, false);
     expect.assertions(1);
     privateApostille.transfer([creator], false, [], [], 0, 0);
     // tslint:disable-next-line:no-string-literal
-    expect(privateApostille.hdAccount['transactions'][0].type).toEqual(TransactionType.AGGREGATE_BONDED);
+    expect(privateApostille['transactions'][0].type).toEqual(TransactionType.AGGREGATE_BONDED);
   });
 
 });
@@ -146,7 +146,7 @@ describe('transfer function should work properly', () => {
 describe('isCreated function should work properly', () => {
 
   it('should return false before creation', async () => {
-    const privateApostille = new Apostille('QUleqZedaOUtlSh', generator);
+    const privateApostille = Apostille.init('QUleqZedaOUtlSh', generator);
     expect.assertions(1);
     return privateApostille.isCreated().then((result) => {
       expect(result).toBeFalsy();
@@ -154,7 +154,7 @@ describe('isCreated function should work properly', () => {
   });
 
   it('should return true after creation', async () => {
-    const privateApostille = new Apostille('new random seed', generator);
+    const privateApostille = Apostille.init('new random seed', generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
     const initiator = new Initiator(creator);
     expect.assertions(1);
@@ -165,21 +165,18 @@ describe('isCreated function should work properly', () => {
   });
 
   it('should return true for an already created apostille', async () => {
-    const privateApostille = new Apostille('MIJIN_TEST', generator);
+    const privateApostille = Apostille.init('MIJIN_TEST', generator);
     expect.assertions(1);
     return privateApostille.isCreated().then((result) => {
       expect(result).toBeTruthy();
     });
   });
 
-});
-
-describe('isAnnounced function should work properly', () => {
   it('should throw an error if we don\'t specefy mijin endpoint url', () => {
     const MJgenerator = Account.createFromPrivateKey(sk, NetworkType.MIJIN);
-    const apostilleMJ = new Apostille('k7u*VTsVCk6h,FdN', MJgenerator);
+    const apostilleMJ = Apostille.init('k7u*VTsVCk6h,FdN', MJgenerator);
     try {
-      return apostilleMJ.isAnnounced();
+      return apostilleMJ.isCreated();
     } catch (e) {
       expect(e.message).toMatch(Errors[Errors.MIJIN_ENDPOINT_NEEDED]);
     }
@@ -187,46 +184,30 @@ describe('isAnnounced function should work properly', () => {
 
   it('should return false before an announce', () => {
     const MTgenerator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
-    const MJgenerator = Account.createFromPrivateKey(sk, NetworkType.MIJIN);
-    const MNgenerator = Account.createFromPrivateKey(sk, NetworkType.MAIN_NET);
-    const Tgenerator = Account.createFromPrivateKey(sk, NetworkType.TEST_NET);
-    const apostilleMT = new Apostille('QUleqZedaOUtlSh', MTgenerator);
-    const apostilleMJ = new Apostille('QUleqZedaOUtlSS', MJgenerator);
-    const apostilleMN = new Apostille('QUleqZedaOUtlSh', MNgenerator);
-    const apostilleT = new Apostille('QUleqZedaOUtlSh', Tgenerator);
-    return apostilleMT.isAnnounced().then((MT) => {
+    const apostilleMT = Apostille.init('QUleqZedaOUtlSh', MTgenerator);
+    return apostilleMT.isCreated().then((MT) => {
       expect(MT).toBeFalsy();
-      return apostilleMJ.isAnnounced('http://b1.nem.foundation:7895').then((MJ) => {
-        expect(MJ).toBeFalsy();
-        return apostilleMN.isAnnounced().then((MN) => {
-          expect(MN).toBeFalsy();
-          return apostilleT.isAnnounced().then((T) => {
-            expect(T).toBeFalsy();
-          });
-        });
-      });
     });
   });
 
   it('should return true after an announce', async () => {
-    const privateApostille = new Apostille('_934@Ve*,tM(3MN-', generator);
+    const privateApostille = Apostille.init('_934@Ve*,tM(3MN-', generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
     const initiator = new Initiator(creator);
     privateApostille.created = true;
     await privateApostille.update(initiator, 'update');
     await privateApostille.announce();
-    return privateApostille.isAnnounced().then((result) => {
+    return privateApostille.isCreated().then((result) => {
       expect(result).toBeTruthy();
     });
   });
 
   it('should return true for an already announced apostille', () => {
-    const privateApostille = new Apostille('MIJIN_TEST', generator);
-    return privateApostille.isAnnounced().then((result) => {
+    const privateApostille = Apostille.init('MIJIN_TEST', generator);
+    return privateApostille.isCreated().then((result) => {
       expect(result).toBeTruthy();
     });
   });
-
 });
 
 // TODO: check the order of transactions
