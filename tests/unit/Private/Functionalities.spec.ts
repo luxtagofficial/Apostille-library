@@ -184,24 +184,9 @@ describe('isCreated function should work properly', () => {
 
   it('should return false before an announce', () => {
     const MTgenerator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
-    const MJgenerator = Account.createFromPrivateKey(sk, NetworkType.MIJIN);
-    const MNgenerator = Account.createFromPrivateKey(sk, NetworkType.MAIN_NET);
-    const Tgenerator = Account.createFromPrivateKey(sk, NetworkType.TEST_NET);
     const apostilleMT = Apostille.init('QUleqZedaOUtlSh', MTgenerator);
-    const apostilleMJ = Apostille.init('QUleqZedaOUtlSS', MJgenerator);
-    const apostilleMN = Apostille.init('QUleqZedaOUtlSh', MNgenerator);
-    const apostilleT = Apostille.init('QUleqZedaOUtlSh', Tgenerator);
     return apostilleMT.isCreated().then((MT) => {
       expect(MT).toBeFalsy();
-      return apostilleMJ.isCreated('http://b1.nem.foundation:7895').then((MJ) => {
-        expect(MJ).toBeFalsy();
-        return apostilleMN.isCreated().then((MN) => {
-          expect(MN).toBeFalsy();
-          return apostilleT.isCreated().then((T) => {
-            expect(T).toBeFalsy();
-          });
-        });
-      });
     });
   });
 

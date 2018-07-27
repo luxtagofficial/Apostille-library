@@ -212,7 +212,8 @@ export class ApostilleAccount {
                 }
                 },
                 (err) => {
-                    reject(err.message);
+                    // network or comunication problem
+                    throw new Error(err.message);
                 },
             );
         });
