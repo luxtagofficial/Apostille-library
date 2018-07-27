@@ -1,7 +1,13 @@
 import CryptoJS from 'crypto-js';
 import nem from 'nem-sdk';
 import { Account, NetworkType } from 'nem2-sdk';
-import { Apostille, Initiator, KECCAK256, KECCAK512, MD5, SHA1, SHA256 } from '../../../index';
+import { Apostille } from '../../../src/Apostille';
+import { KECCAK256 } from '../../../src/hashFunctions/keccak-256';
+import { KECCAK512 } from '../../../src/hashFunctions/keccak-512';
+import { MD5 } from '../../../src/hashFunctions/md5';
+import { SHA1 } from '../../../src/hashFunctions/sha1';
+import { SHA256 } from '../../../src/hashFunctions/sha256';
+import { Initiator } from '../../../src/Initiator';
 
 const seed = 'NEM is Awesome!';
 // A funny but valid private key

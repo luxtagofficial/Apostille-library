@@ -20,21 +20,19 @@ export class ApostilleAccount {
     protected transactions: IReadyTransaction[] = [];
 
     /**
+     * @description - the account that signed the creation transaction
+     * @protected
+     * @memberof ApostilleAccount
+     */
+    protected creatorAccount;
+    /**
      * @description - whether the apostille was created or not
      * @private
      * @type {boolean}
      * @memberof Apostille
      */
-    protected creatorAccount;
     // tslint:disable-next-line:variable-name
     private _created: boolean = false;
-    /**
-     * @description - whether the apostille creation transaction was announced to the network
-     * @private
-     * @type {boolean}
-     * @memberof ApostilleAccount
-     */
-    private creationAnnounced: boolean = false;
     /**
      * @description - the account that made the creation transaction
      * @private
@@ -207,18 +205,14 @@ export class ApostilleAccount {
                 if (transactions.length) {
                     // the apostille has been announced
                     this._created = true;
-                    this.creationAnnounced = true;
                     resolve(true);
                 } else {
                     // is not announced and the value should be false
-                    resolve(this.creationAnnounced);
+                    resolve(this._created);
                 }
                 },
                 (err) => {
-                // an error occurred
-                // can be true or fals depending on the last state
-                console.log(err.message);
-                resolve(this.creationAnnounced);
+                    reject(err.message);
                 },
             );
         });
