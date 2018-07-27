@@ -88,7 +88,7 @@ class Apostille extends ApostilleAccount {
     return this.hdAccount.privateKey;
   }
   /**
-   * @description - gets the apsotille account public key
+   * @description - gets the hdAccount account public key
    * @readonly
    * @type {string}
    * @memberof Apostille
@@ -97,7 +97,7 @@ class Apostille extends ApostilleAccount {
     return this.hdAccount.publicKey;
   }
   /**
-   * @description - gets the apsotille account address
+   * @description - gets the hdAccount account address
    * @readonly
    * @type {Address}
    * @memberof Apostille
@@ -120,7 +120,7 @@ class Apostille extends ApostilleAccount {
    * @type {PublicAccount}
    * @memberof Apostille
    */
-  get hdAccount(): PublicAccount {
+  get publicHD(): PublicAccount {
     return this.publicAccount;
   }
 

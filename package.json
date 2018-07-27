@@ -46,31 +46,31 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@types/crypto-js": "^3.1.39",
-    "@types/lodash": "^4.14.102",
+    "@types/crypto-js": "^3.1.43",
+    "@types/lodash": "^4.14.113",
     "commitizen": "^2.9.6",
     "crypto-js": "^3.1.9-1",
     "js-sha3": "^0.7.0",
     "lodash": "^4.17.10",
     "nem-sdk": "^1.6.4",
-    "nem2-sdk": "^0.10.0",
-    "rxjs": "^6.2.1"
+    "nem2-sdk": "^0.10.1",
+    "rxjs": "^6.2.2"
   },
   "devDependencies": {
     "@types/jest": "^22.2.2",
     "@types/sinon": "^5.0.1",
-    "codecov": "^3.0.1",
+    "codecov": "^3.0.4",
     "commitlint": "^6.2.0",
     "cz-conventional-changelog": "^2.1.0",
     "ghooks": "^2.0.4",
-    "jest": "^22.4.3",
+    "jest": "^23.4.1",
     "npm-run-all": "^4.1.2",
     "rimraf": "^2.6.2",
-    "semantic-release": "^15.2.0",
+    "semantic-release": "^15.8.1",
     "sinon": "^5.0.10",
     "travis-deploy-once": "^5.0.0",
-    "ts-jest": "^22.4.2",
-    "tslint": "^5.10.0",
+    "ts-jest": "^23.0.1",
+    "tslint": "^5.11.0",
     "typescript": "^2.8.3",
     "validate-commit-msg": "^2.14.0"
   },
@@ -102,6 +102,9 @@
     "coverageDirectory": "<rootDir>/tests/unit/coverage",
     "collectCoverageFrom": [
       "<rootDir>/src/**/*.ts"
+    ],
+    "coveragePathIgnorePatterns": [
+      "/types/"
     ]
   }
 }

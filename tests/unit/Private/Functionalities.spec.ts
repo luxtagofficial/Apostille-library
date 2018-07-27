@@ -172,14 +172,11 @@ describe('isCreated function should work properly', () => {
     });
   });
 
-});
-
-describe('isAnnounced function should work properly', () => {
   it('should throw an error if we don\'t specefy mijin endpoint url', () => {
     const MJgenerator = Account.createFromPrivateKey(sk, NetworkType.MIJIN);
     const apostilleMJ = Apostille.init('k7u*VTsVCk6h,FdN', MJgenerator);
     try {
-      return apostilleMJ.isAnnounced();
+      return apostilleMJ.isCreated();
     } catch (e) {
       expect(e.message).toMatch(Errors[Errors.MIJIN_ENDPOINT_NEEDED]);
     }
@@ -187,24 +184,9 @@ describe('isAnnounced function should work properly', () => {
 
   it('should return false before an announce', () => {
     const MTgenerator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
-    const MJgenerator = Account.createFromPrivateKey(sk, NetworkType.MIJIN);
-    const MNgenerator = Account.createFromPrivateKey(sk, NetworkType.MAIN_NET);
-    const Tgenerator = Account.createFromPrivateKey(sk, NetworkType.TEST_NET);
     const apostilleMT = Apostille.init('QUleqZedaOUtlSh', MTgenerator);
-    const apostilleMJ = Apostille.init('QUleqZedaOUtlSS', MJgenerator);
-    const apostilleMN = Apostille.init('QUleqZedaOUtlSh', MNgenerator);
-    const apostilleT = Apostille.init('QUleqZedaOUtlSh', Tgenerator);
-    return apostilleMT.isAnnounced().then((MT) => {
+    return apostilleMT.isCreated().then((MT) => {
       expect(MT).toBeFalsy();
-      return apostilleMJ.isAnnounced('http://b1.nem.foundation:7895').then((MJ) => {
-        expect(MJ).toBeFalsy();
-        return apostilleMN.isAnnounced().then((MN) => {
-          expect(MN).toBeFalsy();
-          return apostilleT.isAnnounced().then((T) => {
-            expect(T).toBeFalsy();
-          });
-        });
-      });
     });
   });
 
@@ -215,18 +197,17 @@ describe('isAnnounced function should work properly', () => {
     privateApostille.created = true;
     await privateApostille.update(initiator, 'update');
     await privateApostille.announce();
-    return privateApostille.isAnnounced().then((result) => {
+    return privateApostille.isCreated().then((result) => {
       expect(result).toBeTruthy();
     });
   });
 
   it('should return true for an already announced apostille', () => {
     const privateApostille = Apostille.init('MIJIN_TEST', generator);
-    return privateApostille.isAnnounced().then((result) => {
+    return privateApostille.isCreated().then((result) => {
       expect(result).toBeTruthy();
     });
   });
-
 });
 
 // TODO: check the order of transactions
