@@ -102,6 +102,9 @@
     "coverageDirectory": "<rootDir>/tests/unit/coverage",
     "collectCoverageFrom": [
       "<rootDir>/src/**/*.ts"
+    ],
+    "coveragePathIgnorePatterns": [
+      "/types/"
     ]
   }
 }
