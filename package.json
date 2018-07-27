@@ -22,7 +22,7 @@
     "prebuild:watch": "rimraf dist",
     "build": "tsc",
     "build:watch": "tsc --watch",
-    "lint": "tslint 'src/**/*.ts'",
+    "lint": "tslint 'src/**/*.ts' -e 'src/types/**'",
     "test": "jest --coverage --verbose",
     "validate": "npm-run-all --parallel lint test",
     "report-coverage": "cat ./tests/unit/coverage/lcov.info | codecov",

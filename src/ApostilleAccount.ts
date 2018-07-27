@@ -97,7 +97,7 @@ export class ApostilleAccount {
             this.publicAccount.address.networkType,
         );
 
-        const readyCreation = this.getIReadyTransaction(initiatorAccount, creationTransaction);
+        const readyCreation = this.prepareIReadyTransaction(initiatorAccount, creationTransaction);
 
         this.transactions.push(readyCreation);
         this._created = true;
@@ -133,7 +133,7 @@ export class ApostilleAccount {
         );
 
         // we prepare the transaction to push it in the array
-        const readyUpdate = this.getIReadyTransaction(initiatorAccount, updateTransaction);
+        const readyUpdate = this.prepareIReadyTransaction(initiatorAccount, updateTransaction);
         this.transactions.push(readyUpdate);
     }
 
@@ -201,14 +201,35 @@ export class ApostilleAccount {
             this.publicAccount,
             new QueryParams(10),
             ).subscribe(
-                (transactions) => {
+                async (transactions) => {
                 if (transactions.length) {
                     // the apostille has been announced
                     this._created = true;
                     resolve(true);
                 } else {
-                    // is not announced and the value should be false
-                    resolve(this._created);
+                    // we need to check if there are any unconfirmed transactions
+                    await accountHttp.unconfirmedTransactions(
+                        this.publicAccount,
+                        new QueryParams(10),
+                    ).subscribe((unconfirmedTransactions) => {
+                        // if there is then the apostille has been created
+                        if (unconfirmedTransactions.length) {
+                            // the apostille has been announced
+                            this._created = true;
+                            resolve(true);
+                        } else {
+                            // the apostille has no transaction on chain
+                            // we resolve the local variable
+                            resolve(this._created);
+                        }
+                    },
+                    (err) => {
+                        // network or comunication problem
+                        throw new Error(err.message);
+                    });
+                    // no transactions on chain
+                    // we resolve the local variable
+                    // resolve(this._created);
                 }
                 },
                 (err) => {
@@ -489,10 +510,15 @@ export class ApostilleAccount {
         return this.hash;
     }
 
-    private getIReadyTransaction(
-        initiator: Initiator,
-        transaction: Transaction,
-        ): IReadyTransaction {
+    /**
+     * @description - prepare an IReadyTransaction object
+     * @private
+     * @param {Initiator} initiator - the transaction signer and initiator
+     * @param {Transaction} transaction - the transaction
+     * @returns {IReadyTransaction}
+     * @memberof ApostilleAccount
+     */
+    private prepareIReadyTransaction( initiator: Initiator, transaction: Transaction ): IReadyTransaction {
             // we prepare the transaction to push it in the array
         let type: TransactionType;
         // we prepare the transaction to push it in the array
