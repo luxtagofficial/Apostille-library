@@ -1,6 +1,6 @@
 # Apostille-library
 <p align="center">
-  <img alt="BetterCap" src="https://apostille.io/apostille.png" height="200" />
+  <img alt="Apostille" src="https://apostille.io/apostille.png" height="200" />
   <p align="center">
     <a href="https://travis-ci.org/luxtagofficial/Apostille-library"><img src="https://travis-ci.org/luxtagofficial/Apostille-library.svg?branch=master"></a>
     <a href="https://codecov.io/gh/luxtagofficial/Apostille-library">

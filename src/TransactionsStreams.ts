@@ -17,44 +17,56 @@ export class TransactionsStreams {
    * @memberof TransactionsStream
    */
   public onConfirmed(): Promise<Observable<Transaction>> {
+    console.log('Opening Connection...');
     return this.listener.open().then(() => {
       return this.listener.confirmed(this.apostilleAccount.publicAccount.address);
     });
   }
 
   public onUnconfirmedAdded(): Promise<Observable<Transaction>> {
+    console.log('Opening Connection...');
     return this.listener.open().then(() => {
       return this.listener.unconfirmedAdded(this.apostilleAccount.publicAccount.address);
     });
   }
 
   public onUnconfirmedRemoved(): Promise<Observable<string>> {
+    console.log('Opening Connection...');
     return this.listener.open().then(() => {
       return this.listener.unconfirmedRemoved(this.apostilleAccount.publicAccount.address);
     });
   }
 
   public onAggregateBondedAdded(): Promise<Observable<AggregateTransaction>> {
+    console.log('Opening Connection...');
     return this.listener.open().then(() => {
       return this.listener.aggregateBondedAdded(this.apostilleAccount.publicAccount.address);
     });
   }
 
   public onAggregateBondedRemoved(): Promise<Observable<AggregateTransaction>> {
+    console.log('Opening Connection...');
     return this.listener.open().then(() => {
       return this.listener.aggregateBondedAdded(this.apostilleAccount.publicAccount.address);
     });
   }
 
   public onError(): Promise<Observable<TransactionStatusError>> {
+    console.log('Opening Connection...');
     return this.listener.open().then(() => {
       return this.listener.status(this.apostilleAccount.publicAccount.address);
     });
   }
 
   public onCosignatureAdded(): Promise<Observable<CosignatureSignedTransaction>> {
+    console.log('Opening Connection...');
     return this.listener.open().then(() => {
       return this.listener.cosignatureAdded(this.apostilleAccount.publicAccount.address);
     });
+  }
+
+  public close(): void {
+    console.log('Closing Connection...');
+    this.listener.close();
   }
 }

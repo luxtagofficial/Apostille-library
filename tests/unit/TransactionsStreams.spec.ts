@@ -3,7 +3,7 @@ import { Apostille } from '../../src/Apostille';
 import { Initiator } from '../../src/Initiator';
 
 beforeAll(() => {
-  jest.setTimeout(10000);
+  jest.setTimeout(20000);
 });
 
 const seed = '.N:@N%5SVj3Wkmr-';
@@ -12,13 +12,19 @@ const gensignr = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
 const privateApostille = Apostille.init(seed, gensignr);
 const initiator = new Initiator(gensignr);
 
+afterAll(() => {
+  privateApostille.monitor().close();
+});
+
 describe('TransactionStreams should work properly', () => {
   privateApostille.created = true;
-  it('should catch unconfirmed when added transactions', async () => {
+  it('should catch unconfirmed transactions when added', async () => {
     privateApostille.monitor().onUnconfirmedAdded().then((channel) => {
       channel.subscribe((transaction: any) => {
-        console.log('UNCONFIRMED ADDED:', transaction.message.payload);
-        return expect(transaction.message.payload).toMatch('transactions stream test unconfirmed');
+        console.log('Listening for unconfirmed added transactions...');
+        console.log('added', transaction.message.payload);
+        // return expect(transaction.message.payload).toMatch('transactions stream test unconfirmed');
+        return expect(transaction.message.payload).toMatch('###');
       },
       (err) => console.error(err));
     });
@@ -29,8 +35,9 @@ describe('TransactionStreams should work properly', () => {
   it('should catch unconfirmed when removed transactions', async () => {
     privateApostille.monitor().onUnconfirmedRemoved().then((channel) => {
       channel.subscribe((transaction: any) => {
-        console.log('UNCONFIRMED REMOVED:', transaction.message.payload);
-        return expect(transaction.message.payload).toMatch('transactions stream test unconfirmed');
+        console.log('Listening for unconfirmed removed transactions...');
+        // return expect(transaction.message.payload).toMatch('transactions stream test unconfirmed');
+        return expect(transaction.message.payload).toMatch('###');
       },
       (err) => console.error(err));
     });
@@ -41,12 +48,14 @@ describe('TransactionStreams should work properly', () => {
   it('should catch confirmed transactions', async () => {
     privateApostille.monitor().onConfirmed().then((channel) => {
       channel.subscribe((transaction: any) => {
-        console.log('CONFIRMED:', transaction.message.payload);
-        return expect(transaction.message.payload).toMatch('transactions stream test unconfirmed');
+        console.log('Listening for confirmed transactions...');
+        console.log('confirmed', transaction.message.payload);
+        // return expect(transaction.message.payload).toMatch('transactions stream test unconfirmed');
+        return expect(transaction.message.payload).toMatch('###');
       },
       (err) => console.error(err));
     });
-    await privateApostille.update(initiator, 'transactions stream test unconfirmed')
-    .then(async () => await privateApostille.announce());
-  });
+    privateApostille.update(initiator, 'transactions stream test unconfirmed')
+          .then(async () => await privateApostille.announce());
+        });
 });
