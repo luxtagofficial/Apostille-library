@@ -569,7 +569,13 @@ export class ApostilleAccount {
         transactionHttp: TransactionHttp): Promise<TransactionAnnounceResponse | void> {
         if (transactions.length === 1 ) {
             // sign and announce the transfer transaction
-            const signedTransaction = transactions[0].initiator.account.sign(transactions[0].transaction);
+
+            // refresh the deadline
+            const deadline = Deadline.create();
+            const freshTransaction = Object.assign({__proto__: Object.getPrototypeOf(transactions[0].transaction)},
+            transactions[0].transaction,
+            {deadline});
+            const signedTransaction = transactions[0].initiator.account.sign(freshTransaction);
             return new Promise<TransactionAnnounceResponse | void>((resolve, reject) => {
                 transactionHttp.announce(signedTransaction).subscribe(
                 (res) => {
@@ -596,7 +602,12 @@ export class ApostilleAccount {
             // we prepare the inner transaction for the aggregate transaction
             const innerTransactions: InnerTransaction[] = [];
             transactions.forEach((transaction) => {
-                innerTransactions.push(transaction.transaction.toAggregate(
+                // refresh the deadline
+                const deadline = Deadline.create();
+                const freshTransaction = Object.assign({__proto__: Object.getPrototypeOf(transaction.transaction)},
+                transaction.transaction,
+                {deadline});
+                innerTransactions.push(freshTransaction.toAggregate(
                     transaction.initiator.account.publicAccount,
                 ));
             });
@@ -630,10 +641,14 @@ export class ApostilleAccount {
         if (!readyTransaction.initiator.multisigAccount) {
             throw Error(Errors[Errors.AGGREGATE_COMPLETE_NEED_MULTISIG_ACCOUNT]);
         }
-
+        // refresh the deadline
+        const deadline = Deadline.create();
+        const freshTransaction = Object.assign({__proto__: Object.getPrototypeOf(readyTransaction.transaction)},
+        readyTransaction.transaction,
+        {deadline});
         const aggregateTransaction = AggregateTransaction.createComplete(
             Deadline.create(),
-            [readyTransaction.transaction.toAggregate(readyTransaction.initiator.multisigAccount)],
+            [freshTransaction.toAggregate(readyTransaction.initiator.multisigAccount)],
             NetworkType.MIJIN_TEST,
             [],
         );
@@ -661,12 +676,16 @@ export class ApostilleAccount {
         if (!readyTransaction.initiator.multisigAccount) {
             throw Error(Errors[Errors.AGGREGATE_BOUNDED_NEED_MULTISIG_ACCOUNT]);
         }
-
         // we need a lock transaction for the aggregate bounded
+
+        const deadline = Deadline.create();
+        const freshTransaction = Object.assign({__proto__: Object.getPrototypeOf(readyTransaction.transaction)},
+        readyTransaction.transaction,
+        {deadline});
         const aggregateTransaction = AggregateTransaction.createBonded(
             Deadline.create(),
             [
-            readyTransaction.transaction.toAggregate(readyTransaction.initiator.multisigAccount),
+                freshTransaction.toAggregate(readyTransaction.initiator.multisigAccount),
             ],
             NetworkType.MIJIN_TEST,
             [],
