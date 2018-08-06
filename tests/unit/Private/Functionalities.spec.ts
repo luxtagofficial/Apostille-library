@@ -103,7 +103,7 @@ describe('update function should work properly', () => {
 
 });
 
-describe('own function should work properly', () => {
+describe('associate function should work properly', () => {
 
   it('should create an aggregate bounded transaction', async () => {
     const privateApostille = Apostille.init(seed, generator);
@@ -112,7 +112,7 @@ describe('own function should work properly', () => {
     expect.assertions(1);
     await privateApostille.create(initiator, 'raw');
     await privateApostille.update(initiator, 'update');
-    privateApostille.own([initiator.account.publicAccount], 1, 1);
+    privateApostille.associate([initiator.account.publicAccount], 1, 1);
     // tslint:disable-next-line:no-string-literal
     expect(privateApostille['transactions'][2].type).toEqual(TransactionType.MODIFY_MULTISIG_ACCOUNT);
   });

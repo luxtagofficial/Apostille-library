@@ -53,7 +53,7 @@ class Apostille extends ApostilleAccount {
    * @param {number} minRemoval - minimum number of owners necessary to agree to remove one or some owners
    * @memberof Apostille
    */
-  public own(owners: PublicAccount[], quorum: number, minRemoval: number): void {
+  public associate(owners: PublicAccount[], quorum: number, minRemoval: number): void {
     const modifications: MultisigCosignatoryModification[] = [];
     owners.forEach((cosignatory) => {
       modifications.push(
