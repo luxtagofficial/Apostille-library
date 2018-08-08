@@ -22,10 +22,11 @@ const oldPrivateApostille = nem.model.apostille.create(
   false, {}, true,
   nem.model.network.data.testnet.id);
 
-const newPrivateApostille = new Apostille(seed, generator);
+const newPrivateApostille = Apostille.init(seed, generator);
 
 describe('HD account generation should be correct', () => {
   it('private key should be valid', () => {
+    console.log('PRIVATE_KEY', newPrivateApostille.privateKey);
     expect(nem.utils.helpers.isPrivateKeyValid(newPrivateApostille.privateKey)).toBeTruthy();
   });
 
