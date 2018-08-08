@@ -34,21 +34,23 @@ export class ApostilleAccount {
     // tslint:disable-next-line:variable-name
     private _created: boolean = false;
     /**
-     * @description - the account that made the creation transaction
-     * @private
-     * @memberof ApostilleAccount
-     */
-    /**
      * @description - the apostille hash (magical byte + hash)
      * @private
      * @memberof ApostilleAccount
      */
     private hash;
 
+    private listner: Listener;
+
+    private transactionsStreams: TransactionsStreams;
+
     /**
      * @param {PublicAccount} publicAccount
      */
-    constructor(public readonly publicAccount: PublicAccount) {}
+    constructor(public readonly publicAccount: PublicAccount) {
+        this.listner = new Listener(this.setUrls());
+        this.transactionsStreams = new TransactionsStreams(this, this.listner);
+    }
 
     /**
      * @description - create a creation transaction for the apostille account
@@ -149,7 +151,7 @@ export class ApostilleAccount {
                 throw new Error(Errors[Errors.APOSTILLE_NOT_CREATED]);
             }
 
-            const filteredUrls = this.filterUrls(urls);
+            const filteredUrls = this.setUrls(urls);
             const transactionHttp = new TransactionHttp(filteredUrls);
             const listener = new Listener(filteredUrls);
             let readyTransfer: IReadyTransaction[] = [];
@@ -195,7 +197,7 @@ export class ApostilleAccount {
      */
     public isCreated(urls?: string): Promise<boolean> {
         // check if the apostille account has any transaction
-        const accountHttp = new AccountHttp(this.filterUrls(urls));
+        const accountHttp = new AccountHttp(this.setUrls(urls));
         return new Promise(async (resolve, reject) => {
             await accountHttp.transactions(
             this.publicAccount,
@@ -489,7 +491,11 @@ export class ApostilleAccount {
      * @memberof ApostilleAccount
      */
     public monitor(urls?: string): TransactionsStreams {
-        return new TransactionsStreams(this, new Listener(this.filterUrls(urls)));
+        if (urls) {
+            const url = urls;
+            this.listner = Object.assign({__proto__: Object.getPrototypeOf(this.listner)}, this.listner, {url});
+        }
+        return this.transactionsStreams;
     }
 
     /**
@@ -541,7 +547,7 @@ export class ApostilleAccount {
         };
     }
 
-    private filterUrls(urls: string | undefined): string {
+    private setUrls(urls?: string): string {
         if (urls) {
             if (this.publicAccount.address.networkType === NetworkType.MAIN_NET
                 || this.publicAccount.address.networkType === NetworkType.TEST_NET) {

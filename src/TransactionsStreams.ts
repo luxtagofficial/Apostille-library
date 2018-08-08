@@ -1,6 +1,6 @@
 import { AggregateTransaction, CosignatureSignedTransaction, Listener, Transaction, TransactionStatusError } from 'nem2-sdk';
 import { Observable } from 'rxjs';
-import { ApostilleAccount } from '../index';
+import { ApostilleAccount } from './ApostilleAccount';
 
 export class TransactionsStreams {
 
@@ -8,7 +8,6 @@ export class TransactionsStreams {
     public readonly apostilleAccount: ApostilleAccount,
     public readonly listener: Listener,
   ) {}
-
   /**
    * @description Returns an observable stream of Transaction for this Apostille Account.
    * Each time a transaction is in confirmed state an it involves this Apostille Account,

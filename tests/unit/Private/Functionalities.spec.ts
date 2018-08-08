@@ -174,9 +174,8 @@ describe('isCreated function should work properly', () => {
 
   it('should throw an error if we don\'t specefy mijin endpoint url', () => {
     const MJgenerator = Account.createFromPrivateKey(sk, NetworkType.MIJIN);
-    const apostilleMJ = Apostille.init('k7u*VTsVCk6h,FdN', MJgenerator);
     try {
-      return apostilleMJ.isCreated();
+      return Apostille.init('k7u*VTsVCk6h,FdN', MJgenerator);
     } catch (e) {
       expect(e.message).toMatch(Errors[Errors.MIJIN_ENDPOINT_NEEDED]);
     }
