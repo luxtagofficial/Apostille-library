@@ -1,7 +1,8 @@
-import CryptoJS from 'crypto-js';
-import nem from 'nem-sdk';
+import * as nemDefault from 'nem-sdk';
 import { Account, NetworkType } from 'nem2-sdk';
 import { Initiator, KECCAK256, KECCAK512, MD5, PublicApostille, SHA1, SHA256 } from '../../../index';
+
+const nem = nemDefault.default;
 
 // prepare hashing object
 const chooseHash = (hashing) => {
@@ -26,7 +27,7 @@ const initiator = new Initiator(Account.createFromPrivateKey(signer, NetworkType
 const common = nem.model.objects.create('common')('', signer);
 
 // Simulate the file content
-const fileContent = CryptoJS.enc.Utf8.parse('Public apostille is awesome !');
+const fileContent = nem.crypto.js.enc.Utf8.parse('Public apostille is awesome !');
 
 /*** Test for MD5, SHA1, SHA3-256, SHA3-512 ***/
 const hashArray = ['MD5', 'SHA1', 'SHA256', 'SHA3-256', 'SHA3-512'];

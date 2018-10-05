@@ -74,7 +74,9 @@ describe('apostille accound methods should work properly', () => {
 
     apostilleAccount.getTransactionById(transactionID)
       .subscribe((transaction) => {
-        expect(transaction.transactionInfo.id).toEqual(transactionID);
+        if (transaction.transactionInfo) {
+          expect(transaction.transactionInfo.id).toEqual(transactionID);
+        }
       });
   });
 
