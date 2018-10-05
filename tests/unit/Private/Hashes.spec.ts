@@ -1,8 +1,9 @@
 
-import CryptoJS from 'crypto-js';
-import nem from 'nem-sdk';
+import * as nemDefault from 'nem-sdk';
 import { NetworkType } from 'nem2-sdk';
 import { KECCAK256, KECCAK512, MD5, SHA1, SHA256 } from '../../../index';
+
+const nem = nemDefault.default;
 
 describe('Generate correct hash using MIJIN_TEST network type', () => {
     const signerPrivateKey = 'F1E7660DB9EF5E73203881304F31B7CCDF167A08055013A633D098EBD94FD36F';
@@ -94,7 +95,7 @@ describe('Generate correct hash using TEST_NET network type', () => {
     // Create a common object holding key
     const common = nem.model.objects.create('common')('', signerPrivateKey);
     // Simulate the file content
-    const payload = CryptoJS.enc.Utf8.parse('Private apostille is awesome !');
+    const payload = nem.crypto.js.enc.Utf8.parse('Private apostille is awesome !');
     it('generates checksum of signed hash with MD5', () => {
         const md5 = new MD5();
         const oldPrivateApostille = nem.model.apostille.create(
