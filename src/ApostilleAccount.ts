@@ -65,14 +65,14 @@ export class ApostilleAccount {
         initiatorAccount: Initiator,
         rawData: string,
         mosaics: Mosaic[] | Mosaic[] = [],
-        url?: string,
+        urls?: string,
         hashFunction?: HashFunction,
     ): Promise<void> {
         if (initiatorAccount.account.address.networkType !== this.publicAccount.address.networkType) {
             throw new Error(Errors[Errors.NETWORK_TYPE_MISMATCHED]);
         }
         // check if the apostille was already created locally or on chain
-        await this.isCreated(url).then(() => {
+        await this.isCreated(urls).then(() => {
         if (this._created) {
             throw new Error(Errors[Errors.APOSTILLE_ALREADY_CREATED]);
         }
@@ -118,11 +118,11 @@ export class ApostilleAccount {
         initiatorAccount: Initiator,
         message: string,
         mosaics: Mosaic[] | Mosaic[] = [],
-        url?: string,
+        urls?: string,
     ): Promise<void> {
         if (!this._created) {
             // we test locally first to avoid testing on chain evrytime we update
-            await this.isCreated(url);
+            await this.isCreated(urls);
             if (!this._created) {
                 throw new Error(Errors[Errors.APOSTILLE_NOT_CREATED]);
             }
@@ -148,7 +148,7 @@ export class ApostilleAccount {
      * @memberof ApostilleAccount
      */
     public async announce(urls?: string): Promise<void> {
-        await this.isCreated().then(async () => {
+        await this.isCreated(urls).then(async () => {
             if (!this._created) {
                 throw new Error(Errors[Errors.APOSTILLE_NOT_CREATED]);
             }
