@@ -124,7 +124,7 @@ describe('transfer function should work properly', () => {
   it('should create an aggregate complete transaction', async () => {
     const privateApostille = Apostille.init(seed, generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
-    const initiator = new Initiator(creator, creator.publicAccount, false);
+    // const initiator = new Initiator(creator, creator.publicAccount, false);
     expect.assertions(1);
     privateApostille.transfer([creator], true, [creator.publicAccount], [creator.publicAccount], 0, 0);
     // tslint:disable-next-line:no-string-literal
@@ -134,7 +134,7 @@ describe('transfer function should work properly', () => {
   it('should create an aggregate complete transaction', async () => {
     const privateApostille = Apostille.init(seed, generator);
     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
-    const initiator = new Initiator(creator, creator.publicAccount, false);
+    // const initiator = new Initiator(creator, creator.publicAccount, false);
     expect.assertions(1);
     privateApostille.transfer([creator], false, [], [], 0, 0);
     // tslint:disable-next-line:no-string-literal

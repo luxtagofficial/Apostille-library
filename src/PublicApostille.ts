@@ -51,12 +51,11 @@ class PublicApostille {
   constructor(
     private initiatorAccount: Initiator,
     public readonly fileName: string,
-    sinkAddress?: string,
+    sinkAddress?: Address,
   ) {
     this.networkType = initiatorAccount.account.address.networkType;
     if (sinkAddress) {
-      const newSink = Address.createFromRawAddress(sinkAddress);
-      this.address = newSink;
+      this.address = sinkAddress;
     } else {
       this.address = Address.createFromRawAddress(Sinks[this.networkType]);
     }
@@ -144,7 +143,7 @@ class PublicApostille {
           );
         });
       } else {
-        // we use aggregate bounded
+        // we use aggregate bonded
         // we need a lock transaction
         const aggregateTransaction = AggregateTransaction.createBonded(
           Deadline.create(),
@@ -221,8 +220,8 @@ class PublicApostille {
    * @type {string}
    * @memberof PublicApostille
    */
-  get sinkAddress(): string {
-    return this.address.pretty();
+  get sinkAddress(): Address {
+    return this.address;
   }
   /**
    * @description - gets the public apostille hash (including the magic byte)

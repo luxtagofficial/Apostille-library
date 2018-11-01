@@ -26,26 +26,28 @@ describe('Getters should work properly', () => {
     expect(PrivateApostille1.address.pretty()).toMatch(hdAccountInformation.address);
   });
 
-  it('should return the genrator public account', () => {
+  it('should return the generator public account', () => {
     expect(PrivateApostille1.generator)
     .toMatchObject(signer.publicAccount);
   });
 
-  it('creator sould be undefined', () => {
+  it('creator should be undefined', () => {
     expect(PrivateApostille1.creator).toBeUndefined();
   });
 
-  it('creator sould be a valid account', async () => {
+  it('creator should be a valid account', async () => {
     const creator = new Initiator(signer);
     await PrivateApostille1.create(creator, payload);
     expect(PrivateApostille1.creator).toMatchObject(creator.account);
   });
 
-  it('multisig creator sould be a valid public account', async () => {
+  it('multisig creator should be a valid public account', async () => {
     const dumpMultisigCreator = new Initiator(signer, signer.publicAccount, true);
     await PrivateApostille2.create(dumpMultisigCreator, payload);
-    expect(PrivateApostille2.creator).toMatchObject(dumpMultisigCreator.multisigAccount);
-    expect(PrivateApostille2.creator.publicKey).toMatch(dumpMultisigCreator.multisigAccount.publicKey);
+    if (dumpMultisigCreator.multisigAccount && PrivateApostille2.creator) {
+      expect(PrivateApostille2.creator).toMatchObject(dumpMultisigCreator.multisigAccount);
+      expect(PrivateApostille2.creator.publicKey).toMatch(dumpMultisigCreator.multisigAccount.publicKey);
+    }
   });
 });
 

@@ -1,5 +1,5 @@
 import CryptoJS from 'crypto-js';
-import { Account, NetworkType } from 'nem2-sdk';
+import { Account, Address, NetworkType } from 'nem2-sdk';
 import sinon from 'sinon';
 import { Initiator, PublicApostille, SHA256 } from '../../../index';
 
@@ -32,10 +32,11 @@ describe('announce function should work properly', () => {
 
   it('should throw error if try to announce more than once', async () => {
     const initiator = new Initiator(signer);
+    const sinkAddress = Address.createFromRawAddress( 'SCKPEZ-5ZAPYO-PXVF6U-YLHINF-CLYZHO-YCIO3P-KGVV');
     const publicApostille = new PublicApostille(
       initiator,
       fileName,
-      'SCKPEZ-5ZAPYO-PXVF6U-YLHINF-CLYZHO-YCIO3P-KGVV');
+      sinkAddress);
     publicApostille.update(fileContent, hashFunction);
     await publicApostille.announce();
 
@@ -47,10 +48,11 @@ describe('announce function should work properly', () => {
 
   test('updating an public apostille should be allowed as many times as we want', async () => {
     const initiator = new Initiator(signer);
+    const sinkAddress = Address.createFromRawAddress( 'SCKPEZ-5ZAPYO-PXVF6U-YLHINF-CLYZHO-YCIO3P-KGVV');
     const publicApostille = new PublicApostille(
       initiator,
       fileName,
-      'SCKPEZ-5ZAPYO-PXVF6U-YLHINF-CLYZHO-YCIO3P-KGVV');
+      sinkAddress);
 
     publicApostille.update(CryptoJS.enc.Utf8.parse('Public apostille is awesome !'), hashFunction);
     await publicApostille.announce();
@@ -63,10 +65,11 @@ describe('announce function should work properly', () => {
   test('announce should work properly', async () => {
     const stubannounce = sinon.stub(PublicApostille.prototype, 'announce');
     const initiator = new Initiator(signer);
+    const sinkAddress = Address.createFromRawAddress( 'SCKPEZ-5ZAPYO-PXVF6U-YLHINF-CLYZHO-YCIO3P-KGVV');
     const publicApostille = new PublicApostille(
       initiator,
       fileName,
-      'SCKPEZ-5ZAPYO-PXVF6U-YLHINF-CLYZHO-YCIO3P-KGVV');
+      sinkAddress);
 
     publicApostille.update(CryptoJS.enc.Utf8.parse('Public apostille is awesome !'), hashFunction);
     await publicApostille.announce();
