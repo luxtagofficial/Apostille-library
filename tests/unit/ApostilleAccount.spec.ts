@@ -1,5 +1,5 @@
 import { NetworkType, PublicAccount, TransactionInfo, TransferTransaction } from 'nem2-sdk';
-import { ApostilleAccount } from '../../index';
+import { ApostilleAccount, Errors } from '../../index';
 
 describe('apostille accound methods should work properly', () => {
   it(' should return 2 cosignataries of the accounts', () => {
@@ -54,7 +54,7 @@ describe('apostille accound methods should work properly', () => {
     return apostilleAccount.getCreationTransaction().then((data: TransferTransaction) => {
       console.log(TransferTransaction);
     }).catch((err) => {
-      expect(err.message).toEqual('Not Found');
+      expect(err).toEqual(Errors[Errors.CREATION_TRANSACTIONS_NOT_FOUND]);
     });
   });
 
