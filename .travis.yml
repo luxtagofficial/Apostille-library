@@ -7,10 +7,7 @@ branches:
     - master
 notifications:
   email: false
-before_script:
-  - npm prune
 script:
-  - npm install --no-optional
   - npm run validate
   - npm run build
 after_success:
