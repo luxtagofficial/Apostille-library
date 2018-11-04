@@ -1,13 +1,13 @@
 import { drop, sortBy, uniqBy } from 'lodash';
-import { Account, AccountHttp, AccountInfo, Address, AggregateTransaction, BlockchainHttp, Deadline, InnerTransaction, Listener, LockFundsTransaction, ModifyMultisigAccountTransaction, Mosaic, MultisigCosignatoryModification, MultisigCosignatoryModificationType, NetworkType, PlainMessage, PublicAccount, QueryParams, SignedTransaction, Transaction, TransactionAnnounceResponse, TransactionHttp, TransactionInfo, TransactionType, TransferTransaction, UInt64, XEM } from 'nem2-sdk';
+import { Account, AccountHttp, AggregateTransaction, Deadline, InnerTransaction, Listener, LockFundsTransaction, ModifyMultisigAccountTransaction, Mosaic, MultisigCosignatoryModification, MultisigCosignatoryModificationType, NetworkType, PlainMessage, PublicAccount, QueryParams, SignedTransaction, Transaction, TransactionAnnounceResponse, TransactionHttp, TransactionInfo, TransactionType, TransferTransaction, UInt64, XEM } from 'nem2-sdk';
 import { Observable } from 'rxjs';
 import { filter, flatMap } from 'rxjs/operators';
 import { Errors } from './Errors';
-import { HashFunction } from './hashFunctions/HashFunction';
 import { HistoricalEndpoints } from './HistoricalEndpoints';
-import { Initiator } from './Initiator';
 import { IReadyTransaction } from './IReadyTransaction';
+import { Initiator } from './Initiator';
 import { TransactionsStreams } from './TransactionsStreams';
+import { HashFunction } from './hashFunctions/HashFunction';
 
 export class ApostilleAccount {
 
@@ -399,90 +399,105 @@ export class ApostilleAccount {
      * @memberof ApostilleAccount
      */
     public getCreationTransaction(urls?: string): Promise<TransferTransaction> {
-        let accountHttp: AccountHttp;
-        let blockchainHttp: BlockchainHttp;
-        if (urls) {
-            accountHttp = new AccountHttp(urls);
-            blockchainHttp = new BlockchainHttp(urls);
-        } else {
-            if (this.publicAccount.address.networkType === NetworkType.MIJIN) {
-                throw new Error(Errors[Errors.MIJIN_ENDPOINT_NEEDED]);
-            }
-            accountHttp = new AccountHttp(HistoricalEndpoints[this.publicAccount.address.networkType]);
-            blockchainHttp = new BlockchainHttp(HistoricalEndpoints[this.publicAccount.address.networkType]);
-        }
-        return new Promise((resolve, reject) => {
-            accountHttp.getAccountInfo(this.publicAccount.address).subscribe(
-                (accountInfo: AccountInfo) => {
-                    const firstTransactionBlock = accountInfo.addressHeight.lower;
-                    // find the first block of this account
-                    blockchainHttp.getBlockTransactions(firstTransactionBlock).subscribe(
-                        (block: Transaction[]) => {
-                            // console.log(JSON.stringify(block));
-                            const filteredTransaction: Transaction[] = [];
-                            for (const transaction of block) {
-                                if (transaction instanceof TransferTransaction) {
-                                    const transferTransaction: TransferTransaction = transaction;
-                                    if (this.equals(transferTransaction.recipient)) {
-                                        filteredTransaction.push(transaction);
-                                    }
-                                } else if (transaction instanceof AggregateTransaction) {
-                                    if (transaction.type === TransactionType.AGGREGATE_COMPLETE) {
-                                        for (const innerTransaction of transaction.innerTransactions) {
-                                            if (innerTransaction instanceof TransferTransaction) {
-                                                if (this.equals(innerTransaction.recipient)) {
-                                                    filteredTransaction.push(transaction);
-                                                }
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+        let fixUrl: string;
 
-                            // sort the block by index
-                            const sortedTransaction: Transaction[] = sortBy(
-                                filteredTransaction, ['transactionInfo.index']);
-                            if (sortedTransaction.length > 0) {
-                                const firstTransaction = sortedTransaction[0];
-                                if (firstTransaction instanceof TransferTransaction) {
-                                    resolve (firstTransaction);
-                                } else if (firstTransaction instanceof AggregateTransaction) {
-                                    // if the smallest index is aggregate transaction, then sort it by index
-                                    const innerTransactions = firstTransaction.innerTransactions;
-                                    const sortedInnerTransactions = sortBy(
-                                        innerTransactions, ['transactionInfo.index']);
-                                    const firstInnerTransaction = sortedInnerTransactions[0];
-                                    if (firstInnerTransaction instanceof TransferTransaction) {
-                                        resolve (firstInnerTransaction);
-                                    } else {
-                                        reject (Errors[Errors.CREATION_TRANSACTIONS_NOT_FOUND]);
-                                    }
-                                } else {
-                                    reject (Errors[Errors.CREATION_TRANSACTIONS_NOT_FOUND]);
-                                }
-                            } else {
-                                reject (Errors[Errors.CREATION_TRANSACTIONS_NOT_FOUND]);
-                            }
-                        },
-                        (err) => {
-                            reject(err);
-                        });
-                },
-                (err) => {
-                    reject(err);
-                });
+        if (urls) {
+            fixUrl = urls;
+        } else {
+            fixUrl = HistoricalEndpoints[this.publicAccount.address.networkType];
+        }
+
+        return new Promise((resolve, reject) => {
+            this.fetchAllIncomingTransactions(fixUrl).then((transactions: Transaction[]) => {
+                if (transactions.length > 0) {
+                    const firstTransaction = transactions[transactions.length - 1];
+                    if (firstTransaction instanceof TransferTransaction) {
+                        resolve (firstTransaction);
+                    } else if (firstTransaction instanceof AggregateTransaction) {
+                        // if the smallest index is aggregate transaction, then sort it by index
+                        const innerTransactions = firstTransaction.innerTransactions;
+                        const sortedInnerTransactions = sortBy(
+                            innerTransactions, ['transactionInfo.index']);
+                        const firstInnerTransaction = sortedInnerTransactions[0];
+                        if (firstInnerTransaction instanceof TransferTransaction) {
+                            resolve (firstInnerTransaction);
+                        } else {
+                            reject (Errors[Errors.CREATION_TRANSACTIONS_NOT_FOUND]);
+                        }
+                    } else {
+                        reject (Errors[Errors.CREATION_TRANSACTIONS_NOT_FOUND]);
+                    }
+                } else {
+                    reject (Errors[Errors.CREATION_TRANSACTIONS_NOT_FOUND]);
+                }
+            });
         });
     }
 
     /**
-     * Compares address for equality.
-     * @param Address
-     * @returns {boolean}
-     * @memberof ApostilleAccount
+     * Fetch all incoming transactions pertaining to this publicAccount
+     *
+     * @returns {Promise<Transaction[]>}
+     * @memberof CertificateHistory
      */
-    public equals(address: Address) {
-        return this.publicAccount.address.plain() === address.plain();
+    public fetchAllIncomingTransactions(urls?: string): Promise<Transaction[]> {
+        let fixUrls: string;
+
+        if (urls) {
+            fixUrls = urls;
+        } else {
+            fixUrls = HistoricalEndpoints[this.publicAccount.address.networkType];
+        }
+        return new Promise<Transaction[]>(async (resolve, reject) => {
+            let nextId: string = '';
+            const pageSize: number = 100;
+            let lastPageSize: number = 100;
+            const allTransactions: Transaction[] = [];
+            while (lastPageSize === pageSize) {
+                const queryParams = new QueryParams(pageSize, nextId !== '' ? nextId : undefined);
+                await this.fetchIncomingTransactions(queryParams, fixUrls).then((transactions) => {
+                    lastPageSize = transactions.length;
+                    if (lastPageSize < 1) { return; }
+                    nextId = transactions[transactions.length - 1].transactionInfo!.id;
+                    allTransactions.push(...transactions);
+                }).catch((err) => {
+                    reject(err);
+                });
+            }
+            resolve(allTransactions);
+        });
+    }
+
+    /**
+     * Fetch an incoming transaction with query params
+     *
+     * @private
+     * @param {QueryParams} queryParams
+     * @returns {Promise<Transaction[]>}
+     * @memberof CertificateHistory
+     */
+    public async fetchIncomingTransactions(
+        queryParams: QueryParams,
+        urls?: string,
+    ): Promise<Transaction[]> {
+        let fixUrls: string;
+
+        if (urls) {
+            fixUrls = urls;
+        } else {
+            fixUrls = HistoricalEndpoints[this.publicAccount.address.networkType];
+        }
+        const accountHttp = new AccountHttp(fixUrls);
+        return await new Promise<Transaction[]>((resolve, reject) => {
+            accountHttp.transactions(
+                this.publicAccount,
+                queryParams)
+            .subscribe((transactions: Transaction[]) => {
+                resolve(transactions);
+            }, (err) => {
+                reject(err);
+            });
+        });
     }
 
     /**
