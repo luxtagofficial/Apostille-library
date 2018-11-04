@@ -384,8 +384,8 @@ export class ApostilleAccount {
      * @returns {Promise<string>}
      * @memberof ApostilleAccount
      */
-    public async getCreationTransactionInfo(): Promise<TransactionInfo> {
-        const transaction: TransferTransaction = await this.getCreationTransaction();
+    public async getCreationTransactionInfo(urls?: string): Promise<TransactionInfo> {
+        const transaction: TransferTransaction = await this.getCreationTransaction(urls);
         if (transaction.transactionInfo instanceof TransactionInfo) {
             return transaction.transactionInfo;
         }
