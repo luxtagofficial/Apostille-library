@@ -58,6 +58,17 @@ describe('apostille accound methods should work properly', () => {
     });
   });
 
+  it('Should return creation transaction when urls is included', () => {
+    const urls = 'https://api.ninja.luxtag.io';
+    const publicKey = 'C6D9C7B1C0A0D02F3E12D7BDBABF17D825992ADC03129F77FC153817F95A2F29';
+    const apostilleAccount = new ApostilleAccount(PublicAccount.createFromPublicKey(publicKey, NetworkType.MIJIN_TEST));
+
+    return apostilleAccount.getCreationTransaction(urls).then((data: TransferTransaction) => {
+      const payload = JSON.parse(data.message.payload);
+      expect(payload.tag).toEqual('G1312498-PG340324-18 April 2018-KOS-IIUM');
+    });
+  });
+
   it('Should return creation transaction info', () => {
     const publicKey = 'E15CAB00A5A34216A8A29034F950A18DFC6F4F27BCCFBF9779DC6886653B7E56';
     const apostilleAccount = new ApostilleAccount(PublicAccount.createFromPublicKey(publicKey, NetworkType.MIJIN_TEST));
