@@ -33,23 +33,17 @@ class Apostille extends ApostilleAccount {
     return new Apostille(hdAccount, generatorAccount);
   }
 
-  public static initWithPrivateKey(privateKey: string, networkType: NetworkType) {
-    // create the HD acccount (appostille)
-    const hdAccount = Account.createFromPrivateKey(privateKey, networkType);
-    return new Apostille(hdAccount);
-  }
-
   /**
    * Creates an instance of Apostille.
    * @param {Account} hdAccount - the apostille account (HD account)
    * @param {Account} generatorAccount - the account used to sign the hash to generate the HD account private key
    * @memberof Apostille
    */
-  private constructor(
+  public constructor(
     public readonly hdAccount: Account,
     private readonly generatorAccount?: Account,
   ) {
-    super(hdAccount.publicAccount);
+    super(hdAccount.publicAccount); 
   }
 
   /**
