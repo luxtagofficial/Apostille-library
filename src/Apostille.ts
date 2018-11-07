@@ -43,7 +43,7 @@ class Apostille extends ApostilleAccount {
     public readonly hdAccount: Account,
     private readonly generatorAccount?: Account,
   ) {
-    super(hdAccount.publicAccount); 
+    super(hdAccount.publicAccount);
   }
 
   /**
