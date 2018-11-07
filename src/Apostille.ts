@@ -46,7 +46,7 @@ class Apostille extends ApostilleAccount {
    * @memberof Apostille
    */
   private constructor(
-    private hdAccount: Account,
+    public readonly hdAccount: Account,
     private readonly generatorAccount?: Account,
   ) {
     super(hdAccount.publicAccount);
