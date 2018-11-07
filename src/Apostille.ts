@@ -1,9 +1,9 @@
 import * as nemSDK from 'nem-sdk';
 import { Account, Address, Deadline, ModifyMultisigAccountTransaction, MultisigCosignatoryModification, MultisigCosignatoryModificationType, NetworkType, PublicAccount, TransactionType } from 'nem2-sdk';
 import { ApostilleAccount } from './ApostilleAccount';
-import { SHA256 } from './hashFunctions';
-import { Initiator } from './Initiator';
 import { IReadyTransaction } from './IReadyTransaction';
+import { Initiator } from './Initiator';
+import { SHA256 } from './hashFunctions';
 
 const nem = nemSDK.default;
 // TODO: add tx hash of creation
@@ -33,6 +33,12 @@ class Apostille extends ApostilleAccount {
     return new Apostille(hdAccount, generatorAccount);
   }
 
+  public static initWithPrivateKey(privateKey: string, networkType: NetworkType) {
+    // create the HD acccount (appostille)
+    const hdAccount = Account.createFromPrivateKey(privateKey, networkType);
+    return new Apostille(hdAccount);
+  }
+
   /**
    * Creates an instance of Apostille.
    * @param {Account} hdAccount - the apostille account (HD account)
@@ -41,7 +47,7 @@ class Apostille extends ApostilleAccount {
    */
   private constructor(
     private hdAccount: Account,
-    private readonly generatorAccount: Account,
+    private readonly generatorAccount?: Account,
   ) {
     super(hdAccount.publicAccount);
   }
@@ -111,8 +117,12 @@ class Apostille extends ApostilleAccount {
    * @type {PublicAccount}
    * @memberof Apostille
    */
-  get generator(): PublicAccount {
-    return this.generatorAccount.publicAccount;
+  get generator(): null | PublicAccount {
+    if (this.generatorAccount) {
+       return this.generatorAccount.publicAccount;
+    } else {
+      return null;
+    }
   }
   /**
    * @description - gets the public account of the generated apostille acount (HD account)
