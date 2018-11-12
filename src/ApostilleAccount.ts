@@ -1,6 +1,5 @@
 import { drop, sortBy, uniqBy } from 'lodash';
 import { Account, AccountHttp, AggregateTransaction, Deadline, InnerTransaction, Listener, LockFundsTransaction, ModifyMultisigAccountTransaction, Mosaic, MultisigCosignatoryModification, MultisigCosignatoryModificationType, NetworkType, PlainMessage, PublicAccount, QueryParams, SignedTransaction, Transaction, TransactionAnnounceResponse, TransactionHttp, TransactionInfo, TransactionType, TransferTransaction, UInt64, XEM } from 'nem2-sdk';
-import { Observable } from 'rxjs';
 import { filter, flatMap } from 'rxjs/operators';
 import { Errors } from './Errors';
 import { HistoricalEndpoints } from './HistoricalEndpoints';
@@ -148,9 +147,10 @@ export class ApostilleAccount {
      * @memberof ApostilleAccount
      */
     public async announce(urls?: string): Promise<void> {
-        await this.isCreated(urls).then(async () => {
-            if (!this._created) {
-                throw new Error(Errors[Errors.APOSTILLE_NOT_CREATED]);
+        try {
+            const isCreated = await this.isCreated(urls);
+            if (!isCreated) {
+                await Promise.reject(new Error(Errors[Errors.APOSTILLE_NOT_CREATED]));
             }
 
             const filteredUrls = this.setUrls(urls);
@@ -180,6 +180,7 @@ export class ApostilleAccount {
                     readyTransfer.push(readyTransaction);
                 }
             });
+
             // finally check if the transafer transaction arraay has transactions to announce
             if (readyTransfer.length > 0) {
                 await this.announceTransfer(readyTransfer, transactionHttp);
@@ -188,7 +189,9 @@ export class ApostilleAccount {
             }
             // empty the array
             this.transactions = [];
-        });
+        } catch (err) {
+            await Promise.reject(err);
+        }
     }
 
     /**
@@ -365,7 +368,7 @@ export class ApostilleAccount {
      * @returns {Observable<Transaction>}
      * @memberof ApostilleAccount
      */
-    public getTransactionById(transactionID: string, urls?: string): Observable<Transaction> {
+    public getTransactionById(transactionID: string, urls?: string): Promise<Transaction> {
         let transactionHttp: TransactionHttp;
         if (urls) {
             transactionHttp = new TransactionHttp(urls);
@@ -375,7 +378,15 @@ export class ApostilleAccount {
             }
             transactionHttp = new TransactionHttp(HistoricalEndpoints[this.publicAccount.address.networkType]);
         }
-        return transactionHttp.getTransaction(transactionID);
+
+        return new Promise<Transaction>((resolve, reject) => {
+            transactionHttp.getTransaction(transactionID)
+            .subscribe((transaction: Transaction) => {
+                resolve(transaction);
+            }, (err) => {
+                reject(err);
+            });
+        });
     }
 
     /**
@@ -455,7 +466,7 @@ export class ApostilleAccount {
             const allTransactions: Transaction[] = [];
             while (lastPageSize === pageSize) {
                 const queryParams = new QueryParams(pageSize, nextId !== '' ? nextId : undefined);
-                await this.fetchIncomingTransactions(queryParams, fixUrls).then((transactions) => {
+                await this.fetchTransactions(queryParams, fixUrls).then((transactions) => {
                     lastPageSize = transactions.length;
                     if (lastPageSize < 1) { return; }
                     nextId = transactions[transactions.length - 1].transactionInfo!.id;
@@ -476,7 +487,7 @@ export class ApostilleAccount {
      * @returns {Promise<Transaction[]>}
      * @memberof CertificateHistory
      */
-    public async fetchIncomingTransactions(
+    public async fetchTransactions(
         queryParams: QueryParams,
         urls?: string,
     ): Promise<Transaction[]> {
