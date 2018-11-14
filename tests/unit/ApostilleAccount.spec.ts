@@ -58,7 +58,7 @@ describe('apostille accound methods should work properly', () => {
     });
   });
 
-  it('Should return creation transaction when urls is included', () => {
+  it.skip('Should return creation transaction when urls is included', () => {
     const urls = 'https://api.ninja.luxtag.io';
     const publicKey = 'C6D9C7B1C0A0D02F3E12D7BDBABF17D825992ADC03129F77FC153817F95A2F29';
     const apostilleAccount = new ApostilleAccount(PublicAccount.createFromPublicKey(publicKey, NetworkType.MIJIN_TEST));
