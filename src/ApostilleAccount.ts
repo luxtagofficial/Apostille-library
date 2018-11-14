@@ -334,8 +334,8 @@ export class ApostilleAccount {
      * @returns {Promise<boolean>}
      * @memberof ApostilleAccount
      */
-    public async isOwned(): Promise<boolean> {
-        const cossignatories = await this.getCosignatories();
+    public async isOwned(urls?: string): Promise<boolean> {
+        const cossignatories = await this.getCosignatories(urls);
         if (cossignatories.length > 0) {
             return true;
         }
