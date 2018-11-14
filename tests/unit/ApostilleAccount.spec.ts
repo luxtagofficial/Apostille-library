@@ -21,7 +21,7 @@ describe('apostille accound methods should work properly', () => {
   });
 
   it('Should return false if the account is not claimed', () => {
-    const publicKey = '22816F825B4CACEA334723D51297D8582332D8B875A5829908AAE85831ABB508';
+    const publicKey = '67FD8C18BAACED8777EBF483B596D6BE0F93EDB2084FA39968DF8D2D96400E08';
     const apostilleAccount = new ApostilleAccount(PublicAccount.createFromPublicKey(publicKey, NetworkType.MIJIN_TEST));
 
     return apostilleAccount.isOwned().then((data) => {

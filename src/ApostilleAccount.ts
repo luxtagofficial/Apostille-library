@@ -335,11 +335,20 @@ export class ApostilleAccount {
      * @memberof ApostilleAccount
      */
     public async isOwned(urls?: string): Promise<boolean> {
-        const cossignatories = await this.getCosignatories(urls);
-        if (cossignatories.length > 0) {
-            return true;
+        try {
+            const cossignatories = await this.getCosignatories(urls);
+            if (cossignatories.length > 0) {
+                return true;
+            }
+            return false;
+        } catch (error) {
+            const errorText = JSON.parse(error.response.text);
+            if (errorText.code === 'ResourceNotFound') {
+                return false;
+            } else {
+                throw new Error(error);
+            }
         }
-        return false;
     }
 
     /**
