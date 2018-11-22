@@ -1,4 +1,4 @@
-export * from './src/Apostille';
+export * from './src/model/Apostille';
 export * from './src/ApostilleAccount';
 export * from './src/Errors';
 export * from './src/hashFunctions';

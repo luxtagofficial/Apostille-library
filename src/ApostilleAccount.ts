@@ -5,7 +5,6 @@ import { Errors } from './Errors';
 import { HistoricalEndpoints } from './HistoricalEndpoints';
 import { IReadyTransaction } from './IReadyTransaction';
 import { Initiator } from './Initiator';
-import { TransactionsStreams } from './TransactionsStreams';
 import { HashFunction } from './hashFunctions/HashFunction';
 
 export class ApostilleAccount {
@@ -39,16 +38,10 @@ export class ApostilleAccount {
      */
     private hash;
 
-    private listner: Listener;
-
-    private transactionsStreams: TransactionsStreams;
-
     /**
      * @param {PublicAccount} publicAccount
      */
     constructor(public readonly publicAccount: PublicAccount) {
-        this.listner = new Listener(this.setUrls());
-        this.transactionsStreams = new TransactionsStreams(this, this.listner);
     }
 
     /**
@@ -525,21 +518,6 @@ export class ApostilleAccount {
                 reject(err);
             });
         });
-    }
-
-    /**
-     * @description - get transaction streams from the account
-     * @static
-     * @param {string} urls
-     * @returns {TransactionsStreams}
-     * @memberof ApostilleAccount
-     */
-    public monitor(urls?: string): TransactionsStreams {
-        if (urls) {
-            const url = urls;
-            this.listner = Object.assign({__proto__: Object.getPrototypeOf(this.listner)}, this.listner, {url});
-        }
-        return this.transactionsStreams;
     }
 
     /**
