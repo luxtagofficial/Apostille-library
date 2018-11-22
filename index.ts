@@ -1,5 +1,5 @@
 export * from './src/model/Apostille';
-export * from './src/ApostilleAccount';
+export * from './src/model/ApostillePublicAccount';
 export * from './src/Errors';
 export * from './src/hashFunctions';
 export * from './src/HistoricalEndpoints';
