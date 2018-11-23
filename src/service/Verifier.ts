@@ -1,6 +1,6 @@
 import CryptoJS from 'crypto-js';
 import { PublicAccount } from 'nem2-sdk';
-import { Errors } from '../index';
+import { Errors } from '../types/Errors';
 
 /**
  * @description - a class with diffrent verifier function utilities
