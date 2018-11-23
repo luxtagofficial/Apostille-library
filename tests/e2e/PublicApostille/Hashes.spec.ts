@@ -1,6 +1,8 @@
 import * as nemDefault from 'nem-sdk';
 import { Account, NetworkType } from 'nem2-sdk';
-import { Initiator, KECCAK256, KECCAK512, MD5, PublicApostille, SHA1, SHA256 } from '../../../index';
+import { KECCAK256, KECCAK512, MD5, SHA1, SHA256 } from '../../../src/hashFunctions';
+import { PublicApostille } from '../../../src/model/apostille/PublicApostille';
+import { Initiator } from '../../../src/model/transaction/Initiator';
 
 const nem = nemDefault.default;
 

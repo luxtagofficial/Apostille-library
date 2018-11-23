@@ -1,5 +1,5 @@
 import { Account, PublicAccount } from 'nem2-sdk';
-import { Errors } from './Errors';
+import { Errors } from '../../types/Errors';
 /**
  * @description - a class wrapping the transaction initiator account
  * @class Initiator
@@ -43,3 +43,4 @@ class Initiator {
 }
 
 export { Initiator };
+

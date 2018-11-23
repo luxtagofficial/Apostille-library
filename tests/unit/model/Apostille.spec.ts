@@ -1,5 +1,5 @@
 import { Account, NetworkType, PublicAccount, SignedTransaction } from 'nem2-sdk';
-import { Apostille } from '../../../src/model/Apostille';
+import { Apostille } from '../../../src/model/apostille/Apostille';
 
 const seed = '.N:@N%5SVjj3Wkmr-';
 

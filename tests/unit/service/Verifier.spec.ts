@@ -1,5 +1,6 @@
 import { Account, NetworkType } from 'nem2-sdk';
-import { Errors, Verifier } from '../../index';
+import { Verifier } from '../../../src/service/Verifier';
+import { Errors } from '../../../src/types/Errors';
 
 describe('verifier should work properly', () => {
     describe('verify isApostille, isPublicApostille, isPrivateApostille, and isSigned ', () => {

@@ -1,5 +1,5 @@
 import { Account, NetworkType } from 'nem2-sdk';
-import { Initiator } from '../../index';
+import { Initiator } from '../../src/model/transaction/Initiator';
 import { Errors } from '../../src/types/Errors';
 
 // const tag = 'NEM is Awesome!';
