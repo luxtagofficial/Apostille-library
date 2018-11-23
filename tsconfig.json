@@ -74,6 +74,6 @@
     "**/tests/*"
   ],
   "include": [
-    "src/**/*.ts"
+    "src/**/*.ts",
   ]
 }

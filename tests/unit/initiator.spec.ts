@@ -1,6 +1,6 @@
 import { Account, NetworkType } from 'nem2-sdk';
-import { Initiator } from '../../index';
-import { Errors } from '../../src/Errors';
+import { Initiator } from '../../src/model/transaction/Initiator';
+import { Errors } from '../../src/types/Errors';
 
 // const tag = 'NEM is Awesome!';
 // A funny but valid private key
