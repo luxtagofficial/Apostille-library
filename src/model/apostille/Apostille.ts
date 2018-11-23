@@ -11,7 +11,14 @@ const nem = nemSDK.default;
  * @class Apostille
  */
 class Apostille {
-
+  /**
+   * @description init apostille
+   * @static
+   * @param {string} seed
+   * @param {Account} generatorAccount
+   * @returns {Apostille}
+   * @memberof Apostille
+   */
   public static init(
     seed: string,
     generatorAccount: Account): Apostille {
