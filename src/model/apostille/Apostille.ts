@@ -1,6 +1,7 @@
 import * as nemSDK from 'nem-sdk';
 import { Account, Deadline, ModifyMultisigAccountTransaction, MultisigCosignatoryModification, MultisigCosignatoryModificationType, NetworkType, PublicAccount, SignedTransaction } from 'nem2-sdk';
-import { SHA256 } from '../../hash/hash';
+import { SHA256 } from '../../hash/sha256';
+import { ApostillePublicAccount } from './ApostillePublicAccount';
 
 const nem = nemSDK.default;
 // TODO: add tx hash of creation
@@ -66,6 +67,10 @@ class Apostille {
     const signedTransaction = this.HDAccount.sign(convertIntoMultisigTransaction);
 
     return  signedTransaction;
+  }
+
+  get apostillePublicAccount(): ApostillePublicAccount {
+    return new ApostillePublicAccount(this.HDAccount.publicAccount);
   }
 
 }

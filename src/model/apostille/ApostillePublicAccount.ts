@@ -7,7 +7,7 @@ export class ApostillePublicAccount {
     /**
      * @param {PublicAccount} publicAccount
      */
-    constructor(public readonly publicAccount: PublicAccount, public readonly url) {
+    constructor(public readonly publicAccount: PublicAccount) {
     }
 
     /**
@@ -192,9 +192,9 @@ export class ApostillePublicAccount {
      * @returns {Promise<boolean>}
      * @memberof ApostilleAccount
      */
-    public isCreated(): Promise<boolean> {
+    public isCreated(url: string): Promise<boolean> {
         // check if the apostille account has any transaction
-        const accountHttp = new AccountHttp(this.url);
+        const accountHttp = new AccountHttp(url);
         return new Promise(async (resolve, reject) => {
             // we need to check unconfirmed transactions first
             await accountHttp.unconfirmedTransactions(
@@ -238,9 +238,9 @@ export class ApostillePublicAccount {
      * @returns {Promise<boolean>}
      * @memberof ApostilleAccount
      */
-    public async isOwned(): Promise<boolean> {
+    public async isOwned(url: string): Promise<boolean> {
         try {
-            const cossignatories = await this.getCosignatories();
+            const cossignatories = await this.getCosignatories(url);
             if (cossignatories.length > 0) {
                 return true;
             } else {
@@ -261,8 +261,8 @@ export class ApostillePublicAccount {
      * @returns {Promise<PublicAccount[]>}
      * @memberof ApostillePublicAccount
      */
-    public getCosignatories(): Promise<PublicAccount[]> {
-        const accountHttp = new AccountHttp(this.url);
+    public getCosignatories(url: string): Promise<PublicAccount[]> {
+        const accountHttp = new AccountHttp(url);
 
         return new Promise(async (resolve, reject) => {
             accountHttp.getMultisigAccountInfo(this.publicAccount.address).subscribe(
