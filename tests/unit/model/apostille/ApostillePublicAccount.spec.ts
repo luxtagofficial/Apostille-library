@@ -1,7 +1,7 @@
 import { Account, ModifyMultisigAccountTransaction, NetworkType, PublicAccount, SignedTransaction, TransferTransaction } from 'nem2-sdk';
-import { SHA256 } from '../../../src/hash/hash';
-import { ApostillePublicAccount } from '../../../src/model/apostille/ApostillePublicAccount';
-import { HistoricalEndpoints } from '../../../src/model/repository/HistoricalEndpoints';
+import { SHA256 } from '../../../../src/hash/sha256';
+import { ApostillePublicAccount } from '../../../../src/model/apostille/ApostillePublicAccount';
+import { HistoricalEndpoints } from '../../../../src/model/repository/HistoricalEndpoints';
 
 const getPublicApostilleAccount = ((publicKey: string, networkType: NetworkType): ApostillePublicAccount => {
   // Account 1
@@ -9,10 +9,7 @@ const getPublicApostilleAccount = ((publicKey: string, networkType: NetworkType)
     publicKey,
     networkType,
   );
-  return new ApostillePublicAccount(
-    publicAccount,
-    HistoricalEndpoints[networkType],
-  );
+  return new ApostillePublicAccount(publicAccount);
 });
 
 describe('apostille public account constructor should work properly', () => {
@@ -22,9 +19,7 @@ describe('apostille public account constructor should work properly', () => {
   );
 
   // Apostille Public Account
-  const apostillePublicAccount = new ApostillePublicAccount(
-    publicAccount,
-    HistoricalEndpoints[NetworkType.MIJIN_TEST]);
+  const apostillePublicAccount = new ApostillePublicAccount(publicAccount);
 
   it('should return correct public account', () => {
     expect(apostillePublicAccount.publicAccount.equals(publicAccount)).toBeTruthy();
@@ -179,19 +174,19 @@ describe('apostille public account non transaction methods should work properly'
   //   NetworkType.MIJIN_TEST);
 
   it(' should return 2 cosignataries of the accounts', () => {
-    return apostillePublicAccount1.getCosignatories().then((data) => {
+    return apostillePublicAccount1.getCosignatories(HistoricalEndpoints[NetworkType.MIJIN_TEST]).then((data) => {
         expect(data.length).toEqual(2);
     });
   });
 
   it('Should return true if the account is claimed', () => {
-    return apostillePublicAccount1.isOwned().then((data) => {
+    return apostillePublicAccount1.isOwned(HistoricalEndpoints[NetworkType.MIJIN_TEST]).then((data) => {
         expect(data).toBeTruthy();
     });
   });
 
   it('Should return false if the account is not claimed', () => {
-    return apostillePublicAccount2.isOwned().then((data) => {
+    return apostillePublicAccount2.isOwned(HistoricalEndpoints[NetworkType.MIJIN_TEST]).then((data) => {
         expect(data).toBeFalsy();
     });
   });

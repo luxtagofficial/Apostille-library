@@ -1,5 +1,5 @@
 import { Account, NetworkType, PublicAccount, SignedTransaction } from 'nem2-sdk';
-import { Apostille } from '../../../src/model/apostille/Apostille';
+import { Apostille } from '../../../../src/model/apostille/Apostille';
 
 const seed = '.N:@N%5SVjj3Wkmr-';
 
@@ -14,6 +14,10 @@ describe('Apostille class should work properly with MIJIN_TEST Network Type', ()
     it('Apostille.init with MIJIN_TEST NetworkType should return correct HDAccount', () => {
         expect(apostille.HDAccount.privateKey).toMatch(
         'E26A117C038068239E312E04F2B43DCC839D31BE7471D04DCCE905C2DC164107');
+    });
+
+    it('should return correct PublicApostilleAccount', () => {
+        expect(apostille.apostillePublicAccount.publicAccount.equals(apostille.HDAccount.publicAccount)).toBeTruthy();
     });
 
     it('should returned correct signer', () => {
