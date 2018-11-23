@@ -1,7 +1,9 @@
 import { Address, AggregateTransaction, Deadline, Listener, LockFundsTransaction, NetworkType, PlainMessage, SignedTransaction, TransactionHttp, TransferTransaction, UInt64, XEM } from 'nem2-sdk';
-import { Errors, HistoricalEndpoints, Initiator } from '../index';
-import { HashFunction } from './hashFunctions/HashFunction';
-import { Sinks } from './Sinks';
+import { HashFunction } from '../../hashFunctions/HashFunction';
+import { Errors } from '../../types/Errors';
+import { HistoricalEndpoints } from '../repository/HistoricalEndpoints';
+import { Sinks } from '../repository/Sinks';
+import { Initiator } from '../transaction/Initiator';
 
 // TODO: add tx hash of the update
 /**
