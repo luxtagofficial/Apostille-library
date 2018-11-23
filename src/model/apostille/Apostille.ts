@@ -1,6 +1,6 @@
 import * as nemSDK from 'nem-sdk';
 import { Account, Deadline, ModifyMultisigAccountTransaction, MultisigCosignatoryModification, MultisigCosignatoryModificationType, NetworkType, PublicAccount, SignedTransaction } from 'nem2-sdk';
-import { SHA256 } from '../../hashFunctions';
+import { SHA256 } from '../../hash/hash';
 
 const nem = nemSDK.default;
 // TODO: add tx hash of creation
@@ -71,4 +71,3 @@ class Apostille {
 }
 
 export { Apostille };
-

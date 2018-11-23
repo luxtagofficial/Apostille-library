@@ -43,4 +43,3 @@ class Initiator {
 }
 
 export { Initiator };
-
