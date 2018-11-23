@@ -145,9 +145,9 @@ export class ApostillePublicAccount {
         );
 
         if (isCompleteCosignatories) {
-           return this._signMultisigTransactionAgregateComplete(transferTransaction, signers);
+           return this._signTransferTransactionAgregateComplete(transferTransaction, signers);
         } else {
-            return this._signMultisigTransactionAggregateBonded(transferTransaction, signers);
+            return this._signTransferTransactionAggregateBonded(transferTransaction, signers);
         }
     }
 
@@ -447,7 +447,7 @@ export class ApostillePublicAccount {
         return signedTransaction;
     }
 
-    private _signMultisigTransactionAgregateComplete(
+    private _signTransferTransactionAgregateComplete(
         transaction: ModifyMultisigAccountTransaction,
         signers: Account[],
     ): SignedTransaction {
@@ -462,7 +462,7 @@ export class ApostillePublicAccount {
         return signedAggregateTransaction;
     }
 
-    private _signMultisigTransactionAggregateBonded(
+    private _signTransferTransactionAggregateBonded(
         transaction: ModifyMultisigAccountTransaction,
         signers: Account[],
     ): SignedTransaction {
@@ -472,6 +472,7 @@ export class ApostillePublicAccount {
             this.publicAccount.address.networkType);
 
         const signedAggregateTransaction = this._signAggregate(aggregateTransaction, signers);
+
         return signedAggregateTransaction;
     }
 }
