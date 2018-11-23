@@ -1,7 +1,7 @@
 import { Account, ModifyMultisigAccountTransaction, NetworkType, PublicAccount, SignedTransaction, TransferTransaction } from 'nem2-sdk';
-import { HistoricalEndpoints } from '../../../src/HistoricalEndpoints';
-import { SHA256 } from '../../../src/hashFunctions/sha256';
-import { ApostillePublicAccount } from '../../../src/model/ApostillePublicAccount';
+import { SHA256 } from '../../../src/hash/hash';
+import { ApostillePublicAccount } from '../../../src/model/apostille/ApostillePublicAccount';
+import { HistoricalEndpoints } from '../../../src/model/repository/HistoricalEndpoints';
 
 const getPublicApostilleAccount = ((publicKey: string, networkType: NetworkType): ApostillePublicAccount => {
   // Account 1

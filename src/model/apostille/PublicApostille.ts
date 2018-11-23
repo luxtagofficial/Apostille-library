@@ -1,5 +1,5 @@
 import { Address, AggregateTransaction, Deadline, Listener, LockFundsTransaction, NetworkType, PlainMessage, SignedTransaction, TransactionHttp, TransferTransaction, UInt64, XEM } from 'nem2-sdk';
-import { HashFunction } from '../../hashFunctions/HashFunction';
+import { HashFunction } from '../../hash/HashFunction';
 import { Errors } from '../../types/Errors';
 import { HistoricalEndpoints } from '../repository/HistoricalEndpoints';
 import { Sinks } from '../repository/Sinks';

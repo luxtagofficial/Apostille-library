@@ -1,7 +1,7 @@
 import { drop } from 'lodash';
 import { Account, AccountHttp, AggregateTransaction, Deadline, LockFundsTransaction, ModifyMultisigAccountTransaction, Mosaic, MultisigCosignatoryModification, MultisigCosignatoryModificationType, PlainMessage, PublicAccount, QueryParams, SignedTransaction, TransferTransaction, UInt64, XEM } from 'nem2-sdk';
-import { Errors } from '../Errors';
-import { HashFunction } from '../hashFunctions/HashFunction';
+import { HashFunction } from '../../hash/HashFunction';
+import { Errors } from '../../types/Errors';
 
 export class ApostillePublicAccount {
     /**
