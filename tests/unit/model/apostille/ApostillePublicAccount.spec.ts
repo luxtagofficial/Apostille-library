@@ -54,17 +54,19 @@ describe('apostille public account transaction methods should work properly', ()
   });
 
   it('should return correct signed update transaction', () => {
-    const signedTransaction: SignedTransaction = apostillePublicAccount.updateAndSign(
+    const updateTransaction: TransferTransaction = apostillePublicAccount.update(
       'LuxTag is awesome',
-      [],
-      signer);
+      []);
+    const signedTransaction: SignedTransaction = apostillePublicAccount.sign(updateTransaction, signer);
     expect(signedTransaction.signer).toMatch(signer.publicAccount.publicKey);
   });
 
   it('should return correct signed update transaction if hash provided', () => {
-    const signedTransaction: SignedTransaction = apostillePublicAccount.updateAndSign(
+    const updateTransaction: TransferTransaction = apostillePublicAccount.update(
       'LuxTag is awesome',
-      [],
+      []);
+    const signedTransaction: SignedTransaction = apostillePublicAccount.sign(
+      updateTransaction,
       signer,
       new SHA256());
     expect(signedTransaction.signer).toMatch(signer.publicAccount.publicKey);
@@ -80,55 +82,65 @@ describe('apostille public account transaction methods should work properly', ()
   });
 
   it('should return signed aggregate complete transfer transaction', () => {
-    const signedTransferTransaction = apostillePublicAccount.transferAndSign(
+    const transferTransaction: ModifyMultisigAccountTransaction = apostillePublicAccount.transfer(
       [newOwner],
       [signer.publicAccount],
       0,
-      0,
+      0);
+    const signedTransferTransaction = apostillePublicAccount.signAggregate(
+      transferTransaction,
       [signer],
       true);
     expect(signedTransferTransaction.signer).toMatch(signer.publicAccount.publicKey);
   });
 
   it('should return signed aggregate complete transfer transaction with 2 cosignatories', () => {
-    const signedTransferTransaction = apostillePublicAccount.transferAndSign(
+    const transferTransaction = apostillePublicAccount.transfer(
       [newOwner],
       [signer.publicAccount],
       0,
-      0,
+      0);
+    const signedTransferTransaction = apostillePublicAccount.signAggregate(
+      transferTransaction,
       [signer, secondSigner],
       true);
     expect(signedTransferTransaction.signer).toMatch(signer.publicAccount.publicKey);
   });
 
   it('should return signed aggregate bonded transfer transaction', () => {
-    const signedAggregateBondedTransaction = apostillePublicAccount.transferAndSign(
+    const aggregateBondedTransaction = apostillePublicAccount.transfer(
       [newOwner],
       [signer.publicAccount],
       0,
-      0,
+      0);
+    const signedAggregateBondedTransaction = apostillePublicAccount.signAggregate(
+      aggregateBondedTransaction,
       [signer],
       false);
     expect(signedAggregateBondedTransaction.signer).toMatch(signer.publicAccount.publicKey);
   });
 
   it('should return signed aggregate bonded transfer transaction with 2 cosignatories', () => {
-    const signedAggregateBondedTransaction = apostillePublicAccount.transferAndSign(
+    const aggregateBondedTransaction = apostillePublicAccount.transfer(
       [newOwner],
       [signer.publicAccount],
       0,
-      0,
+      0);
+    const signedAggregateBondedTransaction = apostillePublicAccount.signAggregate(
+      aggregateBondedTransaction,
       [signer, secondSigner],
       false);
     expect(signedAggregateBondedTransaction.signer).toMatch(signer.publicAccount.publicKey);
   });
 
   it('should return lock funds transaction', () => {
-    const signedAggregateBondedTransaction = apostillePublicAccount.transferAndSign(
+    const aggregateBondedTransaction = apostillePublicAccount.transfer(
       [newOwner],
       [signer.publicAccount],
       0,
-      0,
+      0);
+    const signedAggregateBondedTransaction = apostillePublicAccount.signAggregate(
+      aggregateBondedTransaction,
       [signer],
       false);
     const lockFundsTransaction = apostillePublicAccount.lockFundsTransaction(
@@ -137,15 +149,19 @@ describe('apostille public account transaction methods should work properly', ()
   });
 
   it('should return signed lock funds transaction', () => {
-    const signedAggregateBondedTransaction = apostillePublicAccount.transferAndSign(
+    const aggregateBondedTransaction = apostillePublicAccount.transfer(
       [newOwner],
       [signer.publicAccount],
       0,
-      0,
+      0);
+    const signedAggregateBondedTransaction = apostillePublicAccount.signAggregate(
+      aggregateBondedTransaction,
       [signer],
       false);
-    const signedLockFundsTransaction = apostillePublicAccount.lockFundsTransactionAndSign(
-      signedAggregateBondedTransaction,
+    const lockFundsTransaction = apostillePublicAccount.lockFundsTransaction(
+      signedAggregateBondedTransaction);
+    const signedLockFundsTransaction = apostillePublicAccount.sign(
+      lockFundsTransaction,
       signer);
     expect(signedLockFundsTransaction.signer).toMatch(signer.publicKey);
   });

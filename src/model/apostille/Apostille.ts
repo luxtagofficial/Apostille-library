@@ -4,13 +4,16 @@ import { SHA256 } from '../../hash/sha256';
 import { ApostillePublicAccount } from './ApostillePublicAccount';
 
 const nem = nemSDK.default;
-// TODO: add tx hash of creation
-// TODO: a getter function for getting all the owners of the apostille
+const fixPrivateKey = (privateKey) => {
+  return ('0000000000000000000000000000000000000000000000000000000000000000' + privateKey.replace(/^00/, ''))
+    .slice(-64);
+};
+
 /**
  * @description the private apostille class
  * @class Apostille
  */
-class Apostille {
+export class Apostille {
   /**
    * @description init apostille
    * @static
@@ -29,9 +32,9 @@ class Apostille {
     // sign the hashed seed to get the private key
     if (networkType === NetworkType.MAIN_NET || networkType === NetworkType.TEST_NET) {
       const keyPair = nem.crypto.keyPair.create(generatorAccount.privateKey);
-      privateKey = nem.utils.helpers.fixPrivateKey(keyPair.sign(hashSeed).toString());
+      privateKey = fixPrivateKey(keyPair.sign(hashSeed).toString());
     } else {
-      privateKey = nem.utils.helpers.fixPrivateKey(generatorAccount.signData(hashSeed));
+      privateKey = fixPrivateKey(generatorAccount.signData(hashSeed));
     }
     // create the HD acccount (appostille)
     const hdAccount = Account.createFromPrivateKey(privateKey, networkType);
@@ -44,7 +47,7 @@ class Apostille {
    * @param {Account} generatorAccount - the account used to sign the hash to generate the HD account private key
    * @memberof Apostille
    */
-  private constructor(
+  public constructor(
     public readonly HDAccount: Account,
   ) {}
 
@@ -81,5 +84,3 @@ class Apostille {
   }
 
 }
-
-export { Apostille };

@@ -3,7 +3,7 @@ import { AccountHttp, Address, AggregateTransaction, Listener, PublicAccount, Qu
 import { filter, mergeMap } from 'rxjs/operators';
 import { Errors } from '../types/Errors';
 
-class ApostilleHttp {
+export class ApostilleHttp {
 
     private transactionHttp: TransactionHttp;
     private accountHttp: AccountHttp;
@@ -122,7 +122,7 @@ class ApostilleHttp {
             if (transaction.transactionInfo instanceof TransactionInfo) {
                 return transaction.transactionInfo;
             } else {
-                throw new Error(Errors[Errors.COULD_NOT_FOUND_TRANSACTION_INFO]);
+                throw new Error(Errors[Errors.TRANSACTION_INFO_NOT_FOUND]);
             }
         } catch (error) {
             throw new Error(error);
@@ -227,5 +227,3 @@ class ApostilleHttp {
     }
 
 }
-
-export { ApostilleHttp };
