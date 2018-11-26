@@ -1,6 +1,6 @@
 {
   "name": "apostille-library",
-  "version": "0.0.0-development",
+  "version": "0.0.0",
   "description": "A novel & holistic blockchain notarization and timestamping with transferable, updatable, branded, and conjointly owned notarizations.",
   "keywords": [
     "blockchain",
@@ -12,7 +12,7 @@
   "homepage": "https://nem.io/wp-content/themes/nem/files/ApostilleWhitePaper.pdf",
   "repository": {
     "type": "git",
-    "url": "https://github.com/NEM-Apostille/Apostille-library"
+    "url": "https://github.com/luxtagofficial/Apostille-library/"
   },
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
