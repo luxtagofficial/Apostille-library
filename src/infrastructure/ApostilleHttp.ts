@@ -122,7 +122,7 @@ class ApostilleHttp {
             if (transaction.transactionInfo instanceof TransactionInfo) {
                 return transaction.transactionInfo;
             } else {
-                throw new Error(Errors[Errors.COULD_NOT_FOUND_TRANSACTION_INFO]);
+                throw new Error(Errors[Errors.TRANSACTION_INFO_NOT_FOUND]);
             }
         } catch (error) {
             throw new Error(error);
