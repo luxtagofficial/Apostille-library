@@ -3,7 +3,7 @@ import { AccountHttp, Address, AggregateTransaction, Listener, PublicAccount, Qu
 import { filter, mergeMap } from 'rxjs/operators';
 import { Errors } from '../types/Errors';
 
-class ApostilleHttp {
+export class ApostilleHttp {
 
     private transactionHttp: TransactionHttp;
     private accountHttp: AccountHttp;
@@ -227,5 +227,3 @@ class ApostilleHttp {
     }
 
 }
-
-export { ApostilleHttp };

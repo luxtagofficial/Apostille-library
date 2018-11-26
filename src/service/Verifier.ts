@@ -6,7 +6,7 @@ import { Errors } from '../types/Errors';
  * @description - a class with diffrent verifier function utilities
  * @class Verifier
  */
-class Verifier {
+export class Verifier {
 
     /**
      * @description - verify public apostille message
@@ -113,5 +113,3 @@ class Verifier {
     }
 
 }
-
-export { Verifier };

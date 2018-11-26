@@ -1,5 +1,5 @@
 import { drop } from 'lodash';
-import { Account, AggregateTransaction, Deadline, LockFundsTransaction, ModifyMultisigAccountTransaction, Mosaic, MultisigCosignatoryModification, MultisigCosignatoryModificationType, PlainMessage, PublicAccount, SignedTransaction, TransferTransaction, UInt64, XEM } from 'nem2-sdk';
+import { Account, AggregateTransaction, Deadline, LockFundsTransaction, ModifyMultisigAccountTransaction, Mosaic, MultisigCosignatoryModification, MultisigCosignatoryModificationType, PlainMessage, PublicAccount, SignedTransaction, Transaction, TransferTransaction, UInt64, XEM } from 'nem2-sdk';
 import { HashFunction } from '../../hash/HashFunction';
 import { Errors } from '../../types/Errors';
 
@@ -32,48 +32,6 @@ export class ApostillePublicAccount {
         );
 
         return creationTransaction;
-    }
-
-    /**
-     * @description - returning a signed transfer transaction for the apostille account
-     * @param {string} rawData - the raw data to send in the payload
-     * @param {(Mosaic[] | Mosaic[])} [mosaics=[]] - array of mosiacs to attache
-     * @param {Account} initiatorAccount - the initiator of the transaction
-     * @param {HashFunction} [hashFunction] - if provided will hash the raw data and add a magical byte to the hash
-     * @returns {SignedTransaction}
-     * @memberof ApostilleAccount
-     */
-    public updateAndSign(
-        rawData: string,
-        mosaics: Mosaic[] | Mosaic[] = [],
-        initiatorAccount: Account,
-        hashFunction?: HashFunction,
-    ): SignedTransaction {
-        if (initiatorAccount.address.networkType !== this.publicAccount.address.networkType) {
-            throw new Error(Errors[Errors.NETWORK_TYPE_MISMATCHED]);
-        }
-
-        let data: string = rawData;
-        // first we create the creation transaction as a transfer transaction
-        if (hashFunction) {
-            // for digital files it's a good idea to hash the content of the file
-            // but can be used for other types of information for real life assets
-            const hash = hashFunction.signedHashing(
-                rawData,
-                initiatorAccount.privateKey,
-                this.publicAccount.address.networkType,
-            );
-            data = hash;
-        }
-
-        const creationTransaction = this.update(
-            data,
-            mosaics,
-        );
-
-        const signedTransaction = initiatorAccount.sign(creationTransaction);
-
-        return signedTransaction;
     }
 
     /**
@@ -119,39 +77,6 @@ export class ApostillePublicAccount {
     }
 
     /**
-     * @description - modify ownership of the apostille account by modifying the multisisg contract
-     * @param {PublicAccount[]} newOwners - array of new owners
-     * @param {PublicAccount[]} OwnersToRemove - array of owners to remove
-     * @param {number} quorum - relative quorum (refer to own function above and/or http://bit.ly/2Jnff1r )
-     * @param {number} minRemoval - relative number of minimum owners necessary to agree to remove 1/n owners
-     * @param {Account[]} signers - array of accounts that will sign the transaction
-     * @param {boolean} isCompleteCosignatories - whether the transaction is an aggregate complete or bonded
-     * @returns {SignedTransaction}
-     * @memberof ApostillePublicAccount
-     */
-    public transferAndSign(
-        newOwners: PublicAccount[],
-        OwnersToRemove: PublicAccount[],
-        quorum: number,
-        minRemoval: number,
-        signers: Account[],
-        isCompleteCosignatories: boolean,
-    ): SignedTransaction {
-        const transferTransaction = this.transfer(
-            newOwners,
-            OwnersToRemove,
-            quorum,
-            minRemoval,
-        );
-
-        if (isCompleteCosignatories) {
-           return this._signTransferTransactionAgregateComplete(transferTransaction, signers);
-        } else {
-            return this._signTransferTransactionAggregateBonded(transferTransaction, signers);
-        }
-    }
-
-    /**
      * @description returning lockFundTransactions that can be signed later on
      * @param {SignedTransaction} signedAggregateBondedTransaction
      * @returns {LockFundsTransaction}
@@ -169,22 +94,87 @@ export class ApostillePublicAccount {
     }
 
     /**
-     * @description - returning signed lockFundsTransaction for announcing aggregate bonded
-     * @param {SignedTransaction} signedAggregateBondedTransaction
-     * @param {Account} signer
-     * @returns {SignedTransaction}
+     * @description sign normal transaction (can sign update(if normal transaction) and lockFundsTransaction)
+     * @param {TransferTransaction} transferTransaction
+     * @param {Account} initiatorAccount
+     * @param {HashFunction} [hashFunction] - only hash transfer transaction message
+     * @returns
      * @memberof ApostillePublicAccount
      */
-    public lockFundsTransactionAndSign(
-        signedAggregateBondedTransaction: SignedTransaction,
-        signer: Account,
-    ): SignedTransaction {
-        // the lock need the signed aggregate transaction
-        const lockFundsTransaction = this.lockFundsTransaction(signedAggregateBondedTransaction);
-        // we sign the lock
-        const signedLock = signer.sign(lockFundsTransaction);
+    public sign(
+        transaction: TransferTransaction | Transaction,
+        initiatorAccount: Account,
+        hashFunction?: HashFunction) {
+        if (initiatorAccount.address.networkType !== this.publicAccount.address.networkType) {
+            throw new Error(Errors[Errors.NETWORK_TYPE_MISMATCHED]);
+        }
 
-        return signedLock;
+        let tx = transaction;
+
+        // first we create the creation transaction as a transfer transaction
+        if (hashFunction && tx instanceof TransferTransaction) {
+            // for digital files it's a good idea to hash the content of the file
+            // but can be used for other types of information for real life assets
+
+            const rawData = tx.message.payload;
+
+            const hash = hashFunction.signedHashing(
+                rawData,
+                initiatorAccount.privateKey,
+                this.publicAccount.address.networkType,
+            );
+
+            tx = this.update(hash, tx.mosaics);
+        }
+
+        const signedTransaction = initiatorAccount.sign(tx);
+
+        return signedTransaction;
+    }
+
+    /**
+     * @description signed aggregate transaction (can sign update(if multisig transaction) and transfer transaction)
+     * @param {Transaction} transaction
+     * @param {Account[]} signers
+     * @param {boolean} isCompleteCosignatories
+     * @returns
+     * @memberof ApostillePublicAccount
+     */
+    public signAggregate(transaction: Transaction, signers: Account[], isCompleteCosignatories: boolean) {
+        if (isCompleteCosignatories) {
+           return this._signTransferTransactionAgregateComplete(transaction, signers);
+        } else {
+            return this._signTransferTransactionAggregateBonded(transaction, signers);
+        }
+    }
+
+    private _signTransferTransactionAgregateComplete(
+        transaction: Transaction,
+        signers: Account[],
+    ): SignedTransaction {
+        const aggregateTransaction = AggregateTransaction.createComplete(
+            Deadline.create(),
+            [transaction.toAggregate(this.publicAccount)],
+            this.publicAccount.address.networkType,
+            []);
+
+        const signedAggregateTransaction = this._signAggregate(aggregateTransaction, signers);
+
+        return signedAggregateTransaction;
+    }
+
+    private _signTransferTransactionAggregateBonded(
+        transaction: Transaction,
+        signers: Account[],
+    ): SignedTransaction {
+        const aggregateTransaction = AggregateTransaction.createBonded(
+            Deadline.create(),
+            [transaction.toAggregate(this.publicAccount)],
+            this.publicAccount.address.networkType);
+
+        const signedAggregateTransaction = this._signAggregate(aggregateTransaction, signers);
+
+        return signedAggregateTransaction;
     }
 
     private _signAggregate(aggregateTransaction: AggregateTransaction, signers: Account[]): SignedTransaction {
@@ -209,34 +199,5 @@ export class ApostillePublicAccount {
         }
 
         return signedTransaction;
-    }
-
-    private _signTransferTransactionAgregateComplete(
-        transaction: ModifyMultisigAccountTransaction,
-        signers: Account[],
-    ): SignedTransaction {
-        const aggregateTransaction = AggregateTransaction.createComplete(
-            Deadline.create(),
-            [transaction.toAggregate(this.publicAccount)],
-            this.publicAccount.address.networkType,
-            []);
-
-        const signedAggregateTransaction = this._signAggregate(aggregateTransaction, signers);
-
-        return signedAggregateTransaction;
-    }
-
-    private _signTransferTransactionAggregateBonded(
-        transaction: ModifyMultisigAccountTransaction,
-        signers: Account[],
-    ): SignedTransaction {
-        const aggregateTransaction = AggregateTransaction.createBonded(
-            Deadline.create(),
-            [transaction.toAggregate(this.publicAccount)],
-            this.publicAccount.address.networkType);
-
-        const signedAggregateTransaction = this._signAggregate(aggregateTransaction, signers);
-
-        return signedAggregateTransaction;
     }
 }

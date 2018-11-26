@@ -13,7 +13,7 @@ const fixPrivateKey = (privateKey) => {
  * @description the private apostille class
  * @class Apostille
  */
-class Apostille {
+export class Apostille {
   /**
    * @description init apostille
    * @static
@@ -47,7 +47,7 @@ class Apostille {
    * @param {Account} generatorAccount - the account used to sign the hash to generate the HD account private key
    * @memberof Apostille
    */
-  private constructor(
+  public constructor(
     public readonly HDAccount: Account,
   ) {}
 
@@ -84,5 +84,3 @@ class Apostille {
   }
 
 }
-
-export { Apostille };
