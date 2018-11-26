@@ -2,6 +2,7 @@ import { drop } from 'lodash';
 import { Account, AccountHttp, AggregateTransaction, Deadline, LockFundsTransaction, ModifyMultisigAccountTransaction, Mosaic, MultisigCosignatoryModification, MultisigCosignatoryModificationType, PlainMessage, PublicAccount, QueryParams, SignedTransaction, TransferTransaction, UInt64, XEM } from 'nem2-sdk';
 import { HashFunction } from '../../hash/HashFunction';
 import { Errors } from '../../types/Errors';
+import { IReadyTransaction } from '../transaction/ReadyTransaction';
 
 export class ApostillePublicAccount {
     /**
@@ -136,7 +137,7 @@ export class ApostillePublicAccount {
         minRemoval: number,
         signers: Account[],
         isCompleteCosignatories: boolean,
-    ): SignedTransaction {
+    ): IReadyTransaction {
         const transferTransaction = this.transfer(
             newOwners,
             OwnersToRemove,
@@ -312,7 +313,7 @@ export class ApostillePublicAccount {
     //     if (transaction.transactionInfo instanceof TransactionInfo) {
     //         return transaction.transactionInfo;
     //     }
-    //     throw new Error(Errors[Errors.COULD_NOT_FOUND_TRANSACTION_INFO]);
+    //     throw new Error(Errors[Errors.TRANSACTION_INFO_NOT_FOUND]);
     // }
 
     // /**

@@ -1,4 +1,4 @@
-import { Transaction, TransactionType } from 'nem2-sdk';
+import { SignedTransaction, Transaction, TransactionType } from 'nem2-sdk';
 import { Initiator } from './Initiator';
 /**
  * @description -  a transaction wrapper
@@ -24,4 +24,18 @@ export interface IReadyTransaction {
    * @memberof IReadyTransaction
    */
   readonly type: TransactionType;
+}
+
+export class ReadyTransaction implements IReadyTransaction {
+  constructor(
+    public readonly initiator: Initiator,
+    public readonly transaction: Transaction,
+    public readonly type: TransactionType,
+  ) {
+
+  }
+
+  public sign(): SignedTransaction {
+    return this.initiator.sign(this.transaction, this.type);
+  }
 }
