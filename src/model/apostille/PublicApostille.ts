@@ -8,7 +8,7 @@ import { HashFunction } from '../../hash/HashFunction';
 class PublicApostille {
 
   /**
-   * @description - the hash uncluding the magical byte of this public apostille
+   * @description - the hash including the magical byte of this public apostille
    * @private
    * @memberof PublicApostille
    */
@@ -17,8 +17,7 @@ class PublicApostille {
   /**
    * Creates an instance of PublicApostille.
    * @param {string} fileName - the digital file name
-   * @param {NetworkType} networkType - network type
-   * @param {string} [sinkAddress] - the sink address to use
+   * @param {Address} sinkAddress - the sink address to use
    * @memberof PublicApostille
    */
   constructor(

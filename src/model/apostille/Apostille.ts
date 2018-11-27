@@ -14,6 +14,7 @@ const fixPrivateKey = (privateKey) => {
  * @class Apostille
  */
 export class Apostille {
+
   /**
    * @description init apostille
    * @static
@@ -41,6 +42,8 @@ export class Apostille {
     return new Apostille(hdAccount);
   }
 
+  private publicAccount;
+
   /**
    * Creates an instance of Apostille.
    * @param {Account} hdAccount - the apostille account (HD account)
@@ -49,13 +52,17 @@ export class Apostille {
    */
   public constructor(
     public readonly HDAccount: Account,
-  ) {}
+  ) {
+    this.publicAccount =  new ApostillePublicAccount(this.HDAccount.publicAccount);
+  }
 
   /**
+   *
    * @description - create a multisig contract to own the apostille account
-   * @param {PublicAccount[]} owners - array of public account that will become owners
+   * @param {PublicAccount[]} owners- array of public account that will become owners
    * @param {number} quorum - the minimum number of owners necessary to agree on the apostille account activities
    * @param {number} minRemoval - minimum number of owners necessary to agree to remove one or some owners
+   * @returns {SignedTransaction}
    * @memberof Apostille
    */
   public associate(owners: PublicAccount[], quorum: number, minRemoval: number): SignedTransaction {
@@ -66,7 +73,7 @@ export class Apostille {
           MultisigCosignatoryModificationType.Add,
           cosignatory));
     });
-    const convertIntoMultisigTransaction = ModifyMultisigAccountTransaction.create(
+    const modifyMultisigTransaction = ModifyMultisigAccountTransaction.create(
       Deadline.create(),
       quorum,
       minRemoval,
@@ -74,13 +81,13 @@ export class Apostille {
       this.HDAccount.address.networkType,
     );
 
-    const signedTransaction = this.HDAccount.sign(convertIntoMultisigTransaction);
+    const signedTransaction = this.HDAccount.sign(modifyMultisigTransaction);
 
-    return  signedTransaction;
+    return signedTransaction;
   }
 
   get apostillePublicAccount(): ApostillePublicAccount {
-    return new ApostillePublicAccount(this.HDAccount.publicAccount);
+    return this.publicAccount;
   }
 
 }
