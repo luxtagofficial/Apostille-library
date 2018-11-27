@@ -58,7 +58,7 @@ export class ApostillePublicAccount {
                     cosignatory));
         });
 
-        newOwners.forEach((cosignatory) => {
+        ownersToRemove.forEach((cosignatory) => {
             modifications.push(
                 new MultisigCosignatoryModification(
                     MultisigCosignatoryModificationType.Remove,
