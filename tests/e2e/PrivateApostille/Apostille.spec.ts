@@ -1,214 +1,59 @@
-// import { Account, NetworkType } from 'nem2-sdk';
+import { Account, NetworkType } from 'nem2-sdk';
+import { Apostille, ApostilleHttp, HistoricalEndpoints } from '../../../index';
 
-// const seed = '.N:@N%5SVjj3Wkmr-';
-// // A funny but valid private key
-// const sk = 'aaaaaaaaaaeeeeeeeeeebbbbbbbbbb5555555555dddddddddd1111111111aaee';
-// const generator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
+// A funny but valid private key
+const sk = 'aaaaaaaaaaeeeeeeeeeebbbbbbbbbb5555555555dddddddddd1111111111aaee';
+const generator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
+const apostilleHttp = new ApostilleHttp(HistoricalEndpoints[NetworkType.MIJIN_TEST]);
+const seed = 'KV_,x797taRe}Y<+';
+const PrivateApostille1 = Apostille.init(seed, generator);
+const hdAccountInformation = {
+  address: 'SDTE6Z-XQAQ46-FDJ5P7-MSU43E-BNT4SR-7C7EKU-HHL5',
+  privateKey: 'B9EF817A39DAEB43179EE9129E5D592410B8A47FA4870A4EC16024575E51A608'.toUpperCase(),
+  publicKey: '9C0C770BD1E1506FD207A8D783E0E4AC00D98B6D790401573519D82133474B90'.toUpperCase(),
+};
 
-// beforeAll(() => {
-//   jest.setTimeout(10000);
-// });
-
-describe('Create functionn should work properly', () => {
-  it.skip('skip', () => {
-    expect('').toMatch('');
-  });
-
-  // it.skip('should throw an error if you try to create an apostille more than once', async () => {
-  //   const privateApostille = Apostille.init(seed, generator);
-  //   const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
-  //   const initiator = new Initiator(creator);
-  //   expect.assertions(1);
-  //   await privateApostille.create(initiator, 'raw');
-  //   return privateApostille.create(initiator, 'raw').catch((e) => {
-  //     expect(e.message).toMatch(Errors[Errors.APOSTILLE_ALREADY_CREATED]);
-  //   });
-  // });
-
-  // it.skip('should create a transfer transaction', () => {
-  //   const privateApostille = Apostille.init(seed, generator);
-  //   const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
-  //   const initiator = new Initiator(creator);
-  //   return privateApostille.create(initiator, 'raw').then(() => {
-  //     // tslint:disable-next-line:no-string-literal
-  //     expect(privateApostille['transactions'][0].type).toEqual(TransactionType.TRANSFER);
-  //   });
-  // });
-
-  // it.skip('should create an aggregate complete transaction', () => {
-  //   const privateApostille = Apostille.init(seed, generator);
-  //   const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
-  //   const initiator = new Initiator(creator, creator.publicAccount, true);
-  //   return privateApostille.create(initiator, 'raw').then(() => {
-  //     // tslint:disable-next-line:no-string-literal
-  //     expect(privateApostille['transactions'][0].type).toEqual(TransactionType.AGGREGATE_COMPLETE);
-  //   });
-  // });
-
-  // it.skip('should create an aggregate bounded transaction', () => {
-  //   const privateApostille = Apostille.init(seed, generator);
-  //   const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
-  //   const initiator = new Initiator(creator, creator.publicAccount, false);
-  //   return privateApostille.create(initiator, 'raw').then(() => {
-  //     // tslint:disable-next-line:no-string-literal
-  //     expect(privateApostille['transactions'][0].type).toEqual(TransactionType.AGGREGATE_BONDED);
-  //   });
-  // });
-
+beforeAll(() => {
+  jest.setTimeout(10000);
 });
 
-// describe('update function should work properly', () => {
+it('should correctly generate a private apostille via a private key', () => {
+  expect(PrivateApostille1.HDAccount.privateKey).toMatch(hdAccountInformation.privateKey);
+  expect(PrivateApostille1.HDAccount.publicKey).toMatch(hdAccountInformation.publicKey);
+  expect(PrivateApostille1.HDAccount.address.pretty()).toMatch(hdAccountInformation.address);
+});
 
-//   it.skip('should throw an error if we try to update before creating', async () => {
-//     const privateApostille = Apostille.init(seed, generator);
-//     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
-//     const initiator = new Initiator(creator);
-//     expect.assertions(1);
-//     return privateApostille.update(initiator, 'raw').catch((e) => {
-//       expect(e.message).toMatch(Errors[Errors.APOSTILLE_NOT_CREATED]);
-//     });
-//   });
+describe('isCreated function should work properly', () => {
 
-//   it.skip('should create a transfer transaction', async () => {
-//     const privateApostille = Apostille.init(seed, generator);
-//     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
-//     const initiator = new Initiator(creator);
-//     expect.assertions(1);
-//     await privateApostille.create(initiator, 'raw');
-//     await privateApostille.update(initiator, 'update');
-//     // tslint:disable-next-line:no-string-literal
-//     expect(privateApostille['transactions'][1].type).toEqual(TransactionType.TRANSFER);
-//   });
+  it('should return false before creation', async () => {
+    const privateApostille = Apostille.init('QUleqZedaOUtlSh', generator);
+    expect.assertions(1);
+    return apostilleHttp.isCreated(privateApostille.HDAccount.publicAccount).then((result) => {
+      expect(result).toBeFalsy();
+    });
+  });
 
-//   it.skip('should create an aggregate complete transaction', async () => {
-//     const privateApostille = Apostille.init(seed, generator);
-//     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
-//     const initiator = new Initiator(creator, creator.publicAccount, true);
-//     expect.assertions(1);
-//     await privateApostille.create(initiator, 'raw');
-//     await privateApostille.update(initiator, 'update');
-//     // tslint:disable-next-line:no-string-literal
-//     expect(privateApostille['transactions'][0].type).toEqual(TransactionType.AGGREGATE_COMPLETE);
-//   });
+  it('should return true after creation', async () => {
+    const privateApostille = Apostille.init('new random seed', generator);
+    const apostillePA = privateApostille.apostillePublicAccount;
+    const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
+    expect.assertions(1);
+    const creationTransaction = apostillePA.update('raw');
+    const signedTransaction = apostillePA.sign(creationTransaction, creator);
+    await apostilleHttp.announce(signedTransaction);
+    return apostilleHttp.isCreated(apostillePA.publicAccount).then((result) => {
+      expect(result).toBeTruthy();
+    });
+  });
 
-//   it.skip('should create an aggregate bounded transaction', async () => {
-//     const privateApostille = Apostille.init(seed, generator);
-//     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
-//     const initiator = new Initiator(creator, creator.publicAccount, false);
-//     expect.assertions(1);
-//     await privateApostille.create(initiator, 'raw');
-//     await privateApostille.update(initiator, 'update');
-//     // tslint:disable-next-line:no-string-literal
-//     expect(privateApostille['transactions'][0].type).toEqual(TransactionType.AGGREGATE_BONDED);
-//   });
-
-// });
-
-// describe('associate function should work properly', () => {
-
-//   it.skip('should create an aggregate bounded transaction', async () => {
-//     const privateApostille = Apostille.init(seed, generator);
-//     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
-//     const initiator = new Initiator(creator, creator.publicAccount, false);
-//     expect.assertions(1);
-//     await privateApostille.create(initiator, 'raw');
-//     await privateApostille.update(initiator, 'update');
-//     privateApostille.associate([initiator.account.publicAccount], 1, 1);
-//     // tslint:disable-next-line:no-string-literal
-//     expect(privateApostille['transactions'][2].type).toEqual(TransactionType.MODIFY_MULTISIG_ACCOUNT);
-//   });
-
-// });
-
-// describe('transfer function should work properly', () => {
-
-//   it.skip('should create an aggregate complete transaction', async () => {
-//     const privateApostille = Apostille.init(seed, generator);
-//     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
-//     // const initiator = new Initiator(creator, creator.publicAccount, false);
-//     expect.assertions(1);
-//     privateApostille.transfer([creator], true, [creator.publicAccount], [creator.publicAccount], 0, 0);
-//     // tslint:disable-next-line:no-string-literal
-//     expect(privateApostille['transactions'][0].type).toEqual(TransactionType.AGGREGATE_COMPLETE);
-//   });
-
-//   it.skip('should create an aggregate complete transaction', async () => {
-//     const privateApostille = Apostille.init(seed, generator);
-//     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
-//     // const initiator = new Initiator(creator, creator.publicAccount, false);
-//     expect.assertions(1);
-//     privateApostille.transfer([creator], false, [], [], 0, 0);
-//     // tslint:disable-next-line:no-string-literal
-//     expect(privateApostille['transactions'][0].type).toEqual(TransactionType.AGGREGATE_BONDED);
-//   });
-
-// });
-
-// describe('isCreated function should work properly', () => {
-
-//   it.skip('should return false before creation', async () => {
-//     const privateApostille = Apostille.init('QUleqZedaOUtlSh', generator);
-//     expect.assertions(1);
-//     return privateApostille.isCreated().then((result) => {
-//       expect(result).toBeFalsy();
-//     });
-//   });
-
-//   it('should return true after creation', async () => {
-//     const privateApostille = Apostille.init('new random seed', generator);
-//     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
-//     const initiator = new Initiator(creator);
-//     expect.assertions(1);
-//     await privateApostille.create(initiator, 'raw');
-//     return privateApostille.isCreated().then((result) => {
-//       expect(result).toBeTruthy();
-//     });
-//   });
-
-//   it.skip('should return true for an already created apostille', async () => {
-//     const privateApostille = Apostille.init('MIJIN_TEST', generator);
-//     expect.assertions(1);
-//     return privateApostille.isCreated().then((result) => {
-//       expect(result).toBeTruthy();
-//     });
-//   });
-
-//   it.skip('should throw an error if we don\'t specefy mijin endpoint url', () => {
-//     const MJgenerator = Account.createFromPrivateKey(sk, NetworkType.MIJIN);
-//     try {
-//       return Apostille.init('k7u*VTsVCk6h,FdN', MJgenerator);
-//     } catch (e) {
-//       expect(e.message).toMatch(Errors[Errors.MIJIN_ENDPOINT_NEEDED]);
-//     }
-//   });
-
-//   it.skip('should return false before an announce', () => {
-//     const MTgenerator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
-//     const apostilleMT = Apostille.init('QUleqZedaOUtlSh', MTgenerator);
-//     return apostilleMT.isCreated().then((MT) => {
-//       expect(MT).toBeFalsy();
-//     });
-//   });
-
-//   it.skip('should return true after an announce', async () => {
-//     const privateApostille = Apostille.init('_934@Ve*,tM(3MN-', generator);
-//     const creator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
-//     const initiator = new Initiator(creator);
-//     privateApostille.created = true;
-//     await privateApostille.update(initiator, 'update');
-//     await privateApostille.announce();
-//     return privateApostille.isCreated().then((result) => {
-//       expect(result).toBeTruthy();
-//     });
-//   });
-
-//   it.skip('should return true for an already announced apostille', () => {
-//     const privateApostille = Apostille.init('MIJIN_TEST', generator);
-//     return privateApostille.isCreated().then((result) => {
-//       expect(result).toBeTruthy();
-//     });
-//   });
-// });
+  it('should return false before an announce', () => {
+    const MTgenerator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
+    const apostilleMT = Apostille.init('QUleqZedaOUtlSh', MTgenerator);
+    return apostilleHttp.isCreated(apostilleMT.HDAccount.publicAccount).then((result) => {
+      expect(result).toBeFalsy();
+    });
+  });
+});
 
 // TODO: check the order of transactions
 // TODO: no transfer transaction should exist after a multisig modification

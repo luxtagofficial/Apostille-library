@@ -1,6 +1,7 @@
-import { Account, ModifyMultisigAccountTransaction, NetworkType, PublicAccount, SignedTransaction, TransferTransaction } from 'nem2-sdk';
+import { Account, NetworkType, PublicAccount, TransactionType } from 'nem2-sdk';
 import { SHA256 } from '../../../../src/hash/sha256';
 import { ApostillePublicAccount } from '../../../../src/model/apostille/ApostillePublicAccount';
+import { Errors } from '../../../../src/types/Errors';
 
 const getPublicApostilleAccount = ((publicKey: string, networkType: NetworkType): ApostillePublicAccount => {
   // Account 1
@@ -47,25 +48,32 @@ describe('apostille public account transaction methods should work properly', ()
     NetworkType.MIJIN_TEST);
 
   it('should return correct update transaction', () => {
-    const updateTransaction: TransferTransaction = apostillePublicAccount.update(
+    const updateTransaction = apostillePublicAccount.update(
       'LuxTag is awesome',
       []);
     expect(updateTransaction.recipient).toEqual(apostillePublicAccount.publicAccount.address);
   });
 
-  it('should return correct signed update transaction', () => {
-    const updateTransaction: TransferTransaction = apostillePublicAccount.update(
+  it('Create function should be a transfer type transaction', () => {
+    const updateTransaction = apostillePublicAccount.update(
       'LuxTag is awesome',
       []);
-    const signedTransaction: SignedTransaction = apostillePublicAccount.sign(updateTransaction, signer);
+    expect(updateTransaction.type).toEqual(TransactionType.TRANSFER);
+  });
+
+  it('should return correct signed update transaction', () => {
+    const updateTransaction = apostillePublicAccount.update(
+      'LuxTag is awesome',
+      []);
+    const signedTransaction = apostillePublicAccount.sign(updateTransaction, signer);
     expect(signedTransaction.signer).toMatch(signer.publicAccount.publicKey);
   });
 
   it('should return correct signed update transaction if hash provided', () => {
-    const updateTransaction: TransferTransaction = apostillePublicAccount.update(
+    const updateTransaction = apostillePublicAccount.update(
       'LuxTag is awesome',
       []);
-    const signedTransaction: SignedTransaction = apostillePublicAccount.sign(
+    const signedTransaction = apostillePublicAccount.sign(
       updateTransaction,
       signer,
       new SHA256());
@@ -73,7 +81,7 @@ describe('apostille public account transaction methods should work properly', ()
   });
 
   it('should return correct transfer transaction', () => {
-    const transferTransaction: ModifyMultisigAccountTransaction = apostillePublicAccount.transfer(
+    const transferTransaction = apostillePublicAccount.transfer(
       [newOwner],
       [signer.publicAccount],
       0,
@@ -81,8 +89,22 @@ describe('apostille public account transaction methods should work properly', ()
     expect(transferTransaction.modifications.length).toEqual(2);
   });
 
+  it('should throw error if no cosignatories are present', () => {
+    const transferTransaction = apostillePublicAccount.transfer(
+      [newOwner],
+      [signer.publicAccount],
+      0,
+      0);
+    expect(() => {
+      apostillePublicAccount.signAggregate(
+      transferTransaction,
+      [],
+      true);
+    }).toThrowError(Errors[Errors.UNABLE_TO_SIGN_AGGREGATE_TRANSACTION]);
+  });
+
   it('should return signed aggregate complete transfer transaction', () => {
-    const transferTransaction: ModifyMultisigAccountTransaction = apostillePublicAccount.transfer(
+    const transferTransaction = apostillePublicAccount.transfer(
       [newOwner],
       [signer.publicAccount],
       0,
@@ -165,4 +187,5 @@ describe('apostille public account transaction methods should work properly', ()
       signer);
     expect(signedLockFundsTransaction.signer).toMatch(signer.publicKey);
   });
+
 });
