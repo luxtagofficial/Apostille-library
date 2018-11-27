@@ -61,6 +61,18 @@ describe('apostille public account transaction methods should work properly', ()
     expect(updateTransaction.type).toEqual(TransactionType.TRANSFER);
   });
 
+  it('should not sign if apostille and signer are from different networkTypes', () => {
+    const alienAccount = Account.createFromPrivateKey(
+      'aaaaaaaaaaeeeeeeeeeebbbbbbbbbb5555555555dddddddddd1111111111aaee',
+      NetworkType.MAIN_NET);
+    const updateTransaction = apostillePublicAccount.update(
+      'LuxTag is awesome',
+      []);
+    expect(() => {
+      apostillePublicAccount.sign(updateTransaction, alienAccount);
+    }).toThrowError(Errors[Errors.NETWORK_TYPE_MISMATCHED]);
+  });
+
   it('should return correct signed update transaction', () => {
     const updateTransaction = apostillePublicAccount.update(
       'LuxTag is awesome',
