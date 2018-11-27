@@ -159,6 +159,8 @@ export class ApostilleHttp {
                 } else {
                     reject (Errors[Errors.CREATION_TRANSACTIONS_NOT_FOUND]);
                 }
+            }).catch((err) => {
+                reject(err);
             });
         });
     }
@@ -202,7 +204,7 @@ export class ApostilleHttp {
                 resolve(unconfirmedTransactions);
             }, (err) => {
                 // network or comunication problem
-                resolve(err);
+                reject(err);
             });
         });
 
@@ -220,7 +222,7 @@ export class ApostilleHttp {
                 resolve(transactions);
             }, (err) => {
                 // network or comunication problem
-                resolve(err);
+                reject(err);
             });
         });
 
