@@ -14,4 +14,4 @@ export enum Sinks {
   MIJIN_TEST = 0x90,
 }
 
-// should be used as Sinks[network] // get the address
+// should be used as Sinks[networkType] // get the address

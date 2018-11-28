@@ -11,4 +11,4 @@ export enum HistoricalEndpoints {
     // mijin_test
     'http://api.beta.catapult.mijin.io:3000' = 0x90,
   }
-  // should be used as HistoricalEndpoints[network] // get the address
+  // should be used as HistoricalEndpoints[networkType] // get the address
