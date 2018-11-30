@@ -149,22 +149,21 @@ export class ApostilleHttp {
    * @returns {Promise<boolean>}
    * @memberof ApostilleHttp
    */
-  public async isOwned(address: Address): Promise<boolean> {
-    try {
-      const cosignatories = await this.getCosignatories(address);
-      if (cosignatories.length > 0) {
-        return true;
-      } else {
-        return false;
-      }
-    } catch (error) {
-      const errorText = JSON.parse(error.response.text);
-      if (errorText.code === 'ResourceNotFound') {
-        return false;
-      } else {
-        throw new Error(error);
-      }
-    }
+  public isOwned(address: Address): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      this.getCosignatories(address).then(
+        (cosignatories) => {
+          resolve(cosignatories.length > 0);
+        },
+      ).catch((error) => {
+        const errorText = JSON.parse(error.response.text);
+        if (errorText.code === 'ResourceNotFound') {
+          resolve(false);
+        } else {
+         reject(error);
+        }
+      });
+    });
   }
 
   /**
