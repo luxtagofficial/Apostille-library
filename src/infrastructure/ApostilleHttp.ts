@@ -90,7 +90,7 @@ export class ApostilleHttp {
               return transaction.transactionInfo !== undefined
                 && transaction.transactionInfo.hash === signedLockFundsTransaction.hash;
             }),
-            mergeMap((ignored) => this.transactionHttp.announceAggregateBonded(signedAggregateBondedTransaction)),
+            mergeMap(() => this.transactionHttp.announceAggregateBonded(signedAggregateBondedTransaction)),
           )
           .subscribe((announcedAggregateBonded) => {
             resolve(announcedAggregateBonded);
@@ -111,17 +111,13 @@ export class ApostilleHttp {
   public async isCreated(publicAccount: PublicAccount): Promise<boolean> {
     try {
       const unconfirmedTransactions = await this._unconfirmedTransactions(publicAccount).toPromise();
-      if (unconfirmedTransactions.length) {
+      if (unconfirmedTransactions.length > 0) {
         // the apostille has been sent to the network
         return true;
       } else {
         // then check transactions
         const transactions = await this._transactions(publicAccount).toPromise();
-        if (transactions.length > 0) {
-          return true;
-        } else {
-          return false;
-        }
+        return (transactions.length > 0);
       }
     } catch (err) {
       throw new Error(err);
