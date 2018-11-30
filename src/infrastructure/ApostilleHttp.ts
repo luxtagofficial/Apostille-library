@@ -1,19 +1,50 @@
 import { sortBy } from 'lodash';
 import { AccountHttp, Address, AggregateTransaction, Listener, PublicAccount, QueryParams, SignedTransaction, Transaction, TransactionAnnounceResponse, TransactionHttp, TransactionInfo, TransferTransaction } from 'nem2-sdk';
-import { filter, mergeMap } from 'rxjs/operators';
+import { EMPTY, Observable } from 'rxjs';
+import { expand, filter, mergeMap } from 'rxjs/operators';
 import { Errors } from '../types/Errors';
+import { Initiator } from './Initiator';
 
+export interface IReadyTransaction {
+  transaction: Transaction;
+  initiator?: Initiator;
+}
 export class ApostilleHttp {
 
   private transactionHttp: TransactionHttp;
   private accountHttp: AccountHttp;
+  private listener: Listener;
+
+  private unannouncedTransactions: IReadyTransaction[] = [];
 
   public constructor(url: string) {
     this.transactionHttp = new TransactionHttp(url);
     this.accountHttp = new AccountHttp(url);
+    this.listener = new Listener(url);
+  }
+
+  public addTransaction(transaction: Transaction, initiator?: Initiator): void {
+    this.unannouncedTransactions.push({transaction, initiator});
+  }
+
+  public getIncompleteTransactions(): Transaction[] {
+    return this.unannouncedTransactions
+      .filter((readyTransaction) => {
+        return readyTransaction.initiator === undefined;
+      })
+      .map((readyTransaction) => {
+        return readyTransaction.transaction;
+      });
+  }
+
+  public hasIncompleteTransactions(): boolean {
+    return this.unannouncedTransactions.some((readyTransaction) => {
+      return readyTransaction.initiator === undefined;
+    });
   }
 
   /**
+   * @internal
    * Generic announce method
    *
    * @param {SignedTransaction} signedTransaction
@@ -41,10 +72,10 @@ export class ApostilleHttp {
     cosignatoryAccount: PublicAccount,
     signedAggregateBondedTransaction: SignedTransaction,
     signedLockFundsTransaction: SignedTransaction,
-    listener: Listener): Promise<TransactionAnnounceResponse> {
+  ): Promise<TransactionAnnounceResponse> {
 
     return new Promise<TransactionAnnounceResponse>((resolve, reject) => {
-      listener.open().then(() => {
+      this.listener.open().then(() => {
 
         // Announce lock funds first
         this.transactionHttp
@@ -52,13 +83,14 @@ export class ApostilleHttp {
           .subscribe((x) => console.log(x), (err) => reject(err));
 
         // Watch for lock funds confirmation before announcing aggregate bonded
-        listener
+        this.listener
           .confirmed(cosignatoryAccount.address)
           .pipe(
-            filter((transaction) => transaction.transactionInfo !== undefined
-              && transaction.transactionInfo.hash === signedLockFundsTransaction.hash),
-            mergeMap((ignored) => this.transactionHttp.announceAggregateBonded(
-              signedAggregateBondedTransaction)),
+            filter((transaction) => {
+              return transaction.transactionInfo !== undefined
+                && transaction.transactionInfo.hash === signedLockFundsTransaction.hash;
+            }),
+            mergeMap((ignored) => this.transactionHttp.announceAggregateBonded(signedAggregateBondedTransaction)),
           )
           .subscribe((announcedAggregateBonded) => {
             resolve(announcedAggregateBonded);
@@ -78,13 +110,13 @@ export class ApostilleHttp {
    */
   public async isCreated(publicAccount: PublicAccount): Promise<boolean> {
     try {
-      const unconfirmedTransactions = await this._unconfirmedTransactions(publicAccount);
+      const unconfirmedTransactions = await this._unconfirmedTransactions(publicAccount).toPromise();
       if (unconfirmedTransactions.length) {
         // the apostille has been sent to the network
         return true;
       } else {
         // then check transactions
-        const transactions = await this._transactions(publicAccount);
+        const transactions = await this._transactions(publicAccount).toPromise();
         if (transactions.length > 0) {
           return true;
         } else {
@@ -162,7 +194,7 @@ export class ApostilleHttp {
    */
   public getCreationTransaction(publicAccount: PublicAccount): Promise<TransferTransaction> {
     return new Promise((resolve, reject) => {
-      this._fetchAllTransactions(publicAccount).then((transactions: Transaction[]) => {
+      this.fetchAllTransactions(publicAccount).subscribe((transactions: Transaction[]) => {
         if (transactions.length > 0) {
           const firstTransaction = transactions[transactions.length - 1];
           if (firstTransaction instanceof TransferTransaction) {
@@ -179,73 +211,35 @@ export class ApostilleHttp {
           }
         }
         reject(Errors[Errors.CREATION_TRANSACTIONS_NOT_FOUND]);
-      }).catch((err) => {
-        reject(err);
       });
     });
   }
 
-  /**
-   * Fetch all transactions pertaining to this publicAccount
-   *
-   * @returns {Promise<Transaction[]>}
-   * @memberof CertificateHistory
-   */
-  public _fetchAllTransactions(publicAccount: PublicAccount): Promise <Transaction[]> {
-    return new Promise<Transaction[]>(async (resolve, reject) => {
-      let nextId: string = '';
-      const pageSize: number = 100;
-      let lastPageSize: number = 100;
-      const allTransactions: Transaction[] = [];
-      while (lastPageSize === pageSize) {
-        const queryParams = new QueryParams(pageSize, nextId !== '' ? nextId : undefined);
-        await this._transactions(publicAccount, queryParams).then((transactions) => {
-          lastPageSize = transactions.length;
-          if (lastPageSize < 1) { return; }
-          nextId = transactions[transactions.length - 1].transactionInfo!.id;
-          allTransactions.push(...transactions);
-        }).catch((err) => {
-          reject(err);
-        });
-      }
-      resolve(allTransactions);
-    });
+  public fetchAllTransactions(publicAccount: PublicAccount): Observable<Transaction[]> {
+    let nextId: string = '';
+    const pageSize: number = 100;
+    let lastPageSize: number = 100;
+    let queryParams = new QueryParams(pageSize);
+    return this._transactions(publicAccount, queryParams).pipe(
+      expand((transactions) => {
+        lastPageSize = transactions.length;
+        if (lastPageSize < pageSize) { return EMPTY; }
+        nextId = transactions[transactions.length - 1].transactionInfo!.id;
+        queryParams = new QueryParams(pageSize, nextId !== '' ? nextId : undefined);
+        return this._transactions(publicAccount, queryParams);
+      }),
+    );
   }
 
-  private _unconfirmedTransactions(
+  public _transactions(
     publicAccount: PublicAccount,
-    queryParams ?: QueryParams | undefined): Promise<Transaction[]> {
-
-    return new Promise<Transaction[]>((resolve, reject) => {
-      this.accountHttp.unconfirmedTransactions(
-        publicAccount,
-        queryParams,
-      ).subscribe((unconfirmedTransactions) => {
-        resolve(unconfirmedTransactions);
-      }, (err) => {
-        // network or comunication problem
-        reject(err);
-      });
-    });
-
+    queryParams ?: QueryParams | undefined): Observable<Transaction[]> {
+    return this.accountHttp.transactions(publicAccount, queryParams);
   }
 
-  private _transactions(
+  public _unconfirmedTransactions(
     publicAccount: PublicAccount,
-    queryParams ?: QueryParams | undefined): Promise<Transaction[]> {
-
-    return new Promise<Transaction[]>((resolve, reject) => {
-      this.accountHttp.transactions(
-        publicAccount,
-        queryParams,
-      ).subscribe((transactions) => {
-        resolve(transactions);
-      }, (err) => {
-        // network or comunication problem
-        reject(err);
-      });
-    });
-
+    queryParams ?: QueryParams | undefined): Observable<Transaction[]> {
+    return this.accountHttp.unconfirmedTransactions(publicAccount, queryParams);
   }
-
 }

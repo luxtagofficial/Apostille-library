@@ -16,7 +16,7 @@ const hashFn = new SHA256();
 
 describe('announce function should work properly', () => {
   test('updating an public apostille should be allowed as many times as we want', async () => {
-    const sinkAddress = Address.createFromRawAddress( 'SCKPEZ-5ZAPYO-PXVF6U-YLHINF-CLYZHO-YCIO3P-KGVV');
+    const sinkAddress = Address.createFromRawAddress('SCKPEZ-5ZAPYO-PXVF6U-YLHINF-CLYZHO-YCIO3P-KGVV');
     const publicApostille = new PublicApostille(fileName, sinkAddress);
 
     let updateTransaction;

@@ -38,16 +38,16 @@ export class ApostillePublicAccount {
    * @description - modify ownership of the apostille account by modifying the multisig contract
    * @param {PublicAccount[]} newOwners - array of owners to add
    * @param {PublicAccount[]} OwnersToRemove - array of owners to remove
-   * @param {number} quorum - relative quorum (refer to http://bit.ly/2Jnff1r)
-   * @param {number} minRemoval - relative number of minimum owners necessary to agree to remove 1/n owners
+   * @param {number} quorumDelta - relative quorum (refer to http://bit.ly/2Jnff1r)
+   * @param {number} minRemovalDelta - relative number of minimum owners necessary to agree to remove 1/n owners
    * @returns {ModifyMultisigAccountTransaction}
    * @memberof ApostilleAccount
    */
   public transfer(
     newOwners: PublicAccount[],
     ownersToRemove: PublicAccount[],
-    quorum: number,
-    minRemoval: number,
+    quorumDelta: number,
+    minRemovalDelta: number,
   ): ModifyMultisigAccountTransaction {
     // the initiator must be a multisig account
     const modifications: MultisigCosignatoryModification[] = [];
@@ -67,8 +67,8 @@ export class ApostillePublicAccount {
 
     const modifyMultisigAccountTransaction = ModifyMultisigAccountTransaction.create(
       Deadline.create(),
-      quorum,
-      minRemoval,
+      quorumDelta,
+      minRemovalDelta,
       modifications,
       this.publicAccount.address.networkType,
     );
@@ -94,17 +94,17 @@ export class ApostillePublicAccount {
   }
 
   /**
-   * @description sign normal transaction (can sign update(if normal transaction) and lockFundsTransaction)
+   * @description sign normal transaction (can sign update(if normal transaction) and lockFundsTransaction
    * @param {TransferTransaction} transferTransaction
    * @param {Account} initiatorAccount
    * @param {HashFunction} [hashFunction] - only hash transfer transaction message
-   * @returns
+   * @returns {SignedTransaction}
    * @memberof ApostillePublicAccount
    */
   public sign(
     transaction: TransferTransaction | Transaction,
     initiatorAccount: Account,
-    hashFunction?: HashFunction) {
+    hashFunction?: HashFunction): SignedTransaction {
     if (initiatorAccount.address.networkType !== this.publicAccount.address.networkType) {
       throw new Error(Errors[Errors.NETWORK_TYPE_MISMATCHED]);
     }
@@ -136,12 +136,12 @@ export class ApostillePublicAccount {
    * @description signed aggregate transaction (can sign update(if multisig transaction) and transfer transaction)
    * @param {Transaction} transaction
    * @param {Account[]} signers
-   * @param {boolean} isCompleteCosignatories
+   * @param {boolean} isComplete
    * @returns
    * @memberof ApostillePublicAccount
    */
-  public signAggregate(transaction: Transaction, signers: Account[], isCompleteCosignatories: boolean) {
-    if (isCompleteCosignatories) {
+  public signAggregate(transaction: Transaction, signers: Account[], isComplete: boolean): SignedTransaction {
+    if (isComplete) {
        return this._signTransferTransactionAgregateComplete(transaction, signers);
     } else {
       return this._signTransferTransactionAggregateBonded(transaction, signers);
