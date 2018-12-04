@@ -55,8 +55,8 @@
   },
   "devDependencies": {
     "@types/crypto-js": "^3.1.43",
-    "@types/lodash": "^4.14.113",
     "@types/jest": "^23.3.9",
+    "@types/lodash": "^4.14.113",
     "@types/sinon": "5.0.7",
     "codecov": "^3.0.4",
     "commitizen": "3.0.4",
