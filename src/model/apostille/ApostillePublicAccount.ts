@@ -1,4 +1,4 @@
-import { Account, AggregateTransaction, Deadline, LockFundsTransaction, ModifyMultisigAccountTransaction, Mosaic, MultisigCosignatoryModification, MultisigCosignatoryModificationType, PlainMessage, PublicAccount, SignedTransaction, Transaction, TransferTransaction, UInt64, XEM } from 'nem2-sdk';
+import { Account, AggregateTransaction, Deadline, InnerTransaction, LockFundsTransaction, ModifyMultisigAccountTransaction, Mosaic, MultisigCosignatoryModification, MultisigCosignatoryModificationType, PlainMessage, PublicAccount, SignedTransaction, Transaction, TransferTransaction, UInt64, XEM } from 'nem2-sdk';
 import { HashFunction } from '../../hash/HashFunction';
 import { Errors } from '../../types/Errors';
 
@@ -140,21 +140,22 @@ export class ApostillePublicAccount {
    * @returns
    * @memberof ApostillePublicAccount
    */
+
   public signAggregate(transaction: Transaction, signers: Account[], isComplete: boolean): SignedTransaction {
     if (isComplete) {
        return this._signTransferTransactionAgregateComplete(transaction, signers);
     } else {
-      return this._signTransferTransactionAggregateBonded(transaction, signers);
+      return this._signAgregateBondedTransaction(innerTransactions, signers);
     }
   }
 
-  private _signTransferTransactionAgregateComplete(
-    transaction: Transaction,
+  private _signAgregateCompleteTransaction(
+    innerTransactions: InnerTransaction[],
     signers: Account[],
   ): SignedTransaction {
     const aggregateTransaction = AggregateTransaction.createComplete(
       Deadline.create(),
-      [transaction.toAggregate(this.publicAccount)],
+      innerTransactions,
       this.publicAccount.address.networkType,
       []);
 
@@ -163,13 +164,13 @@ export class ApostillePublicAccount {
     return signedAggregateTransaction;
   }
 
-  private _signTransferTransactionAggregateBonded(
-    transaction: Transaction,
+  private _signAgregateBondedTransaction(
+    innerTransactions: InnerTransaction[],
     signers: Account[],
   ): SignedTransaction {
     const aggregateTransaction = AggregateTransaction.createBonded(
       Deadline.create(),
-      [transaction.toAggregate(this.publicAccount)],
+      innerTransactions,
       this.publicAccount.address.networkType);
 
     const signedAggregateTransaction = this._signAggregate(aggregateTransaction, signers);

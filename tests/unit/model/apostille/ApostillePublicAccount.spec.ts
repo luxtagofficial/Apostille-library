@@ -107,9 +107,12 @@ describe('apostille public account transaction methods should work properly', ()
       [signer.publicAccount],
       0,
       0);
+
+    const innerTransaction = transferTransaction.toAggregate(apostillePublicAccount.publicAccount);
+
     expect(() => {
       apostillePublicAccount.signAggregate(
-      transferTransaction,
+      [innerTransaction],
       [],
       true);
     }).toThrowError(Errors[Errors.UNABLE_TO_SIGN_AGGREGATE_TRANSACTION]);
@@ -121,8 +124,10 @@ describe('apostille public account transaction methods should work properly', ()
       [signer.publicAccount],
       0,
       0);
+
+    const innerTransaction = transferTransaction.toAggregate(apostillePublicAccount.publicAccount);
     const signedTransferTransaction = apostillePublicAccount.signAggregate(
-      transferTransaction,
+      [innerTransaction],
       [signer],
       true);
     expect(signedTransferTransaction.signer).toMatch(signer.publicAccount.publicKey);
@@ -134,8 +139,11 @@ describe('apostille public account transaction methods should work properly', ()
       [signer.publicAccount],
       0,
       0);
+
+    const innerTransaction = transferTransaction.toAggregate(apostillePublicAccount.publicAccount);
+
     const signedTransferTransaction = apostillePublicAccount.signAggregate(
-      transferTransaction,
+      [innerTransaction],
       [signer, secondSigner],
       true);
     expect(signedTransferTransaction.signer).toMatch(signer.publicAccount.publicKey);
@@ -147,8 +155,10 @@ describe('apostille public account transaction methods should work properly', ()
       [signer.publicAccount],
       0,
       0);
+
+    const innerTransaction = aggregateBondedTransaction.toAggregate(apostillePublicAccount.publicAccount);
     const signedAggregateBondedTransaction = apostillePublicAccount.signAggregate(
-      aggregateBondedTransaction,
+      [innerTransaction],
       [signer],
       false);
     expect(signedAggregateBondedTransaction.signer).toMatch(signer.publicAccount.publicKey);
@@ -160,8 +170,10 @@ describe('apostille public account transaction methods should work properly', ()
       [signer.publicAccount],
       0,
       0);
+    const innerTransaction = aggregateBondedTransaction.toAggregate(apostillePublicAccount.publicAccount);
+
     const signedAggregateBondedTransaction = apostillePublicAccount.signAggregate(
-      aggregateBondedTransaction,
+      [innerTransaction],
       [signer, secondSigner],
       false);
     expect(signedAggregateBondedTransaction.signer).toMatch(signer.publicAccount.publicKey);
@@ -173,8 +185,11 @@ describe('apostille public account transaction methods should work properly', ()
       [signer.publicAccount],
       0,
       0);
+
+    const innerTransaction = aggregateBondedTransaction.toAggregate(apostillePublicAccount.publicAccount);
+
     const signedAggregateBondedTransaction = apostillePublicAccount.signAggregate(
-      aggregateBondedTransaction,
+      [innerTransaction],
       [signer],
       false);
     const lockFundsTransaction = apostillePublicAccount.lockFundsTransaction(
@@ -188,8 +203,11 @@ describe('apostille public account transaction methods should work properly', ()
       [signer.publicAccount],
       0,
       0);
+
+    const innerTransaction = aggregateBondedTransaction.toAggregate(apostillePublicAccount.publicAccount);
+
     const signedAggregateBondedTransaction = apostillePublicAccount.signAggregate(
-      aggregateBondedTransaction,
+      [innerTransaction],
       [signer],
       false);
     const lockFundsTransaction = apostillePublicAccount.lockFundsTransaction(
