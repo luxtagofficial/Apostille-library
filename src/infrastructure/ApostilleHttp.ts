@@ -1,7 +1,7 @@
 import { remove, sortBy, uniq } from 'lodash';
 import { Account, AccountHttp, Address, AggregateTransaction, Deadline, InnerTransaction, Listener, LockFundsTransaction, PublicAccount, QueryParams, SignedTransaction, Transaction, TransactionAnnounceResponse, TransactionHttp, TransactionInfo, TransactionType, TransferTransaction, UInt64, XEM } from 'nem2-sdk';
 import { EMPTY, forkJoin, Observable, of } from 'rxjs';
-import { expand, filter, mergeMap } from 'rxjs/operators';
+import { expand, filter, mergeMap, reduce } from 'rxjs/operators';
 import { Errors } from '../types/Errors';
 import { Initiator, initiatorAccountType } from './Initiator';
 
@@ -12,8 +12,8 @@ const incompleteTransactionsFunc = (readyTransaction: IReadyTransaction) => {
   return true;
 };
 export interface IReadyTransaction {
-  transaction: Transaction;
   initiator: Initiator;
+  transaction: Transaction;
 }
 
 interface IAnnounceTransactionList {
@@ -21,6 +21,24 @@ interface IAnnounceTransactionList {
   innerTransaction: InnerTransaction;
 }
 export class ApostilleHttp {
+
+  /**
+   * @description creates a lockfunds transaction for an aggregate bonded transaction
+   * @param {SignedTransaction} signedAggregateBondedTransaction
+   * @returns {LockFundsTransaction}
+   * @memberof ApostillePublicAccount
+   */
+  public static createLockFundsTransaction(signedAggregateBondedTransaction: SignedTransaction): LockFundsTransaction {
+    const lockFundsTransaction = LockFundsTransaction.create(
+      Deadline.create(),
+      XEM.createRelative(10),
+      UInt64.fromUint(480),
+      signedAggregateBondedTransaction,
+      signedAggregateBondedTransaction.networkType);
+
+    return lockFundsTransaction;
+  }
+
   public announceList: SignedTransaction[] = [];
 
   private transactionHttp: TransactionHttp;
@@ -35,138 +53,7 @@ export class ApostilleHttp {
     this.listener = new Listener(url);
   }
 
-  public addTransaction(transaction: Transaction, initiator: Initiator): number {
-    return this.unannouncedTransactions.push({transaction, initiator});
-  }
-
-  public getIncompleteTransactions(): IReadyTransaction[] {
-    return this.unannouncedTransactions.filter(incompleteTransactionsFunc);
-  }
-
-  public hasIncompleteTransactions(): boolean {
-    return this.unannouncedTransactions.some(incompleteTransactionsFunc);
-  }
-
   /**
-   * @description creates a lockfunds transaction for an aggregate bonded transaction
-   * @param {SignedTransaction} signedAggregateBondedTransaction
-   * @returns {LockFundsTransaction}
-   * @memberof ApostillePublicAccount
-   */
-  public createLockFundsTransaction(signedAggregateBondedTransaction: SignedTransaction): LockFundsTransaction {
-    const lockFundsTransaction = LockFundsTransaction.create(
-      Deadline.create(),
-      XEM.createRelative(10),
-      UInt64.fromUint(480),
-      signedAggregateBondedTransaction,
-      signedAggregateBondedTransaction.networkType);
-
-    return lockFundsTransaction;
-  }
-
-  public reduceInitiatorList(initiators: Initiator[]): Account[] {
-    const allInitiators: Account[] = [];
-    for ( const i of initiators) {
-      if (i.account instanceof Account) {
-        allInitiators.push(i.account);
-      }
-      if (i.accountType === initiatorAccountType.MULTISIG_ACCOUNT) {
-        if (i.multiSigAccount) {
-          allInitiators.concat(i.multiSigAccount.cosignatories);
-        }
-      }
-    }
-    return uniq(allInitiators);
-  }
-
-  public aggregateAndSign(innerTransactions: IAnnounceTransactionList[]): SignedTransaction {
-    const initiatorsArray = innerTransactions.map((innerTransaction) => innerTransaction.initiator);
-    const innerTransactionsArray = innerTransactions.map((innerTransaction) => innerTransaction.innerTransaction);
-
-    const allInitiators: Account[] = this.reduceInitiatorList(initiatorsArray);
-    const [firstCosigner, ...cosigners] = allInitiators;
-
-    const aggregateTransaction = AggregateTransaction.createComplete(
-      Deadline.create(),
-      innerTransactionsArray,
-      firstCosigner.address.networkType,
-      []);
-
-    return firstCosigner.signTransactionWithCosignatories(aggregateTransaction, cosigners);
-  }
-
-  /**
-   * @description - announce all transactions to the network
-   * @param {string} [urls] - endpoint url
-   * @returns {Promise<void>}
-   * @memberof ApostilleAccount
-   */
-  public announceAll(): Observable<[SignedTransaction[], Observable<TransactionAnnounceResponse>]> {
-    let innerTransactionsList: IAnnounceTransactionList[] = [];
-    for ( const readyTx of this.unannouncedTransactions) {
-      /**
-       * Pseudocode
-       * For each transaction
-       * If all cosigners are present for that transaction, add to an aggregate complete transaction
-       * If not all cosigners are present for that transaction, convert it into an aggregate bonded
-       * and create a corresponding lock funds transaction.
-       *
-       * ** Note **
-       * There might be an edge case where N transactions having the same initiator but
-       * does not have all the cosigners present can be bundled into a single aggregate bonded
-       * transaction, thereby only needing ONE lock funds transaction instead of N lock funds transaction.
-       * However, a look ahead might unnecessarily complicate this method and there is a possibility of
-       * messing up the order of transactions. This edge case could be looked into in the future.
-       */
-      if (readyTx.transaction.type === TransactionType.TRANSFER ||
-        readyTx.transaction.type === TransactionType.MODIFY_MULTISIG_ACCOUNT) {
-        if (readyTx.initiator.complete) {
-          const refreshedTransaction = readyTx.transaction.replyGiven(Deadline.create());
-          const innerTransaction = refreshedTransaction.toAggregate(readyTx.initiator.publicAccount);
-          innerTransactionsList.push({initiator: readyTx.initiator, innerTransaction});
-          // TODO: Check if innerTransactionsList is greater than 1000
-        } else {
-          this.announceList.push(this.aggregateAndSign(innerTransactionsList));
-          innerTransactionsList = []; // Clear buffer
-          const aggregateBondedTransaction = readyTx.initiator.sign(readyTx.transaction);
-          if (aggregateBondedTransaction instanceof SignedTransaction) {
-            const lockFundsTransaction = this.createLockFundsTransaction(aggregateBondedTransaction);
-            const signedLockFunds = readyTx.initiator.sign(lockFundsTransaction);
-            if (signedLockFunds instanceof SignedTransaction) {
-              this.announceList.push(signedLockFunds);
-              this.announceList.push(aggregateBondedTransaction);
-            }
-          }
-        }
-      } else if (readyTx.transaction.type === TransactionType.AGGREGATE_BONDED ||
-        readyTx.transaction.type === TransactionType.AGGREGATE_COMPLETE) {
-        const signedTransaction = readyTx.initiator.sign(readyTx.transaction);
-        if (signedTransaction instanceof SignedTransaction) {
-          this.announceList.push(signedTransaction);
-        }
-      }
-    }
-
-    // Clear transactions
-    // TODO: Might need a more robust way of clearing the transactions, maybe
-    // an observable that can trace if the transaction is confirmed on the network
-    // before removing it
-    // this.unannouncedTransactions = [];
-
-    // Start listener
-    this.confirmedListener();
-
-    // Announce all signed transactions and push to network
-    return forkJoin(
-      of(this.announceList),
-      this.announceList.map((signedTx) => {
-        return this.transactionHttp.announce(signedTx);
-      }),
-    );
-  }
-
-  /**
-   * @internal
    * Generic announce method
    *
    * @param {SignedTransaction} signedTransaction
@@ -348,6 +235,14 @@ export class ApostilleHttp {
     );
   }
 
+  public async fetchAllTransactionsSync(publicAccount: PublicAccount): Promise<Transaction[]> {
+    return await this.fetchAllTransactions(publicAccount).pipe(
+      reduce((acc, txs) => {
+        return acc.concat(txs);
+      }),
+    ).toPromise();
+  }
+
   public _transactions(
     publicAccount: PublicAccount,
     queryParams ?: QueryParams | undefined): Observable<Transaction[]> {
@@ -358,6 +253,118 @@ export class ApostilleHttp {
     publicAccount: PublicAccount,
     queryParams ?: QueryParams | undefined): Observable<Transaction[]> {
     return this.accountHttp.unconfirmedTransactions(publicAccount, queryParams);
+  }
+
+  /**
+   * Bulk transactions helper functions
+   */
+
+  public addTransaction(transaction: Transaction, initiator: Initiator): number {
+    return this.unannouncedTransactions.push({transaction, initiator});
+  }
+
+  public getIncompleteTransactions(): IReadyTransaction[] {
+    return this.unannouncedTransactions.filter(incompleteTransactionsFunc);
+  }
+
+  public hasIncompleteTransactions(): boolean {
+    return this.unannouncedTransactions.some(incompleteTransactionsFunc);
+  }
+
+  public reduceInitiatorList(initiators: Initiator[]): Account[] {
+    const allInitiators: Account[] = [];
+    for ( const i of initiators) {
+      if (i.account instanceof Account) {
+        allInitiators.push(i.account);
+      }
+      if (i.accountType === initiatorAccountType.MULTISIG_ACCOUNT) {
+        if (i.multiSigAccount) {
+          allInitiators.concat(i.multiSigAccount.cosignatories);
+        }
+      }
+    }
+    return uniq(allInitiators);
+  }
+
+  public aggregateAndSign(innerTransactions: IAnnounceTransactionList[]): SignedTransaction {
+    const initiatorsArray = innerTransactions.map((innerTransaction) => innerTransaction.initiator);
+    const innerTransactionsArray = innerTransactions.map((innerTransaction) => innerTransaction.innerTransaction);
+
+    const allInitiators: Account[] = this.reduceInitiatorList(initiatorsArray);
+    const [firstCosigner, ...cosigners] = allInitiators;
+
+    const aggregateTransaction = AggregateTransaction.createComplete(
+      Deadline.create(),
+      innerTransactionsArray,
+      firstCosigner.address.networkType,
+      []);
+
+    return firstCosigner.signTransactionWithCosignatories(aggregateTransaction, cosigners);
+  }
+
+  /**
+   * @description - announce all transactions to the network
+   * @param {string} [urls] - endpoint url
+   * @returns {Promise<void>}
+   * @memberof ApostilleAccount
+   */
+  public announceAll(): Observable<[SignedTransaction[], Observable<TransactionAnnounceResponse>]> {
+    let innerTransactionsList: IAnnounceTransactionList[] = [];
+    for ( const readyTx of this.unannouncedTransactions) {
+      const {initiator, transaction} = readyTx;
+      /**
+       * Pseudocode
+       * For each transaction
+       * If all cosigners are present for that transaction, add to an aggregate complete transaction
+       * If not all cosigners are present for that transaction, convert it into an aggregate bonded
+       * and create a corresponding lock funds transaction.
+       *
+       * ** Note **
+       * There might be an edge case where N transactions having the same initiator but
+       * does not have all the cosigners present can be bundled into a single aggregate bonded
+       * transaction, thereby only needing ONE lock funds transaction instead of N lock funds transaction.
+       * However, a look ahead might unnecessarily complicate this method and there is a possibility of
+       * messing up the order of transactions. This edge case could be looked into in the future.
+       */
+      if (transaction.type === TransactionType.TRANSFER ||
+        transaction.type === TransactionType.MODIFY_MULTISIG_ACCOUNT) {
+        if (initiator.complete) {
+          const refreshedTransaction = transaction.replyGiven(Deadline.create());
+          const innerTransaction = refreshedTransaction.toAggregate(initiator.publicAccount);
+          innerTransactionsList.push({initiator, innerTransaction});
+          // TODO: Check if innerTransactionsList is greater than 1000
+        } else {
+          this.announceList.push(this.aggregateAndSign(innerTransactionsList));
+          innerTransactionsList = []; // Clear buffer
+          const aggregateBondedTransaction = initiator.sign(transaction);
+          const lockFundsTransaction = ApostilleHttp.createLockFundsTransaction(aggregateBondedTransaction);
+          const signedLockFunds = initiator.sign(lockFundsTransaction);
+          this.announceList.push(signedLockFunds);
+          this.announceList.push(aggregateBondedTransaction);
+        }
+      } else if (transaction.type === TransactionType.AGGREGATE_BONDED ||
+        transaction.type === TransactionType.AGGREGATE_COMPLETE) {
+        const signedTransaction = initiator.sign(transaction);
+        this.announceList.push(signedTransaction);
+      }
+    }
+
+    // Clear transactions
+    // TODO: Might need a more robust way of clearing the transactions, maybe
+    // an observable that can trace if the transaction is confirmed on the network
+    // before removing it
+    // this.unannouncedTransactions = [];
+
+    // Start listener
+    this.confirmedListener();
+
+    // Announce all signed transactions and push to network
+    return forkJoin(
+      of(this.announceList),
+      this.announceList.map((signedTx) => {
+        return this.transactionHttp.announce(signedTx);
+      }),
+    );
   }
 
   private confirmedListener(): void {

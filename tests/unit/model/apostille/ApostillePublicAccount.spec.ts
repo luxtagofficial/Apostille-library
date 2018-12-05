@@ -1,5 +1,5 @@
 import { Account, NetworkType, PublicAccount, TransactionType } from 'nem2-sdk';
-import { SHA256 } from '../../../../src/hash/sha256';
+import { Initiator } from '../../../../src/infrastructure/Initiator';
 import { ApostillePublicAccount } from '../../../../src/model/apostille/ApostillePublicAccount';
 import { Errors } from '../../../../src/types/Errors';
 
@@ -36,28 +36,19 @@ describe('apostille public account transaction methods should work properly', ()
   const signer = Account.createFromPrivateKey(
     'aaaaaaaaaaeeeeeeeeeebbbbbbbbbb5555555555dddddddddd1111111111aaee',
     NetworkType.MIJIN_TEST);
-
-  // Second Signer or Current Owner
-  const secondSigner = Account.createFromPrivateKey(
-    'aaaaaaaaaaeeeeeeeeeebbbbbbbbbb5555555555dddddddddd1111111111aaaa',
-    NetworkType.MIJIN_TEST);
-
+  const signerInitiator = new Initiator(signer);
   // New owner
   const newOwner = PublicAccount.createFromPublicKey(
     '3F393E46EBB3F9825015C11C6ED130B23DB8639DDE5951DDA326D3ABAF2E1605',
     NetworkType.MIJIN_TEST);
 
+  const updateTransaction = apostillePublicAccount.update('LuxTag is awesome');
+
   it('should return correct update transaction', () => {
-    const updateTransaction = apostillePublicAccount.update(
-      'LuxTag is awesome',
-      []);
     expect(updateTransaction.recipient).toEqual(apostillePublicAccount.publicAccount.address);
   });
 
   it('Create function should be a transfer type transaction', () => {
-    const updateTransaction = apostillePublicAccount.update(
-      'LuxTag is awesome',
-      []);
     expect(updateTransaction.type).toEqual(TransactionType.TRANSFER);
   });
 
@@ -65,32 +56,24 @@ describe('apostille public account transaction methods should work properly', ()
     const alienAccount = Account.createFromPrivateKey(
       'aaaaaaaaaaeeeeeeeeeebbbbbbbbbb5555555555dddddddddd1111111111aaee',
       NetworkType.MAIN_NET);
-    const updateTransaction = apostillePublicAccount.update(
-      'LuxTag is awesome',
-      []);
+    const alienInitiator = new Initiator(alienAccount);
     expect(() => {
-      apostillePublicAccount.sign(updateTransaction, alienAccount);
+      alienInitiator.sign(updateTransaction);
     }).toThrowError(Errors[Errors.NETWORK_TYPE_MISMATCHED]);
   });
 
   it('should return correct signed update transaction', () => {
-    const updateTransaction = apostillePublicAccount.update(
-      'LuxTag is awesome',
-      []);
-    const signedTransaction = apostillePublicAccount.sign(updateTransaction, signer);
+    const signedTransaction = signerInitiator.sign(updateTransaction);
     expect(signedTransaction.signer).toMatch(signer.publicAccount.publicKey);
   });
 
-  it('should return correct signed update transaction if hash provided', () => {
-    const updateTransaction = apostillePublicAccount.update(
-      'LuxTag is awesome',
-      []);
-    const signedTransaction = apostillePublicAccount.sign(
-      updateTransaction,
-      signer,
-      new SHA256());
-    expect(signedTransaction.signer).toMatch(signer.publicAccount.publicKey);
-  });
+  // it.skip('should return correct signed update transaction if hash provided', () => {
+  //   const signedTransaction = signerInitiator.sign(
+  //     updateTransaction,
+  //     signer,
+  //     new SHA256());
+  //   expect(signedTransaction.signer).toMatch(signer.publicAccount.publicKey);
+  // });
 
   it('should return correct transfer transaction', () => {
     const transferTransaction = apostillePublicAccount.transfer(
@@ -99,123 +82,6 @@ describe('apostille public account transaction methods should work properly', ()
       0,
       0);
     expect(transferTransaction.modifications.length).toEqual(2);
-  });
-
-  it('should throw error if no cosignatories are present', () => {
-    const transferTransaction = apostillePublicAccount.transfer(
-      [newOwner],
-      [signer.publicAccount],
-      0,
-      0);
-
-    const innerTransaction = transferTransaction.toAggregate(apostillePublicAccount.publicAccount);
-
-    expect(() => {
-      apostillePublicAccount.signAggregate(
-      [innerTransaction],
-      [],
-      true);
-    }).toThrowError(Errors[Errors.UNABLE_TO_SIGN_AGGREGATE_TRANSACTION]);
-  });
-
-  it('should return signed aggregate complete transfer transaction', () => {
-    const transferTransaction = apostillePublicAccount.transfer(
-      [newOwner],
-      [signer.publicAccount],
-      0,
-      0);
-
-    const innerTransaction = transferTransaction.toAggregate(apostillePublicAccount.publicAccount);
-    const signedTransferTransaction = apostillePublicAccount.signAggregate(
-      [innerTransaction],
-      [signer],
-      true);
-    expect(signedTransferTransaction.signer).toMatch(signer.publicAccount.publicKey);
-  });
-
-  it('should return signed aggregate complete transfer transaction with 2 cosignatories', () => {
-    const transferTransaction = apostillePublicAccount.transfer(
-      [newOwner],
-      [signer.publicAccount],
-      0,
-      0);
-
-    const innerTransaction = transferTransaction.toAggregate(apostillePublicAccount.publicAccount);
-
-    const signedTransferTransaction = apostillePublicAccount.signAggregate(
-      [innerTransaction],
-      [signer, secondSigner],
-      true);
-    expect(signedTransferTransaction.signer).toMatch(signer.publicAccount.publicKey);
-  });
-
-  it('should return signed aggregate bonded transfer transaction', () => {
-    const aggregateBondedTransaction = apostillePublicAccount.transfer(
-      [newOwner],
-      [signer.publicAccount],
-      0,
-      0);
-
-    const innerTransaction = aggregateBondedTransaction.toAggregate(apostillePublicAccount.publicAccount);
-    const signedAggregateBondedTransaction = apostillePublicAccount.signAggregate(
-      [innerTransaction],
-      [signer],
-      false);
-    expect(signedAggregateBondedTransaction.signer).toMatch(signer.publicAccount.publicKey);
-  });
-
-  it('should return signed aggregate bonded transfer transaction with 2 cosignatories', () => {
-    const aggregateBondedTransaction = apostillePublicAccount.transfer(
-      [newOwner],
-      [signer.publicAccount],
-      0,
-      0);
-    const innerTransaction = aggregateBondedTransaction.toAggregate(apostillePublicAccount.publicAccount);
-
-    const signedAggregateBondedTransaction = apostillePublicAccount.signAggregate(
-      [innerTransaction],
-      [signer, secondSigner],
-      false);
-    expect(signedAggregateBondedTransaction.signer).toMatch(signer.publicAccount.publicKey);
-  });
-
-  it('should return lock funds transaction', () => {
-    const aggregateBondedTransaction = apostillePublicAccount.transfer(
-      [newOwner],
-      [signer.publicAccount],
-      0,
-      0);
-
-    const innerTransaction = aggregateBondedTransaction.toAggregate(apostillePublicAccount.publicAccount);
-
-    const signedAggregateBondedTransaction = apostillePublicAccount.signAggregate(
-      [innerTransaction],
-      [signer],
-      false);
-    const lockFundsTransaction = apostillePublicAccount.lockFundsTransaction(
-      signedAggregateBondedTransaction);
-    expect(lockFundsTransaction.type).toEqual(16716);
-  });
-
-  it('should return signed lock funds transaction', () => {
-    const aggregateBondedTransaction = apostillePublicAccount.transfer(
-      [newOwner],
-      [signer.publicAccount],
-      0,
-      0);
-
-    const innerTransaction = aggregateBondedTransaction.toAggregate(apostillePublicAccount.publicAccount);
-
-    const signedAggregateBondedTransaction = apostillePublicAccount.signAggregate(
-      [innerTransaction],
-      [signer],
-      false);
-    const lockFundsTransaction = apostillePublicAccount.lockFundsTransaction(
-      signedAggregateBondedTransaction);
-    const signedLockFundsTransaction = apostillePublicAccount.sign(
-      lockFundsTransaction,
-      signer);
-    expect(signedLockFundsTransaction.signer).toMatch(signer.publicKey);
   });
 
 });

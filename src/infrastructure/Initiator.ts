@@ -70,10 +70,15 @@ export class Initiator {
     }
   }
 
-  public sign(transaction: Transaction): SignedTransaction | boolean {
+  public sign(transaction: Transaction): SignedTransaction {
+    if (this.account.address.networkType !== transaction.networkType) {
+      throw Error(Errors[Errors.NETWORK_TYPE_MISMATCHED]);
+    }
     if (this.accountType === initiatorAccountType.ACCOUNT) {
       if (this.account instanceof Account) {
-        return this.account.sign(transaction);
+        if (!(transaction instanceof AggregateTransaction)) {
+          return this.account.sign(transaction);
+        }
       }
     } else if (this.accountType === initiatorAccountType.MULTISIG_ACCOUNT &&
         this.account instanceof PublicAccount) {
@@ -104,7 +109,7 @@ export class Initiator {
         return firstCosigner.signTransactionWithCosignatories(aggregateTransaction, cosigners);
       }
     }
-    return false;
+    throw Error(Errors[Errors.INITIATOR_UNABLE_TO_SIGN]);
   }
 
   private _isAccountComplete(): boolean {
