@@ -112,6 +112,17 @@ export class Initiator {
     throw Error(Errors[Errors.INITIATOR_UNABLE_TO_SIGN]);
   }
 
+  public canSign(): boolean {
+    switch (this.accountType) {
+      case initiatorAccountType.ACCOUNT:
+        return this._isAccountComplete();
+      case initiatorAccountType.HARDWARE_WALLET:
+        return false;
+      case initiatorAccountType.MULTISIG_ACCOUNT:
+        return this.multiSigAccount!.cosignatories.length > 0;
+    }
+  }
+
   private _isAccountComplete(): boolean {
     return this.account instanceof Account;
   }

@@ -235,8 +235,8 @@ export class ApostilleHttp {
     );
   }
 
-  public async fetchAllTransactionsSync(publicAccount: PublicAccount): Promise<Transaction[]> {
-    return await this.fetchAllTransactions(publicAccount).pipe(
+  public fetchAllTransactionsSync(publicAccount: PublicAccount): Promise<Transaction[]> {
+    return this.fetchAllTransactions(publicAccount).pipe(
       reduce((acc, txs) => {
         return acc.concat(txs);
       }),
@@ -260,7 +260,11 @@ export class ApostilleHttp {
    */
 
   public addTransaction(transaction: Transaction, initiator: Initiator): number {
-    return this.unannouncedTransactions.push({transaction, initiator});
+    if (initiator.canSign()) {
+      return this.unannouncedTransactions.push({transaction, initiator});
+    } else {
+      throw Error(Errors[Errors.INITIATOR_UNABLE_TO_SIGN]);
+    }
   }
 
   public getIncompleteTransactions(): IReadyTransaction[] {
@@ -286,20 +290,30 @@ export class ApostilleHttp {
     return uniq(allInitiators);
   }
 
-  public aggregateAndSign(innerTransactions: IAnnounceTransactionList[]): SignedTransaction {
-    const initiatorsArray = innerTransactions.map((innerTransaction) => innerTransaction.initiator);
-    const innerTransactionsArray = innerTransactions.map((innerTransaction) => innerTransaction.innerTransaction);
+  public aggregateAndSign(innerTransactions: IAnnounceTransactionList[]): SignedTransaction[] {
+    let index = 0;
+    const size = 1000;
+    const signedTransactions: SignedTransaction[] = [];
+    while (index < innerTransactions.length) {
+      const innerT = innerTransactions.slice(index, size + index);
+      const initiatorsArray = innerT.map((innerTransaction) => innerTransaction.initiator);
+      const innerTransactionsArray = innerT.map((innerTransaction) => innerTransaction.innerTransaction);
 
-    const allInitiators: Account[] = this.reduceInitiatorList(initiatorsArray);
-    const [firstCosigner, ...cosigners] = allInitiators;
+      const allInitiators: Account[] = this.reduceInitiatorList(initiatorsArray);
+      const [firstCosigner, ...cosigners] = allInitiators;
 
-    const aggregateTransaction = AggregateTransaction.createComplete(
-      Deadline.create(),
-      innerTransactionsArray,
-      firstCosigner.address.networkType,
-      []);
+      const aggregateTransaction = AggregateTransaction.createComplete(
+        Deadline.create(),
+        innerTransactionsArray,
+        firstCosigner.address.networkType,
+        []);
 
-    return firstCosigner.signTransactionWithCosignatories(aggregateTransaction, cosigners);
+      signedTransactions.push(firstCosigner.signTransactionWithCosignatories(aggregateTransaction, cosigners));
+
+      index += size;
+    }
+
+    return signedTransactions;
   }
 
   /**
@@ -310,8 +324,11 @@ export class ApostilleHttp {
    */
   public announceAll(): Observable<[SignedTransaction[], Observable<TransactionAnnounceResponse>]> {
     let innerTransactionsList: IAnnounceTransactionList[] = [];
-    for ( const readyTx of this.unannouncedTransactions) {
-      const {initiator, transaction} = readyTx;
+    let readyTx;
+    while (this.unannouncedTransactions.length > 0) {
+      readyTx = this.unannouncedTransactions.pop();
+      if (readyTx === undefined) { break; }
+      const {initiator, transaction} = readyTx as IReadyTransaction;
       /**
        * Pseudocode
        * For each transaction
@@ -332,10 +349,10 @@ export class ApostilleHttp {
           const refreshedTransaction = transaction.replyGiven(Deadline.create());
           const innerTransaction = refreshedTransaction.toAggregate(initiator.publicAccount);
           innerTransactionsList.push({initiator, innerTransaction});
-          // TODO: Check if innerTransactionsList is greater than 1000
         } else {
-          this.announceList.push(this.aggregateAndSign(innerTransactionsList));
+          this.announceList.concat(this.aggregateAndSign(innerTransactionsList));
           innerTransactionsList = []; // Clear buffer
+
           const aggregateBondedTransaction = initiator.sign(transaction);
           const lockFundsTransaction = ApostilleHttp.createLockFundsTransaction(aggregateBondedTransaction);
           const signedLockFunds = initiator.sign(lockFundsTransaction);
@@ -344,16 +361,16 @@ export class ApostilleHttp {
         }
       } else if (transaction.type === TransactionType.AGGREGATE_BONDED ||
         transaction.type === TransactionType.AGGREGATE_COMPLETE) {
+        this.announceList.concat(this.aggregateAndSign(innerTransactionsList));
+        innerTransactionsList = []; // Clear buffer
+
         const signedTransaction = initiator.sign(transaction);
         this.announceList.push(signedTransaction);
       }
     }
 
-    // Clear transactions
-    // TODO: Might need a more robust way of clearing the transactions, maybe
-    // an observable that can trace if the transaction is confirmed on the network
-    // before removing it
-    // this.unannouncedTransactions = [];
+    this.announceList.concat(this.aggregateAndSign(innerTransactionsList));
+    innerTransactionsList = []; // Clear buffer
 
     // Start listener
     this.confirmedListener();

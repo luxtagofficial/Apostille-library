@@ -36,7 +36,7 @@ describe('Initiator', () => {
       const initiator = new Initiator(account);
       expect(initiator.publicAccount.publicKey).toBe(account.publicKey);
       expect(initiator.accountType).toBe(initiatorAccountType.ACCOUNT);
-      expect(initiator.complete).toBeTruthy();
+      expect(initiator.complete).toBe(true);
     });
 
     it('should throw if no private key', () => {
@@ -44,6 +44,12 @@ describe('Initiator', () => {
         // tslint:disable-next-line:no-unused-expression
         new Initiator(publicAccount);
       }).toThrowError(Errors[Errors.INITIATOR_TYPE_ACCOUNT_REQUIRE_ACCOUNT]);
+    });
+
+    it('should be able to sign', () => {
+      const account = accountPK;
+      const initiator = new Initiator(account);
+      expect(initiator.canSign()).toBe(true);
     });
   });
 
@@ -53,7 +59,13 @@ describe('Initiator', () => {
       const initiator = new Initiator(account, initiatorAccountType.HARDWARE_WALLET);
       expect(initiator.account.publicKey).toBe(account.publicKey);
       expect(initiator.accountType).toBe(initiatorAccountType.HARDWARE_WALLET);
-      expect(initiator.complete).toBeFalsy();
+      expect(initiator.complete).toBe(false);
+    });
+
+    it('should not be able to sign', () => {
+      const account = publicAccount;
+      const initiator = new Initiator(account, initiatorAccountType.HARDWARE_WALLET);
+      expect(initiator.canSign()).toBe(false);
     });
   });
 
@@ -87,7 +99,7 @@ describe('Initiator', () => {
       };
       const initiator = new Initiator(account, initiatorAccountType.MULTISIG_ACCOUNT, multisigInfo);
       expect(initiator.publicAccount.equals(account)).toBeTruthy();
-      expect(initiator.complete).toBeTruthy();
+      expect(initiator.complete).toBe(true);
     });
     it('should return incomplete if not all signers are present', () => {
       const account = publicAccount;
@@ -99,7 +111,20 @@ describe('Initiator', () => {
         isComplete: false,
       };
       const initiator = new Initiator(account, initiatorAccountType.MULTISIG_ACCOUNT, multisigInfo);
-      expect(initiator.complete).toBeFalsy();
+      expect(initiator.complete).toBe(false);
+    });
+
+    it('should be able to sign', () => {
+      const account = publicAccount;
+      const multisigSigner = accountPK;
+      const multisigInfo: IMultisigInitiator = {
+        cosignatories: [
+          multisigSigner,
+        ],
+        isComplete: false,
+      };
+      const initiator = new Initiator(account, initiatorAccountType.MULTISIG_ACCOUNT, multisigInfo);
+      expect(initiator.canSign()).toBe(true);
     });
   });
 
