@@ -4,7 +4,6 @@ import { Errors } from '../../../src/types/Errors';
 import { ApostilleHttp } from './../../../src/infrastructure/ApostilleHttp';
 import { ApostillePublicAccount } from './../../../src/model/apostille/ApostillePublicAccount';
 
-// A funny but valid private key
 const network = NetworkType.MIJIN_TEST;
 const pk = 'aaaaaaaaaaeeeeeeeeeebbbbbbbbbb5555555555dddddddddd1111111111aaee';
 const accountPK = Account.createFromPrivateKey(pk, network);

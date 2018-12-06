@@ -1,7 +1,7 @@
-import { remove, sortBy, uniq } from 'lodash';
+import { chain, remove, sortBy, uniq } from 'lodash';
 import { Account, AccountHttp, Address, AggregateTransaction, Deadline, InnerTransaction, Listener, LockFundsTransaction, PublicAccount, QueryParams, SignedTransaction, Transaction, TransactionAnnounceResponse, TransactionHttp, TransactionInfo, TransactionType, TransferTransaction, UInt64, XEM } from 'nem2-sdk';
 import { EMPTY, forkJoin, Observable, of } from 'rxjs';
-import { expand, filter, mergeMap, reduce } from 'rxjs/operators';
+import { expand, filter, mergeMap, reduce, shareReplay } from 'rxjs/operators';
 import { Errors } from '../types/Errors';
 import { Initiator, initiatorAccountType } from './Initiator';
 
@@ -232,6 +232,7 @@ export class ApostilleHttp {
         queryParams = new QueryParams(pageSize, nextId !== '' ? nextId : undefined);
         return this._transactions(publicAccount, queryParams);
       }),
+      shareReplay(),
     );
   }
 
@@ -276,44 +277,36 @@ export class ApostilleHttp {
   }
 
   public reduceInitiatorList(initiators: Initiator[]): Account[] {
-    const allInitiators: Account[] = [];
+    let allInitiators: Account[] = [];
     for ( const i of initiators) {
       if (i.account instanceof Account) {
         allInitiators.push(i.account);
       }
       if (i.accountType === initiatorAccountType.MULTISIG_ACCOUNT) {
-        if (i.multiSigAccount) {
-          allInitiators.concat(i.multiSigAccount.cosignatories);
-        }
+        allInitiators = allInitiators.concat(i.multiSigAccount!.cosignatories);
       }
     }
     return uniq(allInitiators);
   }
 
   public aggregateAndSign(innerTransactions: IAnnounceTransactionList[]): SignedTransaction[] {
-    let index = 0;
-    const size = 1000;
-    const signedTransactions: SignedTransaction[] = [];
-    while (index < innerTransactions.length) {
-      const innerT = innerTransactions.slice(index, size + index);
-      const initiatorsArray = innerT.map((innerTransaction) => innerTransaction.initiator);
-      const innerTransactionsArray = innerT.map((innerTransaction) => innerTransaction.innerTransaction);
+    return chain(innerTransactions)
+      .chunk(1000)
+      .map((innerT) => {
+        const initiatorsArray = innerT.map((innerTransaction) => innerTransaction.initiator);
+        const innerTransactionsArray = innerT.map((innerTransaction) => innerTransaction.innerTransaction);
 
-      const allInitiators: Account[] = this.reduceInitiatorList(initiatorsArray);
-      const [firstCosigner, ...cosigners] = allInitiators;
+        const allInitiators: Account[] = this.reduceInitiatorList(initiatorsArray);
+        const [firstCosigner, ...cosigners] = allInitiators;
 
-      const aggregateTransaction = AggregateTransaction.createComplete(
-        Deadline.create(),
-        innerTransactionsArray,
-        firstCosigner.address.networkType,
-        []);
+        const aggregateTransaction = AggregateTransaction.createComplete(
+          Deadline.create(),
+          innerTransactionsArray,
+          firstCosigner.address.networkType,
+          []);
 
-      signedTransactions.push(firstCosigner.signTransactionWithCosignatories(aggregateTransaction, cosigners));
-
-      index += size;
-    }
-
-    return signedTransactions;
+        return firstCosigner.signTransactionWithCosignatories(aggregateTransaction, cosigners);
+      }).value();
   }
 
   /**
