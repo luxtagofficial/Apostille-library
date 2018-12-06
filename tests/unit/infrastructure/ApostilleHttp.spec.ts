@@ -1,4 +1,5 @@
-import { NetworkType, PublicAccount, TransactionInfo, TransferTransaction } from 'nem2-sdk';
+import { NetworkType, PublicAccount } from 'nem2-sdk';
+import { reduce, take } from 'rxjs/operators';
 import { ApostilleHttp } from '../../../src/infrastructure/ApostilleHttp';
 import { ApostillePublicAccount } from '../../../src/model/apostille/ApostillePublicAccount';
 import { HistoricalEndpoints } from '../../../src/model/repository/HistoricalEndpoints';
@@ -36,53 +37,62 @@ describe('apostille public account non transaction methods should work properly'
       NetworkType.MIJIN_TEST);
 
     it(' should return 2 cosignataries of the accounts', () => {
-        return apostilleHttp.getCosignatories(apostillePublicAccount1.publicAccount.address).then((data) => {
-            expect(data.length).toEqual(2);
-        });
+        expect.assertions(1);
+        return expect(apostilleHttp.getCosignatories(apostillePublicAccount1.publicAccount.address))
+            .resolves.toHaveLength(2);
+
     });
 
     it('Should return true if the account is claimed', () => {
-        return apostilleHttp.isOwned(apostillePublicAccount1.publicAccount.address).then((data) => {
-            expect(data).toBeTruthy();
-        });
+        expect.assertions(1);
+        return expect(apostilleHttp.isOwned(apostillePublicAccount1.publicAccount.address)).resolves.toBeTruthy();
     });
 
     it('Should return false if the account is not claimed', () => {
-        return apostilleHttp.isOwned(apostillePublicAccount2.publicAccount.address).then((data) => {
-            expect(data).toBeFalsy();
-        });
+        expect.assertions(1);
+        return expect(apostilleHttp.isOwned(apostillePublicAccount2.publicAccount.address)).resolves.toBeFalsy();
     });
 
-    //   TODO: Move this test to luxtag SDK
-    it('Should return creation transaction when it is transfer transaction', () => {
-        return apostilleHttp.getCreationTransaction(
-            apostillePublicAccount3.publicAccount).then((data: TransferTransaction) => {
-            expect(data.message.payload).toEqual('');
-        });
+    it('Should return creation transaction when it is transfer transaction', async () => {
+        expect.assertions(1);
+        const data = await apostilleHttp.getCreationTransaction(apostillePublicAccount3.publicAccount);
+        return expect(data.message.payload).toEqual('');
     });
 
-    //   TODO: Move this test to luxtag SDK
-    it('Should return creation transaction when the it is an aggregate complete transaction', () => {
-        return apostilleHttp.getCreationTransaction(
-            apostillePublicAccount1.publicAccount).then((data: TransferTransaction) => {
-            expect(data.message.payload).toEqual('I am really really awesomeee');
-        });
+    it('Should return creation transaction when the it is an aggregate complete transaction', async () => {
+        expect.assertions(1);
+        const data = await apostilleHttp.getCreationTransaction(apostillePublicAccount1.publicAccount);
+        return expect(data.message.payload).toEqual('I am really really awesomeee');
     });
 
-    //   TODO: Move this test to luxtag SDK
-    it('Throws error if there is no first transactions', () => {
-        return apostilleHttp.getCreationTransaction(
-            apostillePublicAccount4.publicAccount).then((data: TransferTransaction) => {
-            console.log(TransferTransaction);
-        }).catch((err) => {
-            expect(err).toEqual(Errors[Errors.CREATION_TRANSACTIONS_NOT_FOUND]);
-        });
+    it('Throws error if there is no first transactions', async () => {
+        expect.assertions(1);
+        return expect(
+            apostilleHttp.getCreationTransaction(apostillePublicAccount4.publicAccount),
+        ).rejects.toEqual(Errors[Errors.CREATION_TRANSACTIONS_NOT_FOUND]);
     });
 
-    it('Should return creation transaction info', () => {
-        return apostilleHttp.getCreationTransactionInfo(
-            apostillePublicAccount1.publicAccount).then((transactionInfo: TransactionInfo) => {
-        expect(transactionInfo.id).toEqual('5B160E18C60E680001790BA2');
+    it('Should return creation transaction info', async () => {
+        expect.assertions(1);
+        const transactionInfo = await apostilleHttp.getCreationTransactionInfo(
+            apostillePublicAccount1.publicAccount);
+        return expect(transactionInfo.id).toEqual('5B160E18C60E680001790BA2');
+    });
+
+    describe('fetchAllTransactions', () => {
+        it('should return more than one page', async () => {
+            expect.assertions(1);
+            const accountLarge = PublicAccount.createFromPublicKey(
+                'FE9F2C724D0E0360A20B9ED7591E4E25CF25D6F4A4E8E52C491C62D2452397F8',
+                NetworkType.MIJIN_TEST);
+            const transactions = await apostilleHttp.fetchAllTransactions(accountLarge)
+                .pipe(
+                    take(2),
+                    reduce((acc, txs) => {
+                        return acc.concat(txs);
+                    }),
+                ).toPromise();
+            return expect(transactions.length).toBeGreaterThan(100);
         });
     });
 

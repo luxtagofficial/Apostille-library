@@ -9,7 +9,7 @@ const sk = 'aaaaaaaaaaeeeeeeeeeebbbbbbbbbb5555555555dddddddddd1111111111aaee';
 describe('Apostille class should work properly with MIJIN_TEST Network Type', () => {
 
   const generator = Account.createFromPrivateKey(sk, NetworkType.MIJIN_TEST);
-  const apostille = Apostille.init(seed, generator);
+  const apostille = Apostille.initFromSeed(seed, generator);
 
   it('Apostille.init with MIJIN_TEST NetworkType should return correct HDAccount', () => {
     expect(apostille.HDAccount.privateKey).toMatch(
@@ -17,14 +17,14 @@ describe('Apostille class should work properly with MIJIN_TEST Network Type', ()
   });
 
   it('should return correct PublicApostilleAccount', () => {
-    expect(apostille.apostillePublicAccount.publicAccount.equals(apostille.HDAccount.publicAccount)).toBeTruthy();
+    expect(apostille.publicAccount.equals(apostille.HDAccount.publicAccount)).toBeTruthy();
   });
 
   describe('associate function should work properly', () => {
 
     it('should create a ModifyMultisigAccount transaction', async () => {
       const signedTransaction = apostille.associate([generator.publicAccount], 1, 1);
-      expect(signedTransaction.type).toEqual(TransactionType.MODIFY_MULTISIG_ACCOUNT);
+      expect(signedTransaction.transaction.type).toEqual(TransactionType.MODIFY_MULTISIG_ACCOUNT);
     });
 
     it('should returned correct signer', () => {
@@ -33,7 +33,7 @@ describe('Apostille class should work properly with MIJIN_TEST Network Type', ()
         NetworkType.MIJIN_TEST,
       );
       const signedTransaction = apostille.associate([ownerPublicAccount], 1, 1);
-      expect(signedTransaction.signer).toMatch(apostille.HDAccount.publicAccount.publicKey);
+      expect(signedTransaction.initiator.publicAccount.equals(apostille.HDAccount.publicAccount)).toBeTruthy();
     });
 
   });
@@ -41,7 +41,7 @@ describe('Apostille class should work properly with MIJIN_TEST Network Type', ()
 
 describe('Apostille class should work properly with MAIN_NET Network Type', () => {
   const generator = Account.createFromPrivateKey(sk, NetworkType.MAIN_NET);
-  const apostille = Apostille.init(seed, generator);
+  const apostille = Apostille.initFromSeed(seed, generator);
 
   it('Apostille.init with MAIN_NET NetworkType should return correct HDAccount', () => {
     expect(apostille.HDAccount.privateKey).toMatch(
