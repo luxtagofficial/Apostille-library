@@ -1,5 +1,5 @@
 import { chain, remove, sortBy, uniq } from 'lodash';
-import { Account, AccountHttp, Address, AggregateTransaction, Deadline, InnerTransaction, Listener, LockFundsTransaction, PublicAccount, QueryParams, SignedTransaction, Transaction, TransactionAnnounceResponse, TransactionHttp, TransactionInfo, TransactionType, TransferTransaction, UInt64, XEM } from 'nem2-sdk';
+import { Account, AccountHttp, Address, AggregateTransaction, Deadline, InnerTransaction, Listener, LockFundsTransaction, Mosaic, NamespaceId, PublicAccount, QueryParams, SignedTransaction, Transaction, TransactionAnnounceResponse, TransactionHttp, TransactionInfo, TransactionType, TransferTransaction, UInt64 } from 'nem2-sdk';
 import { EMPTY, forkJoin, Observable, of } from 'rxjs';
 import { expand, filter, mergeMap, reduce, shareReplay } from 'rxjs/operators';
 import { Errors } from '../types/Errors';
@@ -31,7 +31,7 @@ export class ApostilleHttp {
   public static createLockFundsTransaction(signedAggregateBondedTransaction: SignedTransaction): LockFundsTransaction {
     const lockFundsTransaction = LockFundsTransaction.create(
       Deadline.create(),
-      XEM.createRelative(10),
+      new Mosaic(new NamespaceId('nem.xem'), UInt64.fromUint(10)),
       UInt64.fromUint(480),
       signedAggregateBondedTransaction,
       signedAggregateBondedTransaction.networkType);
@@ -198,7 +198,11 @@ export class ApostilleHttp {
    */
   public getCreationTransaction(publicAccount: PublicAccount): Promise<TransferTransaction> {
     return new Promise((resolve, reject) => {
-      this.fetchAllTransactions(publicAccount).subscribe((transactions: Transaction[]) => {
+      this.fetchAllTransactions(publicAccount).pipe(
+        reduce((acc, txs) => {
+          return acc.concat(txs);
+        }),
+      ).subscribe((transactions: Transaction[]) => {
         if (transactions.length > 0) {
           const firstTransaction = transactions[transactions.length - 1];
           if (firstTransaction instanceof TransferTransaction) {
@@ -339,7 +343,7 @@ export class ApostilleHttp {
       if (transaction.type === TransactionType.TRANSFER ||
         transaction.type === TransactionType.MODIFY_MULTISIG_ACCOUNT) {
         if (initiator.complete) {
-          const refreshedTransaction = transaction.replyGiven(Deadline.create());
+          const refreshedTransaction = transaction.reapplyGiven(Deadline.create());
           const innerTransaction = refreshedTransaction.toAggregate(initiator.publicAccount);
           innerTransactionsList.push({initiator, innerTransaction});
         } else {

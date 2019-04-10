@@ -17,19 +17,14 @@ const getPublicApostilleAccount = ((publicKey: string, networkType: NetworkType)
 });
 
 const apostilleHttp = new ApostilleHttp(HistoricalEndpoints[NetworkType.MIJIN_TEST]);
-// Apostille Public Account1 1
+// Apostille Public Account 1
 const apostillePublicAccount1 = getPublicApostilleAccount(
-  'E15CAB00A5A34216A8A29034F950A18DFC6F4F27BCCFBF9779DC6886653B7E56',
+  '9F4E94F2E6B45AC5469308212B6DBC4CE5CCE3183361D95973340B872F8277DA',
   NetworkType.MIJIN_TEST);
 
-// Apostille Public Account1 2
+// Apostille Public Account 2
 const apostillePublicAccount2 = getPublicApostilleAccount(
   '67FD8C18BAACED8777EBF483B596D6BE0F93EDB2084FA39968DF8D2D96400E08',
-  NetworkType.MIJIN_TEST);
-
-// Apostille Public Account 3
-const apostillePublicAccount3 = getPublicApostilleAccount(
-  '901C9D46840BB74F4649EF3AF65A910A9F162DFA0FD5AD7E2739E5B82C2579F0',
   NetworkType.MIJIN_TEST);
 
 // Apostille Public Account 4
@@ -41,11 +36,6 @@ const apostillePublicAccount4 = getPublicApostilleAccount(
 const owner1 = PublicAccount.createFromPublicKey(
   'F8F36DE56950993330A020CDD76B5C1D82266E3460F91EE43FBEFB71E8A8A193',
   NetworkType.MIJIN_TEST);
-
-// Apostille Public Account 4
-// const owner2 = PublicAccount.createFromPublicKey(
-//   '22816F825B4CACEA334723D51297D8582332D8B875A5829908AAE85831ABB508',
-//   NetworkType.MIJIN_TEST);
 
 const network = NetworkType.MIJIN_TEST;
 const pk = 'aaaaaaaaaaeeeeeeeeeebbbbbbbbbb5555555555dddddddddd1111111111aaee';
@@ -85,13 +75,7 @@ describe('apostille public account non transaction methods should work properly'
     return expect(apostilleHttp.isOwned(apostillePublicAccount2.publicAccount.address)).resolves.toBeFalsy();
   });
 
-  it('should return creation transaction when it is transfer transaction', async () => {
-    expect.assertions(1);
-    const data = await apostilleHttp.getCreationTransaction(apostillePublicAccount3.publicAccount);
-    return expect(data.message.payload).toEqual('');
-  });
-
-  it('should return creation transaction when the it is an aggregate complete transaction', async () => {
+  it('should return creation transaction when it is an aggregate complete transaction', async () => {
     expect.assertions(1);
     const data = await apostilleHttp.getCreationTransaction(apostillePublicAccount1.publicAccount);
     return expect(data.message.payload).toEqual('I am really really awesomeee');
@@ -108,16 +92,13 @@ describe('apostille public account non transaction methods should work properly'
     expect.assertions(1);
     const transactionInfo = await apostilleHttp.getCreationTransactionInfo(
       apostillePublicAccount1.publicAccount);
-    return expect(transactionInfo.id).toEqual('5B160E18C60E680001790BA2');
+    return expect(transactionInfo.hash).toEqual('7356D0917464FDA989106FDCA9C66529AE07D59F93E9D857F15D60DF66A13B07');
   });
 
   describe('fetchAllTransactions', () => {
     it('should return more than one page', async () => {
       expect.assertions(1);
-      const accountLarge = PublicAccount.createFromPublicKey(
-        'FE9F2C724D0E0360A20B9ED7591E4E25CF25D6F4A4E8E52C491C62D2452397F8',
-        NetworkType.MIJIN_TEST);
-      const transactions = await apostilleHttp.fetchAllTransactions(accountLarge)
+      const transactions = await apostilleHttp.fetchAllTransactions(apostillePublicAccount1.publicAccount)
         .pipe(
           take(2),
           reduce((acc, txs) => {

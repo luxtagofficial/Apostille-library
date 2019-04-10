@@ -86,7 +86,7 @@ export class Initiator {
       let aggregateTransaction: AggregateTransaction | undefined;
       if (transaction instanceof TransferTransaction ||
         transaction instanceof ModifyMultisigAccountTransaction) {
-        const refreshedTransaction = transaction.replyGiven(Deadline.create());
+        const refreshedTransaction = transaction.reapplyGiven(Deadline.create());
         if (this.complete) {
           aggregateTransaction = AggregateTransaction.createComplete(
             Deadline.create(),

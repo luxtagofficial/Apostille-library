@@ -1,4 +1,4 @@
-import { Address, Deadline, PlainMessage, TransferTransaction, XEM } from 'nem2-sdk';
+import { Address, Deadline, Mosaic, NamespaceId, PlainMessage, TransferTransaction, UInt64 } from 'nem2-sdk';
 import { HashFunction } from '../../hash/HashFunction';
 
 /**
@@ -37,7 +37,9 @@ class PublicApostille {
     const creationTransaction = TransferTransaction.create(
       Deadline.create(),
       this.sinkAddress,
-      [XEM.createRelative(0)],
+      [
+        new Mosaic(new NamespaceId('nem.xem'), UInt64.fromUint(10)),
+      ],
       PlainMessage.create(this.hash),
       this.sinkAddress.networkType,
     );
