@@ -1,9 +1,12 @@
 import * as nemSDK from 'nem-sdk';
-import { Account, Deadline, ModifyMultisigAccountTransaction, MultisigCosignatoryModification, MultisigCosignatoryModificationType, NetworkType, PublicAccount, SignedTransaction } from 'nem2-sdk';
+import { Account, NetworkType, PublicAccount } from 'nem2-sdk';
 import { SHA256 } from '../../hash/sha256';
+import { IReadyTransaction } from '../../infrastructure/ApostilleHttp';
+import { Initiator } from '../../infrastructure/Initiator';
 import { ApostillePublicAccount } from './ApostillePublicAccount';
 
 const nem = nemSDK.default;
+
 const fixPrivateKey = (privateKey) => {
   return ('0000000000000000000000000000000000000000000000000000000000000000' + privateKey.replace(/^00/, ''))
     .slice(-64);
@@ -13,7 +16,7 @@ const fixPrivateKey = (privateKey) => {
  * @description the private apostille class
  * @class Apostille
  */
-export class Apostille {
+export class Apostille extends ApostillePublicAccount {
 
   /**
    * @description init apostille
@@ -23,7 +26,7 @@ export class Apostille {
    * @returns {Apostille}
    * @memberof Apostille
    */
-  public static init(
+  public static initFromSeed(
     seed: string,
     generatorAccount: Account): Apostille {
     const networkType = generatorAccount.address.networkType;
@@ -42,8 +45,6 @@ export class Apostille {
     return new Apostille(hdAccount);
   }
 
-  private publicAccount;
-
   /**
    * Creates an instance of Apostille.
    * @param {Account} hdAccount - the apostille account (HD account)
@@ -53,41 +54,27 @@ export class Apostille {
   public constructor(
     public readonly HDAccount: Account,
   ) {
-    this.publicAccount =  new ApostillePublicAccount(this.HDAccount.publicAccount);
+    super(HDAccount.publicAccount);
   }
 
   /**
    *
    * @description - create a multisig contract to own the apostille account
    * @param {PublicAccount[]} owners- array of public account that will become owners
-   * @param {number} quorum - the minimum number of owners necessary to agree on the apostille account activities
-   * @param {number} minRemoval - minimum number of owners necessary to agree to remove one or some owners
-   * @returns {SignedTransaction}
+   * @param {number} quorumDelta - the minimum number of owners necessary to agree on the apostille account activities
+   * @param {number} minRemovalDelta - minimum number of owners necessary to agree to remove one or some owners
+   * @returns {IReadyTransaction}
    * @memberof Apostille
    */
-  public associate(owners: PublicAccount[], quorum: number, minRemoval: number): SignedTransaction {
-    const modifications: MultisigCosignatoryModification[] = [];
-    owners.forEach((cosignatory) => {
-      modifications.push(
-        new MultisigCosignatoryModification(
-          MultisigCosignatoryModificationType.Add,
-          cosignatory));
-    });
-    const modifyMultisigTransaction = ModifyMultisigAccountTransaction.create(
-      Deadline.create(),
-      quorum,
-      minRemoval,
-      modifications,
-      this.HDAccount.address.networkType,
-    );
-
-    const signedTransaction = this.HDAccount.sign(modifyMultisigTransaction);
-
-    return signedTransaction;
+  public associate(owners: PublicAccount[], quorumDelta: number, minRemovalDelta: number): IReadyTransaction {
+    return {
+      initiator: this.initiator,
+      transaction: this.transfer(owners, [], quorumDelta, minRemovalDelta),
+    };
   }
 
-  get apostillePublicAccount(): ApostillePublicAccount {
-    return this.publicAccount;
+  private get initiator(): Initiator {
+    return new Initiator(this.HDAccount);
   }
 
 }
