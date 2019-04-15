@@ -1,7 +1,7 @@
 
 import * as nemDefault from 'nem-sdk';
 import { NetworkType } from 'nem2-sdk';
-import { KECCAK256, KECCAK512, MD5, SHA1, SHA256 } from '../../../src/hash/hash';
+import { KECCAK256, KECCAK512, MD5, SHA1, SHA256, SHA3_256, SHA3_512 } from '../../../src/hash/hash';
 
 const nem = nemDefault.default;
 
@@ -82,6 +82,37 @@ describe('Generate correct hash using MIJIN_TEST network type', () => {
         expect(keccak512.signedHashing(data, signerPrivateKey, NetworkType.MIJIN_TEST)).toEqual(hash);
     });
 
+    it('generates checksum of signed hash with SHA3_256', () => {
+        // tslint:disable-next-line:variable-name
+        const sha3_256 = new SHA3_256();
+        const checksum = 'fe4e545990';
+        // tslint:disable-next-line:max-line-length
+        expect(sha3_256.signedHashing(data, signerPrivateKey, NetworkType.MIJIN_TEST).substring(0, 10)).toEqual(checksum);
+    });
+
+    it('generates signed hash with SHA3_256', () => {
+        // tslint:disable-next-line:variable-name
+        const sha3_256 = new SHA3_256();
+        // tslint:disable-next-line:max-line-length
+        const hash = 'fe4e5459904B9C121282E15B76D0F005746E364D75398B8446881762F64231C8E3731864596334CF0CFEA7208525F66E64C1B7C690D39681CF5927001FD3C68E63AAA75A0F';
+        expect(sha3_256.signedHashing(data, signerPrivateKey, NetworkType.MIJIN_TEST)).toEqual(hash);
+    });
+
+    it('generates checksum of signed hash with SHA3_512', () => {
+        // tslint:disable-next-line:variable-name
+        const sha3_512 = new SHA3_512();
+        const checksum = 'fe4e545991';
+        // tslint:disable-next-line:max-line-length
+        expect(sha3_512.signedHashing(data, signerPrivateKey, NetworkType.MIJIN_TEST).substring(0, 10)).toEqual(checksum);
+    });
+
+    it('generates signed hash with SHA3_512', () => {
+        // tslint:disable-next-line:variable-name
+        const sha3_512 = new SHA3_512();
+        // tslint:disable-next-line:max-line-length
+        const hash = 'fe4e54599167D5E936775F973F9B111A4888DFC6F62EEFFBDE872599E5878803F4E51299ACCE2875970F09060CA50E417BCA9AAB860FA6EA18A1C772673C8B71410A38FB06';
+        expect(sha3_512.signedHashing(data, signerPrivateKey, NetworkType.MIJIN_TEST)).toEqual(hash);
+    });
 });
 
 // TEST_NET ======================================
