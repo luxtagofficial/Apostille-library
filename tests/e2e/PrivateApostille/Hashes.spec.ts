@@ -1,7 +1,7 @@
-
 import * as nemDefault from 'nem-sdk';
 import { NetworkType } from 'nem2-sdk';
 import { KECCAK256, KECCAK512, MD5, SHA1, SHA256, SHA3_256, SHA3_512 } from '../../../src/hash/hash';
+import { Errors } from './../../../src/types/Errors';
 
 const nem = nemDefault.default;
 
@@ -277,5 +277,21 @@ describe('Generate correct hash using TEST_NET network type', () => {
             nem.model.network.data.testnet.id);
         expect(keccak512.signedHashing(payload, signerPrivateKey, NetworkType.TEST_NET))
         .toEqual(oldPrivateApostille.data.hash);
+    });
+
+    it('should not generate signed hash with SHA3_256', () => {
+        // tslint:disable-next-line:variable-name
+        const sha3_256 = new SHA3_256();
+        expect(() => {
+            sha3_256.signedHashing(payload.toString(), signerPrivateKey, NetworkType.TEST_NET);
+        }).toThrowError(Errors[Errors.NETWORK_TYPE_NOT_SUPPORTED]);
+    });
+
+    it('should not generate signed hash with SHA3_512', () => {
+        // tslint:disable-next-line:variable-name
+        const sha3_512 = new SHA3_512();
+        expect(() => {
+            sha3_512.signedHashing(payload.toString(), signerPrivateKey, NetworkType.TEST_NET);
+        }).toThrowError(Errors[Errors.NETWORK_TYPE_NOT_SUPPORTED]);
     });
 });

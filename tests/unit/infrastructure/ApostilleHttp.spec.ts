@@ -7,7 +7,7 @@ import { HistoricalEndpoints } from '../../../src/model/repository/HistoricalEnd
 import { Errors } from '../../../src/types/Errors';
 import { Initiator, initiatorAccountType } from './../../../src/infrastructure/Initiator';
 
-const getPublicApostilleAccount = ((publicKey: string, networkType: NetworkType): ApostillePublicAccount => {
+const getApostillePublicAccount = ((publicKey: string, networkType: NetworkType): ApostillePublicAccount => {
   // Account 1
   const publicAccount = PublicAccount.createFromPublicKey(
   publicKey,
@@ -18,17 +18,17 @@ const getPublicApostilleAccount = ((publicKey: string, networkType: NetworkType)
 
 const apostilleHttp = new ApostilleHttp(HistoricalEndpoints[NetworkType.MIJIN_TEST]);
 // Apostille Public Account 1
-const apostillePublicAccount1 = getPublicApostilleAccount(
+const apostillePublicAccount1 = getApostillePublicAccount(
   '9F4E94F2E6B45AC5469308212B6DBC4CE5CCE3183361D95973340B872F8277DA',
   NetworkType.MIJIN_TEST);
 
 // Apostille Public Account 2
-const apostillePublicAccount2 = getPublicApostilleAccount(
+const apostillePublicAccount2 = getApostillePublicAccount(
   '67FD8C18BAACED8777EBF483B596D6BE0F93EDB2084FA39968DF8D2D96400E08',
   NetworkType.MIJIN_TEST);
 
 // Apostille Public Account 4
-const apostillePublicAccount4 = getPublicApostilleAccount(
+const apostillePublicAccount4 = getApostillePublicAccount(
   '95361ED8C94048BD5B0BDB229C19DF817DB7D66B59F4162E3F3A1D0D813B2AB9',
   NetworkType.MIJIN_TEST);
 
@@ -118,14 +118,14 @@ describe('apostille public account non transaction methods should work properly'
       expect.assertions(1);
       const transaction = apostillePublicAccount1.update('Brand new signature');
       const initiator = completeInitiator;
-      expect(apostilleHttp.addTransaction(transaction, initiator)).toBeGreaterThan(0);
+      expect(apostilleHttp.addTransaction({initiator, transaction})).toBeGreaterThan(0);
     });
     it('should not be able to add transactions to be signed by hardware wallets', () => {
       expect.assertions(1);
       const transaction = apostillePublicAccount1.update('Brand new signature');
       const initiator = hwInitiator;
       expect(() => {
-        apostilleHttp.addTransaction(transaction, initiator);
+        apostilleHttp.addTransaction({initiator, transaction});
       }).toThrowError(Errors[Errors.INITIATOR_UNABLE_TO_SIGN]);
     });
   });

@@ -26,7 +26,7 @@ export class SHA256 extends HashFunction {
    * @memberof SHA256
    */
   constructor() {
-    super('03', '83');
+    super('83');
   }
   /**
    * @description - creates a signed hash for private apostille
@@ -36,25 +36,15 @@ export class SHA256 extends HashFunction {
    * @memberof SHA256
    */
   public signedHashing(data: string, signerPrivateKey: string, networkType: NetworkType) {
+    const dataHash = CryptoJS.SHA256(data).toString();
+
     if (networkType === NetworkType.MAIN_NET || networkType === NetworkType.TEST_NET) {
       const keyPair = nem.crypto.keyPair.create(signerPrivateKey);
-      const CHEKSUM = 'fe4e5459' + this.signed;
-      return CHEKSUM +  keyPair.sign(CryptoJS.SHA256(data).toString()).toString();
+      return this.checksum +  keyPair.sign(dataHash).toString();
     } else {
       // sha-3 signing
       const signer = Account.createFromPrivateKey(signerPrivateKey, networkType);
-      const CHEKSUM = 'fe4e5459' + this.signed;
-      return CHEKSUM +  signer.signData(CryptoJS.SHA256(data).toString());
+      return this.checksum +  signer.signData(dataHash);
     }
-  }
-  /**
-   * @description - creates a hash of the digital file for public apostille
-   * @param {string} data - digital file raw data
-   * @returns - a hash with a magical byte
-   * @memberof SHA256
-   */
-  public nonSignedHashing(data: string) {
-    const CHEKSUM = 'fe4e5459' + this.nonSigned;
-    return CHEKSUM + CryptoJS.SHA256(data);
   }
 }

@@ -1,6 +1,6 @@
 import * as nemSDK from 'nem-sdk';
 import { Account, NetworkType, PublicAccount } from 'nem2-sdk';
-import { SHA256 } from '../../hash/sha256';
+import { SHA256 } from '../../hash/hash';
 import { IReadyTransaction } from '../../infrastructure/ApostilleHttp';
 import { Initiator } from '../../infrastructure/Initiator';
 import { ApostillePublicAccount } from './ApostillePublicAccount';

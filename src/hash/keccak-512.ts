@@ -16,7 +16,7 @@ export class KECCAK512 extends HashFunction {
    * @memberof KECCAK512
    */
   constructor() {
-    super('09', '89');
+    super('89');
   }
   /**
    * @description - creates a signed hash for private apostille
@@ -26,25 +26,15 @@ export class KECCAK512 extends HashFunction {
    * @memberof KECCAK512
    */
   public signedHashing(data: string, signerPrivateKey: string, networkType: NetworkType) {
+    const dataHash = CryptoJS.SHA3(data, { outputLength: 512 }).toString();
+
     if (networkType === NetworkType.MAIN_NET || networkType === NetworkType.TEST_NET) {
       const keyPair = nem.crypto.keyPair.create(signerPrivateKey);
-      const CHEKSUM = 'fe4e5459' + this.signed;
-      return CHEKSUM +  keyPair.sign(CryptoJS.SHA3(data, { outputLength: 512 }).toString()).toString();
+      return this.checksum +  keyPair.sign(dataHash).toString();
     } else {
       // sha-3 signing
       const signer = Account.createFromPrivateKey(signerPrivateKey, networkType);
-      const CHEKSUM = 'fe4e5459' + this.signed;
-      return CHEKSUM +  signer.signData(CryptoJS.SHA3(data, { outputLength: 512 }).toString());
+      return this.checksum +  signer.signData(dataHash);
     }
-  }
-  /**
-   * @description - creates a hash of the digital file for public apostille
-   * @param {string} data - digital file raw data
-   * @returns - a hash with a magical byte
-   * @memberof KECCAK512
-   */
-  public nonSignedHashing(data: string) {
-    const CHEKSUM = 'fe4e5459' + this.nonSigned;
-    return CHEKSUM + CryptoJS.SHA3(data, { outputLength: 512 });
   }
 }

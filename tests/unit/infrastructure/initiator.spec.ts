@@ -1,6 +1,7 @@
-import { Account, AggregateTransaction, Deadline, NetworkType, PublicAccount, TransactionType } from 'nem2-sdk';
+import { Account, AggregateTransaction, Deadline, NetworkType, PublicAccount, TransactionType, TransferTransaction } from 'nem2-sdk';
 import { IMultisigInitiator, Initiator, initiatorAccountType } from '../../../src/infrastructure/Initiator';
 import { Errors } from '../../../src/types/Errors';
+import { SHA3_256 } from './../../../src/hash/sha3-256';
 import { ApostilleHttp } from './../../../src/infrastructure/ApostilleHttp';
 import { ApostillePublicAccount } from './../../../src/model/apostille/ApostillePublicAccount';
 
@@ -50,6 +51,16 @@ describe('Initiator', () => {
       const initiator = new Initiator(account);
       expect(initiator.canSign()).toBe(true);
     });
+
+    it('should sign file hash', () => {
+      const account = accountPK;
+      const initiator = new Initiator(account);
+      const data = 'I am legen wait for it dary';
+      const fileHash = initiator.signFileHash(apostillePublicAccount, data, new SHA3_256());
+      const tx = fileHash.transaction as TransferTransaction;
+      // tslint:disable-next-line:max-line-length
+      expect(tx.message.payload).toBe('fe4e545990FFA43B55163C32BABA8990E7CC10467ED652CAD66511177A8A61D27BCD74B02AB2B63BD82ABF02DEFF989BA77C8CE8932B5B6C0064EA8D1547303DA70987F600');
+    });
   });
 
   describe('Hardware wallet initiator', () => {
@@ -65,6 +76,15 @@ describe('Initiator', () => {
       const account = publicAccount;
       const initiator = new Initiator(account, initiatorAccountType.HARDWARE_WALLET);
       expect(initiator.canSign()).toBe(false);
+    });
+
+    it('should not sign file hash', () => {
+      const account = publicAccount;
+      const initiator = new Initiator(account, initiatorAccountType.HARDWARE_WALLET);
+      const data = 'I am legen wait for it dary';
+      expect(() => {
+        initiator.signFileHash(apostillePublicAccount, data, new SHA3_256());
+      }).toThrowError(Errors[Errors.REQUIRE_INITIATOR_TYPE_ACCOUNT]);
     });
   });
 

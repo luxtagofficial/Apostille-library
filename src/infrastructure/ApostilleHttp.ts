@@ -264,9 +264,10 @@ export class ApostilleHttp {
    * Bulk transactions helper functions
    */
 
-  public addTransaction(transaction: Transaction, initiator: Initiator): number {
+  public addTransaction(readyTransaction: IReadyTransaction): number {
+    const { initiator } = readyTransaction;
     if (initiator.canSign()) {
-      return this.unannouncedTransactions.push({transaction, initiator});
+      return this.unannouncedTransactions.push(readyTransaction);
     } else {
       throw Error(Errors[Errors.INITIATOR_UNABLE_TO_SIGN]);
     }

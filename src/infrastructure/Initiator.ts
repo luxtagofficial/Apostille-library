@@ -1,5 +1,8 @@
 import { Account, AggregateTransaction, Deadline, LockFundsTransaction, ModifyMultisigAccountTransaction, PublicAccount, SignedTransaction, Transaction, TransferTransaction } from 'nem2-sdk';
+import { HashFunction } from '../hash/HashFunction';
 import { Errors } from '../types/Errors';
+import { ApostillePublicAccount } from './../model/apostille/ApostillePublicAccount';
+import { IReadyTransaction } from './ApostilleHttp';
 
 export interface IMultisigInitiator {
   isComplete: boolean;
@@ -121,6 +124,21 @@ export class Initiator {
       case initiatorAccountType.MULTISIG_ACCOUNT:
         return this.multiSigAccount!.cosignatories.length > 0;
     }
+  }
+
+  public signFileHash(
+    apostille: ApostillePublicAccount,
+    data: string,
+    hashFunction?: HashFunction,
+  ): IReadyTransaction {
+    if (hashFunction && this.account instanceof Account) {
+      const hashedData = hashFunction.signedHashing(data, this.account.privateKey, this.account.address.networkType);
+      return {
+        initiator: this,
+        transaction: apostille.update(hashedData),
+      };
+    }
+    throw Errors[Errors.REQUIRE_INITIATOR_TYPE_ACCOUNT];
   }
 
   private _isAccountComplete(): boolean {
