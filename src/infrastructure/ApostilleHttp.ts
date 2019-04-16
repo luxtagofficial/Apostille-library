@@ -1,7 +1,7 @@
 import { chain, remove, sortBy, uniq } from 'lodash';
-import { Account, AccountHttp, Address, AggregateTransaction, Deadline, InnerTransaction, Listener, LockFundsTransaction, Mosaic, NamespaceId, PublicAccount, QueryParams, SignedTransaction, Transaction, TransactionAnnounceResponse, TransactionHttp, TransactionInfo, TransactionType, TransferTransaction, UInt64 } from 'nem2-sdk';
-import { EMPTY, forkJoin, Observable, of } from 'rxjs';
-import { expand, filter, mergeMap, reduce, shareReplay } from 'rxjs/operators';
+import { Account, AccountHttp, Address, AggregateTransaction, Deadline, InnerTransaction, Listener, LockFundsTransaction, Mosaic, NamespaceId, PublicAccount, QueryParams, SignedTransaction, Transaction, TransactionAnnounceResponse, TransactionHttp, TransactionInfo, TransactionStatus, TransactionType, TransferTransaction, UInt64 } from 'nem2-sdk';
+import { concat, EMPTY, from, Observable, of } from 'rxjs';
+import { expand, filter, finalize, map, mergeMap, reduce, shareReplay, switchMap, takeWhile } from 'rxjs/operators';
 import { Errors } from '../types/Errors';
 import { Initiator, initiatorAccountType } from './Initiator';
 
@@ -40,6 +40,7 @@ export class ApostilleHttp {
   }
 
   public announceList: SignedTransaction[] = [];
+  public return;
 
   private transactionHttp: TransactionHttp;
   private accountHttp: AccountHttp;
@@ -320,7 +321,11 @@ export class ApostilleHttp {
    * @returns {Promise<void>}
    * @memberof ApostilleAccount
    */
-  public announceAll(): Observable<[SignedTransaction[], Observable<TransactionAnnounceResponse>]> {
+  public announceAll(): Observable<
+    SignedTransaction[] |
+    TransactionAnnounceResponse |
+    TransactionStatus[]
+  > {
     let innerTransactionsList: IAnnounceTransactionList[] = [];
     let readyTx;
     while (this.unannouncedTransactions.length > 0) {
@@ -348,7 +353,7 @@ export class ApostilleHttp {
           const innerTransaction = refreshedTransaction.toAggregate(initiator.publicAccount);
           innerTransactionsList.push({initiator, innerTransaction});
         } else {
-          this.announceList.concat(this.aggregateAndSign(innerTransactionsList));
+          this.announceList = this.announceList.concat(this.aggregateAndSign(innerTransactionsList));
           innerTransactionsList = []; // Clear buffer
 
           const aggregateBondedTransaction = initiator.sign(transaction);
@@ -367,39 +372,55 @@ export class ApostilleHttp {
       }
     }
 
-    this.announceList.concat(this.aggregateAndSign(innerTransactionsList));
+    this.announceList = this.announceList.concat(this.aggregateAndSign(innerTransactionsList));
     innerTransactionsList = []; // Clear buffer
 
-    // Start listener
-    this.confirmedListener();
-
     // Announce all signed transactions and push to network
-    return forkJoin(
+    return concat(
       of(this.announceList),
-      this.announceList.map((signedTx) => {
-        return this.transactionHttp.announce(signedTx);
-      }),
+      from(this.announceList).pipe(
+        switchMap((signedTx) => {
+          return this.transactionHttp.announce(signedTx);
+        }),
+      ),
+      this.confirmedListener(),
     );
   }
 
-  private confirmedListener(): void {
-    const newBlock$ = this.listener.newBlock().subscribe(() => {
-      if (this.announceList.length > 0) {
-        const transactionHashes = this.announceList.map((signedTx) => signedTx.hash);
-        this.transactionHttp.getTransactionsStatuses(transactionHashes).subscribe(
-          (txs) => {
-            for (const tx of txs) {
-              if (tx.group === 'confirmed') {
-                remove(this.announceList, (signedTx) => {
-                  return signedTx.hash === tx.hash;
-                });
-              }
-            }
-          },
-        );
-      } else {
-        newBlock$.unsubscribe();
-      }
-    });
+  private confirmedListener(): Observable<TransactionStatus[]> {
+    return from(
+      this.listener.open(),
+    ).pipe(
+      switchMap(() => {
+        return this.listener.newBlock()
+          .pipe(
+            finalize(() => this.listener.close()),
+            takeWhile(() => this.announceList.length > 0),
+            switchMap(
+              () => {
+                const transactionHashes = this.announceList.map((signedTx) => signedTx.hash);
+                return this.transactionHttp.getTransactionsStatuses(transactionHashes);
+              },
+            ),
+            map(
+              (txs) => {
+                for (const tx of txs) {
+                  if (tx.group === 'confirmed') {
+                    remove(this.announceList, (signedTx) => {
+                      return signedTx.hash === tx.hash;
+                    });
+                  }
+                  if (tx.group === 'failed') {
+                    remove(this.announceList, (signedTx) => {
+                      return signedTx.hash === tx.hash;
+                    });
+                  }
+                }
+                return txs;
+              },
+            ),
+          );
+      }),
+    );
   }
 }

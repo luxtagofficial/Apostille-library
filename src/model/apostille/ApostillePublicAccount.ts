@@ -1,4 +1,4 @@
-import { Deadline, ModifyMultisigAccountTransaction, Mosaic, MultisigCosignatoryModification, MultisigCosignatoryModificationType, NetworkType, PlainMessage, PublicAccount, TransferTransaction } from 'nem2-sdk';
+import { Address, Deadline, ModifyMultisigAccountTransaction, MultisigCosignatoryModification, MultisigCosignatoryModificationType, NetworkType, PlainMessage, PublicAccount, TransferTransaction } from 'nem2-sdk';
 
 export class ApostillePublicAccount {
   /**
@@ -25,17 +25,16 @@ export class ApostillePublicAccount {
   /**
    * @description - returning a transfer transaction for the apostille account
    * @param {string} rawData - the raw data to send in the payload
-   * @param {(Mosaic[] | Mosaic[])} [mosaics=[]] - array of mosiacs to attach
    * @returns {TransferTransaction}
    * @memberof ApostillePublicAccount
    */
-  public update(rawData: string, mosaics: Mosaic[] = []): TransferTransaction {
+  public update(rawData: string, destAddress?: Address): TransferTransaction {
     const plainMessage = PlainMessage.create(rawData);
 
     const creationTransaction = TransferTransaction.create(
       Deadline.create(),
-      this.publicAccount.address,
-      mosaics,
+      destAddress || this.publicAccount.address,
+      [],
       plainMessage,
       this.publicAccount.address.networkType,
     );
