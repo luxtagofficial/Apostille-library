@@ -1,38 +1,37 @@
-import CryptoJS from 'crypto-js';
-import * as nemSDK from 'nem-sdk';
+import { sha3_512 } from 'js-sha3';
 import { Account, NetworkType } from 'nem2-sdk';
+import { Errors } from './../types/Errors';
 import { HashFunction } from './HashFunction';
 
-const nem = nemSDK.default;
 /**
- * @description - KECCAK-256 hash function class
+ * @description - SHA3_512 hash function class
  * @export
- * @class KECCAK256
+ * @class SHA3_512
  * @extends {HashFunction}
  */
-export class KECCAK256 extends HashFunction {
+// tslint:disable-next-line:class-name
+export class SHA3_512 extends HashFunction {
   /**
-   * Creates an instance of KECCAK256.
-   * @memberof KECCAK256
+   * Creates an instance of SHA3_512.
+   * @memberof SHA3_512
    */
   constructor() {
-    super('88');
+    super('91');
   }
+
   /**
    * @description - creates a signed hash for private apostille
    * @param {string} data - raw data
    * @param {string} signerPrivateKey - signer private key
    * @returns - a signed hash with a magical byte
-   * @memberof KECCAK256
+   * @memberof SHA3_512
    */
-  public signedHashing(data: string, signerPrivateKey: string, networkType: NetworkType): string {
-    const dataHash = CryptoJS.SHA3(data, { outputLength: 256 }).toString();
+  public signedHashing(data: string, signerPrivateKey: string, networkType: NetworkType) {
+    const dataHash = sha3_512(data);
 
     if (networkType === NetworkType.MAIN_NET || networkType === NetworkType.TEST_NET) {
-      const keyPair = nem.crypto.keyPair.create(signerPrivateKey);
-      return this.checksum +  keyPair.sign(dataHash).toString();
+      throw Errors[Errors.NETWORK_TYPE_NOT_SUPPORTED];
     } else {
-      // sha-3 signing
       const signer = Account.createFromPrivateKey(signerPrivateKey, networkType);
       return this.checksum +  signer.signData(dataHash);
     }

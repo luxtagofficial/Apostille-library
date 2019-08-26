@@ -9,6 +9,6 @@ export enum HistoricalEndpoints {
     // testnet
     'http://104.128.226.60:7890' = 0x98,
     // mijin_test
-    'http://13.114.200.132:3000' = 0x90,
+    'https://api.nf.catapult.luxtag.io' = 0x90,
   }
   // should be used as HistoricalEndpoints[networkType] // get the address

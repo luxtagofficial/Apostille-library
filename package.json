@@ -42,41 +42,44 @@
     {
       "name": "jeff",
       "email": "jeff@luxtag.io"
+    },
+    {
+      "name": "Jonathan Tey",
+      "email": "jonathan@luxtag.io"
     }
   ],
   "license": "MIT",
   "dependencies": {
-    "@octokit/request": "^2.1.2",
     "crypto-js": "^3.1.9-1",
-    "js-sha3": "0.8.0",
+    "js-sha3": "^0.8.0",
     "lodash": "^4.17.10",
     "nem-sdk": "^1.6.7",
-    "nem2-sdk": "^0.11.1",
+    "nem2-sdk": "^0.13.1",
     "rxjs": "^6.2.2"
   },
   "devDependencies": {
     "@types/crypto-js": "^3.1.43",
-    "@types/jest": "^23.3.9",
+    "@types/jest": "24.0.11",
     "@types/lodash": "^4.14.113",
-    "@types/sinon": "5.0.7",
+    "@types/sinon": "7.0.11",
     "codecov": "^3.0.4",
-    "commitizen": "3.0.4",
-    "commitlint": "7.2.1",
+    "commitizen": "3.0.7",
+    "commitlint": "7.5.2",
     "cz-conventional-changelog": "^2.1.0",
     "ghooks": "^2.0.4",
     "jest": "^23.4.1",
     "npm-run-all": "4.1.5",
     "rimraf": "^2.6.2",
     "semantic-release": "^15.8.1",
-    "sinon": "7.1.1",
-    "travis-deploy-once": "5.0.9",
-    "ts-jest": "^23.0.1",
+    "sinon": "7.3.1",
+    "travis-deploy-once": "5.0.11",
+    "ts-jest": "24.0.2",
     "tslint": "^5.11.0",
-    "typescript": "^2.8.3",
+    "typescript": "3.4.3",
     "validate-commit-msg": "^2.14.0"
   },
   "resolutions": {
-    "@octokit/request": "^2.1.2"
+    "request": "2.88.0"
   },
   "files": [
     "dist"
@@ -92,17 +95,15 @@
   },
   "jest": {
     "testEnvironment": "node",
-    "transform": {
-      "^.+\\.tsx?$": "ts-jest"
-    },
+    "preset": "ts-jest",
     "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(tsx?)$",
     "moduleFileExtensions": [
-      "ts",
-      "tsx",
       "js",
-      "jsx",
       "json",
-      "node"
+      "jsx",
+      "node",
+      "ts",
+      "tsx"
     ],
     "coverageDirectory": "<rootDir>/tests/unit/coverage",
     "collectCoverageFrom": [
@@ -110,6 +111,7 @@
     ],
     "coveragePathIgnorePatterns": [
       "/types/"
-    ]
+    ],
+    "testMatch": null
   }
 }

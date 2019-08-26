@@ -1,5 +1,8 @@
 import { Account, AggregateTransaction, Deadline, LockFundsTransaction, ModifyMultisigAccountTransaction, PublicAccount, SignedTransaction, Transaction, TransferTransaction } from 'nem2-sdk';
+import { HashFunction } from '../hash/HashFunction';
 import { Errors } from '../types/Errors';
+import { ApostillePublicAccount } from './../model/apostille/ApostillePublicAccount';
+import { IReadyTransaction } from './ApostilleHttp';
 
 export interface IMultisigInitiator {
   isComplete: boolean;
@@ -70,14 +73,14 @@ export class Initiator {
     }
   }
 
-  public sign(transaction: Transaction): SignedTransaction {
+  public sign(transaction: Transaction, generationHash: string): SignedTransaction {
     if (this.account.address.networkType !== transaction.networkType) {
       throw Error(Errors[Errors.NETWORK_TYPE_MISMATCHED]);
     }
     if (this.accountType === initiatorAccountType.ACCOUNT) {
       if (this.account instanceof Account) {
         if (!(transaction instanceof AggregateTransaction)) {
-          return this.account.sign(transaction);
+          return this.account.sign(transaction, generationHash);
         }
       }
     } else if (this.accountType === initiatorAccountType.MULTISIG_ACCOUNT &&
@@ -103,10 +106,10 @@ export class Initiator {
       } else if (transaction instanceof AggregateTransaction) {
         aggregateTransaction = transaction;
       } else if (transaction instanceof LockFundsTransaction) {
-        return firstCosigner.sign(transaction);
+        return firstCosigner.sign(transaction, generationHash);
       }
       if (aggregateTransaction !== undefined) {
-        return firstCosigner.signTransactionWithCosignatories(aggregateTransaction, cosigners);
+        return firstCosigner.signTransactionWithCosignatories(aggregateTransaction, cosigners, generationHash);
       }
     }
     throw Error(Errors[Errors.INITIATOR_UNABLE_TO_SIGN]);
@@ -121,6 +124,21 @@ export class Initiator {
       case initiatorAccountType.MULTISIG_ACCOUNT:
         return this.multiSigAccount!.cosignatories.length > 0;
     }
+  }
+
+  public signFileHash(
+    apostille: ApostillePublicAccount,
+    data: string,
+    hashFunction?: HashFunction,
+  ): IReadyTransaction {
+    if (hashFunction && this.account instanceof Account) {
+      const hashedData = hashFunction.signedHashing(data, this.account.privateKey, this.account.address.networkType);
+      return {
+        initiator: this,
+        transaction: apostille.update(hashedData),
+      };
+    }
+    throw Errors[Errors.REQUIRE_INITIATOR_TYPE_ACCOUNT];
   }
 
   private _isAccountComplete(): boolean {
