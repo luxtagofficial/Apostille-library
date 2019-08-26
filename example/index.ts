@@ -1,12 +1,7 @@
 import fs from 'fs';
-import { Account, NetworkType, PublicAccount } from 'nem2-sdk';
+import { Account, NetworkType, PublicAccount, SignedTransaction } from 'nem2-sdk';
 import path from 'path';
-import { SHA256 } from './../src/hash/sha256';
-import { SHA3_256 } from './../src/hash/sha3-256';
-import { ApostilleHttp } from './../src/infrastructure/ApostilleHttp';
-import { Initiator } from './../src/infrastructure/Initiator';
-import { Apostille } from './../src/model/apostille/Apostille';
-import { HistoricalEndpoints } from './../src/model/repository/HistoricalEndpoints';
+import { Apostille, ApostilleHttp, HistoricalEndpoints, Initiator, SHA256, SHA3_256 } from '../index';
 
 // ApostilleHttp
 const network = NetworkType.MIJIN_TEST;
@@ -76,5 +71,12 @@ accounts.forEach((a) => createApostille(a, f));
 
 // Announce
 apostilleHttp.announceAll().subscribe(
-  (signedTxs) => console.log(signedTxs),
+  (result) => {
+    if (result instanceof Array) {
+      if (result[0] instanceof SignedTransaction) {
+        return;
+      }
+    }
+    console.log(result);
+  },
 );

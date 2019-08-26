@@ -73,14 +73,14 @@ export class Initiator {
     }
   }
 
-  public sign(transaction: Transaction): SignedTransaction {
+  public sign(transaction: Transaction, generationHash: string): SignedTransaction {
     if (this.account.address.networkType !== transaction.networkType) {
       throw Error(Errors[Errors.NETWORK_TYPE_MISMATCHED]);
     }
     if (this.accountType === initiatorAccountType.ACCOUNT) {
       if (this.account instanceof Account) {
         if (!(transaction instanceof AggregateTransaction)) {
-          return this.account.sign(transaction);
+          return this.account.sign(transaction, generationHash);
         }
       }
     } else if (this.accountType === initiatorAccountType.MULTISIG_ACCOUNT &&
@@ -106,10 +106,10 @@ export class Initiator {
       } else if (transaction instanceof AggregateTransaction) {
         aggregateTransaction = transaction;
       } else if (transaction instanceof LockFundsTransaction) {
-        return firstCosigner.sign(transaction);
+        return firstCosigner.sign(transaction, generationHash);
       }
       if (aggregateTransaction !== undefined) {
-        return firstCosigner.signTransactionWithCosignatories(aggregateTransaction, cosigners);
+        return firstCosigner.signTransactionWithCosignatories(aggregateTransaction, cosigners, generationHash);
       }
     }
     throw Error(Errors[Errors.INITIATOR_UNABLE_TO_SIGN]);

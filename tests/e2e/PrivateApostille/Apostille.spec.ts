@@ -13,6 +13,7 @@ const hdAccountInformation = {
   privateKey: 'B9EF817A39DAEB43179EE9129E5D592410B8A47FA4870A4EC16024575E51A608'.toUpperCase(),
   publicKey: '9C0C770BD1E1506FD207A8D783E0E4AC00D98B6D790401573519D82133474B90'.toUpperCase(),
 };
+const generationHash = 'F669FE7D1FBAC0823334E5C01BD6D54E4F8B4D25AC8FEB24D15266FE6F1569CB';
 
 beforeAll(() => {
   jest.setTimeout(10000);
@@ -40,7 +41,7 @@ describe('isCreated function should work properly', () => {
     const Icreator = new Initiator(creator);
     expect.assertions(1);
     const creationTransaction = privateApostille.update('raw');
-    const signedTransaction = Icreator.sign(creationTransaction);
+    const signedTransaction = Icreator.sign(creationTransaction, generationHash);
     await apostilleHttp.announce(signedTransaction);
     return apostilleHttp.isCreated(privateApostille.publicAccount).then((result) => {
       expect(result).toBeTruthy();

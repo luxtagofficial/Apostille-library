@@ -28,7 +28,7 @@ npm install apostille-library # OR yarn add apostille-library
 # Documentation
 To check out examples and docs, visit [apostille.io](https://apostille.io)
 # Questions
-For questions and support please [join](https://nem2.slack.com/join/shared_invite/enQtMzY4MDc2NTg0ODgyLTFhZjgxM2NhYTQ1MTY1Mjk0ZDE2ZTJlYzUxYWYxYmJlYjAyY2EwNGM5NzgxMjM4MGEzMDc5ZDIwYTgzZjgyODM) the official Slack community chat where there is a specific apostille channel there. 
+For questions and support please [join](https://nem2.slack.com/join/shared_invite/enQtMzY4MDc2NTg0ODgyLTFhZjgxM2NhYTQ1MTY1Mjk0ZDE2ZTJlYzUxYWYxYmJlYjAyY2EwNGM5NzgxMjM4MGEzMDc5ZDIwYTgzZjgyODM) the official Slack community chat where there is a specific apostille channel there.
 
 The issue list of this repo is exclusively for bug reports and feature requests.
 # Contribution

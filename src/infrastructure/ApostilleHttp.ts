@@ -1,7 +1,7 @@
 import { chain, remove, sortBy, uniq } from 'lodash';
-import { Account, AccountHttp, Address, AggregateTransaction, Deadline, InnerTransaction, Listener, LockFundsTransaction, Mosaic, NamespaceId, PublicAccount, QueryParams, SignedTransaction, Transaction, TransactionAnnounceResponse, TransactionHttp, TransactionInfo, TransactionStatus, TransactionType, TransferTransaction, UInt64 } from 'nem2-sdk';
+import { Account, AccountHttp, Address, AggregateTransaction, BlockHttp, Deadline, InnerTransaction, Listener, LockFundsTransaction, Mosaic, NamespaceId, PublicAccount, QueryParams, SignedTransaction, Transaction, TransactionAnnounceResponse, TransactionHttp, TransactionInfo, TransactionStatus, TransactionType, TransferTransaction, UInt64 } from 'nem2-sdk';
 import { concat, EMPTY, from, Observable, of } from 'rxjs';
-import { expand, filter, finalize, map, mergeMap, reduce, shareReplay, switchMap, takeWhile } from 'rxjs/operators';
+import { concatMap, expand, filter, finalize, first, map, mergeMap, pluck, reduce, shareReplay, switchMap, takeWhile } from 'rxjs/operators';
 import { Errors } from '../types/Errors';
 import { Initiator, initiatorAccountType } from './Initiator';
 
@@ -40,10 +40,10 @@ export class ApostilleHttp {
   }
 
   public announceList: SignedTransaction[] = [];
-  public return;
 
   private transactionHttp: TransactionHttp;
   private accountHttp: AccountHttp;
+  private blockHttp: BlockHttp;
   private listener: Listener;
 
   private unannouncedTransactions: IReadyTransaction[] = [];
@@ -51,6 +51,7 @@ export class ApostilleHttp {
   public constructor(url: string) {
     this.transactionHttp = new TransactionHttp(url);
     this.accountHttp = new AccountHttp(url);
+    this.blockHttp = new BlockHttp(url);
     this.listener = new Listener(url);
   }
 
@@ -212,10 +213,14 @@ export class ApostilleHttp {
             // if the smallest index is aggregate transaction, then sort it by index
             const innerTransactions = firstTransaction.innerTransactions;
             const sortedInnerTransactions = sortBy(
-              innerTransactions, ['transactionInfo.index']);
-            const firstInnerTransaction = sortedInnerTransactions[0];
-            if (firstInnerTransaction instanceof TransferTransaction) {
-              resolve(firstInnerTransaction);
+              innerTransactions, ['transactionInfo.index'],
+            );
+            // tslint:disable-next-line: prefer-for-of
+            for (let i = 0; i < sortedInnerTransactions.length; i++) {
+              const innerTransaction = sortedInnerTransactions[i];
+              if (innerTransaction.type === TransactionType.TRANSFER) {
+                resolve(innerTransaction as TransferTransaction);
+              }
             }
           }
         }
@@ -295,7 +300,7 @@ export class ApostilleHttp {
     return uniq(allInitiators);
   }
 
-  public aggregateAndSign(innerTransactions: IAnnounceTransactionList[]): SignedTransaction[] {
+  public aggregateAndSign(innerTransactions: IAnnounceTransactionList[], generationHash: string): SignedTransaction[] {
     return chain(innerTransactions)
       .chunk(1000)
       .map((innerT) => {
@@ -311,7 +316,7 @@ export class ApostilleHttp {
           firstCosigner.address.networkType,
           []);
 
-        return firstCosigner.signTransactionWithCosignatories(aggregateTransaction, cosigners);
+        return firstCosigner.signTransactionWithCosignatories(aggregateTransaction, cosigners, generationHash);
       }).value();
   }
 
@@ -326,64 +331,81 @@ export class ApostilleHttp {
     TransactionAnnounceResponse |
     TransactionStatus[]
   > {
-    let innerTransactionsList: IAnnounceTransactionList[] = [];
-    let readyTx;
-    while (this.unannouncedTransactions.length > 0) {
-      readyTx = this.unannouncedTransactions.pop();
-      if (readyTx === undefined) { break; }
-      const {initiator, transaction} = readyTx as IReadyTransaction;
-      /**
-       * Pseudocode
-       * For each transaction
-       * If all cosigners are present for that transaction, add to an aggregate complete transaction
-       * If not all cosigners are present for that transaction, convert it into an aggregate bonded
-       * and create a corresponding lock funds transaction.
-       *
-       * ** Note **
-       * There might be an edge case where N transactions having the same initiator but
-       * does not have all the cosigners present can be bundled into a single aggregate bonded
-       * transaction, thereby only needing ONE lock funds transaction instead of N lock funds transaction.
-       * However, a look ahead might unnecessarily complicate this method and there is a possibility of
-       * messing up the order of transactions. This edge case could be looked into in the future.
-       */
-      if (transaction.type === TransactionType.TRANSFER ||
-        transaction.type === TransactionType.MODIFY_MULTISIG_ACCOUNT) {
-        if (initiator.complete) {
-          const refreshedTransaction = transaction.reapplyGiven(Deadline.create());
-          const innerTransaction = refreshedTransaction.toAggregate(initiator.publicAccount);
-          innerTransactionsList.push({initiator, innerTransaction});
-        } else {
-          this.announceList = this.announceList.concat(this.aggregateAndSign(innerTransactionsList));
-          innerTransactionsList = []; // Clear buffer
-
-          const aggregateBondedTransaction = initiator.sign(transaction);
-          const lockFundsTransaction = ApostilleHttp.createLockFundsTransaction(aggregateBondedTransaction);
-          const signedLockFunds = initiator.sign(lockFundsTransaction);
-          this.announceList.push(signedLockFunds);
-          this.announceList.push(aggregateBondedTransaction);
+    return this.fetchGenerationHash().pipe(
+      first(), // We expect only one generationHash
+      concatMap((generationHash) => {
+        if (generationHash === '') {
+          throw new Error('generationHash cannot be empty!');
         }
-      } else if (transaction.type === TransactionType.AGGREGATE_BONDED ||
-        transaction.type === TransactionType.AGGREGATE_COMPLETE) {
-        this.announceList.concat(this.aggregateAndSign(innerTransactionsList));
+
+        let innerTransactionsList: IAnnounceTransactionList[] = [];
+        let readyTx;
+        while (this.unannouncedTransactions.length > 0) {
+          readyTx = this.unannouncedTransactions.pop();
+          if (readyTx === undefined) { break; }
+          const {initiator, transaction} = readyTx as IReadyTransaction;
+          /**
+           * Pseudocode
+           * For each transaction
+           * If all cosigners are present for that transaction, add to an aggregate complete transaction
+           * If not all cosigners are present for that transaction, convert it into an aggregate bonded
+           * and create a corresponding lock funds transaction.
+           *
+           * ** Note **
+           * There might be an edge case where N transactions having the same initiator but
+           * does not have all the cosigners present can be bundled into a single aggregate bonded
+           * transaction, thereby only needing ONE lock funds transaction instead of N lock funds transaction.
+           * However, a look ahead might unnecessarily complicate this method and there is a possibility of
+           * messing up the order of transactions. This edge case could be looked into in the future.
+           */
+          if (transaction.type === TransactionType.TRANSFER ||
+            transaction.type === TransactionType.MODIFY_MULTISIG_ACCOUNT) {
+            if (initiator.complete) {
+              const refreshedTransaction = transaction.reapplyGiven(Deadline.create());
+              const innerTransaction = refreshedTransaction.toAggregate(initiator.publicAccount);
+              innerTransactionsList.push({initiator, innerTransaction});
+            } else {
+              this.announceList = this.announceList.concat(
+                this.aggregateAndSign(innerTransactionsList, generationHash),
+              );
+              innerTransactionsList = []; // Clear buffer
+
+              const aggregateBondedTransaction = initiator.sign(transaction, generationHash);
+              const lockFundsTransaction = ApostilleHttp.createLockFundsTransaction(aggregateBondedTransaction);
+              const signedLockFunds = initiator.sign(lockFundsTransaction, generationHash);
+              this.announceList.push(signedLockFunds);
+              this.announceList.push(aggregateBondedTransaction);
+            }
+          } else if (transaction.type === TransactionType.AGGREGATE_BONDED ||
+            transaction.type === TransactionType.AGGREGATE_COMPLETE) {
+            this.announceList.concat(this.aggregateAndSign(innerTransactionsList, generationHash));
+            innerTransactionsList = []; // Clear buffer
+
+            const signedTransaction = initiator.sign(transaction, generationHash);
+            this.announceList.push(signedTransaction);
+          }
+        }
+
+        this.announceList = this.announceList.concat(this.aggregateAndSign(innerTransactionsList, generationHash));
         innerTransactionsList = []; // Clear buffer
 
-        const signedTransaction = initiator.sign(transaction);
-        this.announceList.push(signedTransaction);
-      }
-    }
+        // Announce all signed transactions and push to network
+        return concat(
+          of(this.announceList),
+          from(this.announceList).pipe(
+            switchMap((signedTx) => {
+              return this.transactionHttp.announce(signedTx);
+            }),
+          ),
+          this.confirmedListener(),
+        );
+      }),
+    );
+  }
 
-    this.announceList = this.announceList.concat(this.aggregateAndSign(innerTransactionsList));
-    innerTransactionsList = []; // Clear buffer
-
-    // Announce all signed transactions and push to network
-    return concat(
-      of(this.announceList),
-      from(this.announceList).pipe(
-        switchMap((signedTx) => {
-          return this.transactionHttp.announce(signedTx);
-        }),
-      ),
-      this.confirmedListener(),
+  private fetchGenerationHash(): Observable<string> {
+    return this.blockHttp.getBlockByHeight(1).pipe(
+      pluck('generationHash'),
     );
   }
 

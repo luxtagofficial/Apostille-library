@@ -12,6 +12,8 @@ const getPublicApostilleAccount = ((publicKey: string, networkType: NetworkType)
   return new ApostillePublicAccount(publicAccount);
 });
 
+const generationHash = 'F669FE7D1FBAC0823334E5C01BD6D54E4F8B4D25AC8FEB24D15266FE6F1569CB';
+
 describe('apostille public account constructor should work properly', () => {
   const publicAccount = PublicAccount.createFromPublicKey(
     'E15CAB00A5A34216A8A29034F950A18DFC6F4F27BCCFBF9779DC6886653B7E56',
@@ -58,12 +60,12 @@ describe('apostille public account transaction methods should work properly', ()
       NetworkType.MAIN_NET);
     const alienInitiator = new Initiator(alienAccount);
     expect(() => {
-      alienInitiator.sign(updateTransaction);
+      alienInitiator.sign(updateTransaction, generationHash);
     }).toThrowError(Errors[Errors.NETWORK_TYPE_MISMATCHED]);
   });
 
   it('should return correct signed update transaction', () => {
-    const signedTransaction = signerInitiator.sign(updateTransaction);
+    const signedTransaction = signerInitiator.sign(updateTransaction, generationHash);
     expect(signedTransaction.signer).toMatch(signer.publicAccount.publicKey);
   });
 

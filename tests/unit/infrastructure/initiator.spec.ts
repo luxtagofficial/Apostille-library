@@ -6,6 +6,7 @@ import { ApostilleHttp } from './../../../src/infrastructure/ApostilleHttp';
 import { ApostillePublicAccount } from './../../../src/model/apostille/ApostillePublicAccount';
 
 const network = NetworkType.MIJIN_TEST;
+const generationHash = 'F669FE7D1FBAC0823334E5C01BD6D54E4F8B4D25AC8FEB24D15266FE6F1569CB';
 const pk = 'aaaaaaaaaaeeeeeeeeeebbbbbbbbbb5555555555dddddddddd1111111111aaee';
 const accountPK = Account.createFromPrivateKey(pk, network);
 const publicAccountPublicKey = 'E15CAB00A5A34216A8A29034F950A18DFC6F4F27BCCFBF9779DC6886653B7E56';
@@ -149,33 +150,33 @@ describe('Initiator', () => {
 
   describe('Signing', () => {
     it('should return signed transaction', () => {
-      const signedTransferTransaction = completeInitiator.sign(transferTransaction);
+      const signedTransferTransaction = completeInitiator.sign(transferTransaction, generationHash);
       expect(signedTransferTransaction.signer).toMatch(accountPK.publicKey);
       expect(signedTransferTransaction.type).toBe(TransactionType.MODIFY_MULTISIG_ACCOUNT);
     });
 
     it('should throw error for hardware wallet', () => {
       expect(() => {
-        hwInitiator.sign(transferTransaction);
+        hwInitiator.sign(transferTransaction, generationHash);
       }).toThrowError(Errors[Errors.INITIATOR_UNABLE_TO_SIGN]);
     });
 
     it('should return signed aggregate complete transfer transaction', () => {
-      const signedTransferTransaction = multiSigInitiator.sign(transferTransaction);
+      const signedTransferTransaction = multiSigInitiator.sign(transferTransaction, generationHash);
       expect(signedTransferTransaction.signer).toMatch(accountPK.publicKey);
       expect(signedTransferTransaction.type).toBe(TransactionType.AGGREGATE_COMPLETE);
     });
 
     it('should return signed aggregate bonded transfer transaction', () => {
-      const signedTransferTransaction = incompleteInitiator.sign(transferTransaction);
+      const signedTransferTransaction = incompleteInitiator.sign(transferTransaction, generationHash);
       expect(signedTransferTransaction.signer).toMatch(accountPK.publicKey);
       expect(signedTransferTransaction.type).toBe(TransactionType.AGGREGATE_BONDED);
     });
 
     it('should return signed lock funds transaction', () => {
-      const signedTransferTransaction = incompleteInitiator.sign(transferTransaction);
+      const signedTransferTransaction = incompleteInitiator.sign(transferTransaction, generationHash);
       const lockFundsTransaction =  ApostilleHttp.createLockFundsTransaction(signedTransferTransaction);
-      const signedLockFundsTransaction = incompleteInitiator.sign(lockFundsTransaction);
+      const signedLockFundsTransaction = incompleteInitiator.sign(lockFundsTransaction, generationHash);
       expect(lockFundsTransaction.type).toBe(TransactionType.LOCK);
       expect(signedLockFundsTransaction.type).toBe(TransactionType.LOCK);
       expect(signedLockFundsTransaction.signer).toMatch(accountPK.publicKey);
@@ -193,7 +194,7 @@ describe('Initiator', () => {
         transferTransaction1.networkType,
         []);
       expect(() => {
-        completeInitiator.sign(aggregateTransaction);
+        completeInitiator.sign(aggregateTransaction, generationHash);
       }).toThrowError(Errors[Errors.INITIATOR_UNABLE_TO_SIGN]);
     });
 
@@ -208,7 +209,7 @@ describe('Initiator', () => {
         ],
         transferTransaction1.networkType,
         []);
-      const signedAggregateTransaction = multiSigInitiator.sign(aggregateTransaction);
+      const signedAggregateTransaction = multiSigInitiator.sign(aggregateTransaction, generationHash);
       expect(signedAggregateTransaction.signer).toMatch(accountPK.publicKey);
       expect(signedAggregateTransaction.type).toBe(TransactionType.AGGREGATE_COMPLETE);
     });
