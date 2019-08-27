@@ -73,4 +73,12 @@ export class ApostillePublicAccount {
     );
   }
 
+  get publicKey(): string {
+    return this.publicAccount.publicKey;
+  }
+
+  get address(): Address {
+    return this.publicAccount.address;
+  }
+
 }

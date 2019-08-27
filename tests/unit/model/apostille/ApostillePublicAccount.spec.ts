@@ -46,6 +46,14 @@ describe('apostille public account transaction methods should work properly', ()
 
   const updateTransaction = apostillePublicAccount.update('LuxTag is awesome');
 
+  it('has address getter', () => {
+    expect(apostillePublicAccount.publicAccount.address.plain()).toEqual(apostillePublicAccount.address.plain());
+  });
+
+  it('has publicKey getter', () => {
+    expect(apostillePublicAccount.publicAccount.publicKey).toEqual(apostillePublicAccount.publicKey);
+  });
+
   it('should return correct update transaction', () => {
     expect(updateTransaction.recipient).toEqual(apostillePublicAccount.publicAccount.address);
   });
